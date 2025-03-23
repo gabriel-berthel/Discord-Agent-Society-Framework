@@ -1,0 +1,12 @@
+config:
+  message_throttle: 10
+  plan_interval: 360
+  memory_interval: 60
+  model: "llama3.2"
+  base-plan: ""
+
+personnality:
+  - "TBD"
+
+special_guideline:
+  - "TBD"

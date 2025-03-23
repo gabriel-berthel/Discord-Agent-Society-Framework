@@ -1,0 +1,58 @@
+# project
+venv
+*.env
+
+# Python bytecode files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Virtual environments
+.env/
+.venv/
+
+# Python-specific cache directories
+*.tox/
+*.nox/
+*.coverage
+*.hypothesis/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Pytest
+.cache/
+
+# MyPy
+.mypy_cache/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.pydevproject
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
