@@ -40,9 +40,6 @@ class Agent:
     async def get_channel_queries(self, channel_id):
         return await QueryEngine(self.model).context_query([msg for msg in self.server.get_messages(channel_id).copy()])
 
-    # ----- SERVER ROUTINES juste 3 agents & 2 salons pour la preuve de concept! Sinon benchmarker va être horrible.
-    # Separate modules.. Contextualizer
-    # It would be nice for query to able to do web-serch
     async def respond_routine(self):
         while True:
             if self.event_queue.qsize() > 0:
