@@ -1,33 +1,6 @@
 import ollama
 from utils import *
 
-def prompt(plan, context, memories, messages):
-    return f"""
-    {get_base_prompt()}
-
-    **Given the following information as context to use, you will be asked to reply as a discord user, according to your personality**:
-
-    You current plan is:
-    {plan}
-
-    The context of the consersation is: 
-    {context}
-
-    You remembered:
-    {memories}
-    
-    **Consider the instruction bellow while processing the messages that will follow**
-    - Respond in accordance to the plan, context, memories and personality
-    - Stay in line with pretending to be a normal user
-    - If you wish to ignore the message, do not answer or write IGNORE
-
-    Reply to the following messages:
-
-    **Conversation**:
-    
-    {messages}
-    """
-
 class Responder():
     def __init__(self, model):
         self.model = model
