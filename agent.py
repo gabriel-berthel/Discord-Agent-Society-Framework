@@ -35,7 +35,7 @@ class Agent:
     async def get_channel_context(self, channel_id):
         return await Contextualizer(self.model).neutral_context([msg for msg in self.server.get_messages(channel_id).copy()], self.get_bot_context())
     
-    async def get_channel_queries(self, channel_id):
+    async def get_neutral_queries(self, channel_id):
         return await QueryEngine(self.model).context_query([msg for msg in self.server.get_messages(channel_id).copy()])
 
     async def respond_routine(self):
@@ -67,21 +67,18 @@ class Agent:
             print("Starting Plan Routine")
             
             context = await self.get_channel_context(self.monitoring_channel)
-            channel_queries = await self.get_channel_queries(self.monitoring_channel)
+            neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
 
-            memories = self.memory.query_multiple(channel_queries + [self.plan])
+            memories = self.memory.query_multiple(neutral_queries + [self.plan])
             most_recent_mem = self.memory.get_last_n_memories(3)
             unique_memories = list(set(memories + most_recent_mem))
 
-            choice_num = await Planner(self.model).choose_action(self.plan, context, unique_memories)
-            choice = f" keep reading {self.server.channels[self.monitoring_channel]['name']}"
-            updated_plan = await Planner(self.model).refine_plan(self.plan, context, unique_memories, choice)
+            updated_plan = await Planner(self.model).refine_plan(self.plan, context, unique_memories, self.get_bot_context())
             
             if updated_plan:
                 self.memory.add_document(self.plan, 'FORMER-PLAN')
                 self.plan = updated_plan
 
-    
     async def memory_routine(self):
         while True:
             # TODO : FIX THE QUUEUE
