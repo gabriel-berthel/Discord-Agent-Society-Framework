@@ -26,8 +26,6 @@ class Agent:
         self.memory = db.Memories(collection_name="AgentMemTest")
         self.responses: asyncio.Queue = asyncio.Queue()
         self.event_queue = asyncio.Queue()
-        self.notification_queue = asyncio.Queue()
-        self.last_choice = deque(maxlen=10)
         self.server = server
         self.processed_messages = asyncio.Queue()
     
