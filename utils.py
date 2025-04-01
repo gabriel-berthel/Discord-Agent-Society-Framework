@@ -21,10 +21,6 @@ def format_llm_prompt(role, content):
 def format_llm_prompts(messages):
     return [format_llm_prompt(role, content) for role, content in messages]
 
-def split_queries(txt):
-    queries = re.findall(r'`(.*?)`', txt)
-    return [re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', '', query.strip().lower().replace('\n', ' ').replace('\r', ' '))).strip() for query in queries]
-
 def list_to_text(lst):
 
     if len(lst) > 0:

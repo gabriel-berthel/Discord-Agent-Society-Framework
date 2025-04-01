@@ -48,9 +48,14 @@ class Agent:
             if self.event_queue.qsize() > 0:
                 context = await self.get_channel_context(self.monitoring_channel)
                 messages = [self.server.format_message(await self.event_queue.get()) for _ in range(self.event_queue.qsize())]
-                queries = await QueryEngine(self.model).response_queries(self.plan, context, messages)
                 
+                queries = await QueryEngine(self.model).response_queries(self.plan, context, messages)
                 memories = self.memory.query_multiple(queries)
+                
+                # web_queries = await QueryEngine(self.model).web_queries(self.plan, context, messages)
+                # summary = .... web browser summary
+                # putting summary in memory
+
                 response = await Responder(self.model).respond(self.plan, context, memories, messages)
                 
                 for message in messages:

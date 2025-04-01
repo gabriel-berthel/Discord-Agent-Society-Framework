@@ -15,7 +15,7 @@ class Memories:
         self.model = SentenceTransformer(model_name)
 
     def add_document(self, document: str, doc_type: str, timestamp: Optional[float] = None):
-        valid_types = ['FORMER-PLAN', 'MEMORY', 'SELF-KNOWLEDGE', 'KNOWLEDGE']
+        valid_types = ['FORMER-PLAN', 'MEMORY', 'KNOWLEDGE']
         if doc_type not in valid_types:
             return
         
@@ -29,26 +29,12 @@ class Memories:
             timestamp = timestamp if timestamp else time.time()
             metadatas["timestamp"] = timestamp
 
-
         self.collection.add(
             ids=[str(uuid.uuid4())],
             documents=[document],
             metadatas=[metadatas],
             embeddings=[embedding]
         )
-
-    def query(self, query: str, n_results: int = 1):
-        query_embedding = self.model.encode(query)
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=n_results
-        )
-
-        return results['documents']
-
-    def get_all_documents(self):
-        all_docs = self.collection.get()
-        return all_docs['documents'], all_docs['embeddings'], all_docs['metadatas']
 
     def query_multiple(self, queries: list, n_results: int = 5):
         documents, embeddings, metadatas = self.get_all_documents()
