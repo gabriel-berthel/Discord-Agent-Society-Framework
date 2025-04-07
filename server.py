@@ -19,9 +19,11 @@ if os.name != "nt":
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 if __name__ == "__main__":
+    print("hi")
     parser = argparse.ArgumentParser(description="Load .env and YAML configuration files for an agent.")
     parser.add_argument("env", type=str, help="Path to the agent config folder")
     parser.add_argument("config", type=str, help="Path to the agent config folder")
+    parser.add_argument("archetype", type=str, help="Agent archetype")
     
     args = parser.parse_args()
 
@@ -37,4 +39,4 @@ if __name__ == "__main__":
 
     agent_conf = utils.load_yaml(args.config)
 
-    discord_bot.run(agent_conf)
+    discord_bot.run(agent_conf, args.archetype)
