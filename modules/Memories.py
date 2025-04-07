@@ -28,7 +28,7 @@ class Memories:
             self._embeddings = result["embeddings"]
             self._metadatas = result["metadatas"]
         except Exception as e:
-            logging.error(f"Failed to refresh cache: {e}")
+            logging.error(f"No memories were retrieved")
             self._documents = []
             self._embeddings = []
             self._metadatas = []
@@ -52,7 +52,6 @@ class Memories:
             embeddings=[embedding]
         )
 
-        # Update cache incrementally
         self._documents.append(document)
         self._embeddings.append(embedding)
         self._metadatas.append(metadatas)
