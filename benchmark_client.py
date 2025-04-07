@@ -25,5 +25,7 @@ class BenchmarkingClient:
         self.agent.server.add_message(*event)
         self.agent.event_queue.put(event)
         
-        await message, _ = await self.agent.responses.get() 
+        message, _ = await self.agent.responses.get() 
         return message
+    
+agent = BenchmarkingClient('benchmark_config.yaml', 'trouble_maker')

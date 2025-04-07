@@ -10,11 +10,17 @@ from modules.QueryEngine import QueryEngine
 from modules.Planner import Planner
 from modules.Responder import Responder
 import utils
+import ollama
 
 class Agent:
     def __init__(self, user_id, agent_conf, server, archetype, special_instruction=""):
+        
+        self.config = utils.load_yaml(agent_conf)['config']
+        
+        if self.config['model'] not in [m['name'] for m in ollama.list()['models']]:  
+            ollama.pull(self.config['model'])
+        
         self.user_id = int(user_id)
-        self.config = agent_conf.get('config')
         self.monitoring_channel = self.config.get('initial-channel-id')
         self.plan = "No specific plan at the moment. I am simply responding."
         self.special_instruction = special_instruction
@@ -23,7 +29,7 @@ class Agent:
         self.server = server
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
-        self.archetype = utils.load_yaml('archetypes.yaml').get(archetype)
+        self.archetype = utils.load_yaml('archetypes.yaml')[archetype]
     
     def get_bot_context(self):
         ctx =  f"You are reading {self.server.get_channel(self.monitoring_channel)['name']} and it is {datetime.now():%Y-%m-%d %H:%M:%S}"
@@ -33,16 +39,16 @@ class Agent:
         return ctx
 
     async def get_channel_context(self, channel_id):
-        return await Contextualizer(self.config.get('model')).neutral_context([msg for msg in self.server.get_messages(channel_id).copy()], self.get_bot_context())
+        return await Contextualizer(self.config['model']).neutral_context([msg for msg in self.server.get_messages(channel_id).copy()], self.get_bot_context())
     
     async def get_neutral_queries(self, channel_id):
-        return await QueryEngine(self.config.get('model')).context_query([msg for msg in self.server.get_messages(channel_id).copy()])
+        return await QueryEngine(self.config['model']).context_query([msg for msg in self.server.get_messages(channel_id).copy()])
 
     async def respond_routine(self):
         while True:
             if self.event_queue.qsize() > 0:
                 context = await self.get_channel_context(self.monitoring_channel)
-                throttle = self.config.get('message_throttle', -1)
+                throttle = self.config['message_throttle']
 
                 # Batch mode: process all messages in queue
                 if throttle != -1:
@@ -53,10 +59,10 @@ class Agent:
                     author_id, global_name, content = await self.event_queue.get()
                     messages = [self.server.format_message(author_id, global_name, content)]
 
-                queries = await QueryEngine(self.config.get('model')).response_queries(self.plan, context, messages)
+                queries = await QueryEngine(self.config['model']).response_queries(self.plan, context, messages)
                 memories = self.memory.query_multiple(queries)
 
-                response = await Responder(self.config.get('model')).respond(self.plan, context, memories, messages)
+                response = await Responder(self.config['model']).respond(self.plan, context, memories, messages)
 
                 for message in messages:
                     await self.processed_messages.put(message)
@@ -66,12 +72,12 @@ class Agent:
 
             # Only sleep if throttle is not -1
             if self.config.get('message_throttle', -1) != -1:
-                await asyncio.sleep(self.config.get('message_throttle'))
+                await asyncio.sleep(self.config['message_throttle'])
 
 
     async def plan_routine(self):
-        while True and self.config.get('plan_interval') != -1:
-            await asyncio.sleep(self.config.get('plan_interval'))
+        while True and self.config['plan_interval'] != -1:
+            await asyncio.sleep(self.config['plan_interval'])
             print("Starting Plan Routine")
             
             context = await self.get_channel_context(self.monitoring_channel)

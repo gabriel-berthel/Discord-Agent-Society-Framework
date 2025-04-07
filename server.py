@@ -37,6 +37,4 @@ if __name__ == "__main__":
 
     load_dotenv(args.env)
 
-    agent_conf = utils.load_yaml(args.config)
-
-    discord_bot.run(agent_conf, args.archetype)
+    discord_bot.run(args.config, args.archetype)
