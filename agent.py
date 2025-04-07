@@ -45,7 +45,7 @@ class Agent:
             if self.event_queue.qsize() > 0:
                 context = await self.get_channel_context(self.monitoring_channel)
                 throttle = self.config['message_throttle']
-
+                print("Hi?")
                 # Batch mode: process all messages in queue
                 if throttle != -1:
                     messages = [self.server.format_message(await self.event_queue.get()) 
@@ -54,6 +54,7 @@ class Agent:
                 else:
                     author_id, global_name, content = await self.event_queue.get()
                     messages = [self.server.format_message(author_id, global_name, content)]
+                    print(messages)
 
                 queries = await QueryEngine(self.config['model']).response_queries(self.plan, context, messages)
                 memories = self.memory.query_multiple(queries)
@@ -66,9 +67,10 @@ class Agent:
                 if response:
                     await self.responses.put((response, self.monitoring_channel))
 
-            # Only sleep if throttle is not -1
             if self.config['message_throttle'] != -1:
                 await asyncio.sleep(self.config['message_throttle'])
+            else:
+                await asyncio.sleep(0)
 
 
     async def plan_routine(self):

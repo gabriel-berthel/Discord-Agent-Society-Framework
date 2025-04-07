@@ -1,11 +1,12 @@
 import asyncio
 from agent import Agent
 from modules.DiscordServer import DiscordServer
+from dotenv import load_dotenv
 
 class BenchmarkingClient:
     def __init__(self, agent_conf, archetype):
         
-        server = DiscordServer(1, 'Benchmarking')
+        server = DiscordServer(1, 'Benchmarking', 1)
         server.add_channel(1, 'General')
         
         server.update_user(1, 'Joey')
@@ -22,24 +23,21 @@ class BenchmarkingClient:
         )
     
     async def prompt(self, message):
-        print(message)
         event = (1, 2, 'Interviewer', message)
         self.agent.server.add_message(*event)
-        self.agent.event_queue.put(event)
+        await self.agent.event_queue.put(event)
         
         message, _ = await self.agent.responses.get() 
-        print(message)
         return message
     
     async def run(self):
         await self.start()
         
-    
 async def main():
     agent_client = BenchmarkingClient('benchmark_config.yaml', 'trouble_maker')
 
-    await agent_client.run()
-    
+    agent_client.run()
+    print("hii")
     result = await agent_client.prompt("Hi! How are you doing?")
     print(result)
 

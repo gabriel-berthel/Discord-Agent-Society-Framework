@@ -3,11 +3,12 @@ import hikari
 import os
 
 class DiscordServer:
-    def __init__(self, server_id, name):
+    def __init__(self, server_id, name, curr_user):
         self.id = server_id
         self.name = name
         self.users = {}
         self.channels = {}
+        self.curr_user = curr_user
 
     def update_user(self, user_id, user_name):
         self.users[user_id] = user_name
@@ -37,7 +38,7 @@ class DiscordServer:
         return message
     
     def format_message(self, author_id, global_name, content):
-        name = "You" if author_id == int(os.getenv('USER_ID')) else global_name
+        name = "You" if author_id == self.curr_user else global_name
         content = self.fix_message(content)
 
         return f"{name} sent: {content}"

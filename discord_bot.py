@@ -52,7 +52,7 @@ def run(agent_conf, archetype):
         # Create server representation
         server_id = os.getenv("SERVER_ID")
         guild = await bot.rest.fetch_guild(server_id)
-        server = DiscordServer(server_id, guild.name)
+        server = DiscordServer(server_id, guild.name, os.getenv("USER_ID"))
         
         async for member in bot.rest.fetch_members(server_id):
             server.update_user(member.id, member.display_name)
