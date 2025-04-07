@@ -9,6 +9,7 @@ import sys
 
 import logging
 from sentence_transformers import SentenceTransformer
+
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)

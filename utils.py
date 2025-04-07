@@ -1,9 +1,5 @@
 import yaml
-import re
-from contextlib import redirect_stdout, redirect_stderr
-import time
 import sys
-import os
 
 def load_yaml(file_path):
     """Loads a YAML file and returns its contents as a dictionary."""

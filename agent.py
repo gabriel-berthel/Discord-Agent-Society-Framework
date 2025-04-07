@@ -1,14 +1,9 @@
 import asyncio
 from contextlib import contextmanager
-import hikari
-import os
-import random
-import time
 from datetime import datetime
-import ollama
 from collections import deque
 from utils import *
-import entities.Memories as db
+import Memories as db
 from collections import defaultdict
 from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
