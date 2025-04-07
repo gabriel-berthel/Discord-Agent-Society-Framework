@@ -4,6 +4,5 @@ python-dotenv
 hikari
 chromadb
 numpy
-sklearn
+scikit-learn
 sentence-transformers
-uvloop
