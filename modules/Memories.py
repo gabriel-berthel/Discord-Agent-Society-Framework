@@ -14,12 +14,10 @@ class Memories:
         self.collection = self.client.create_collection(collection_name)
         self.model = SentenceTransformer(model_name)
 
-        # Cache
         self._documents = []
         self._embeddings = []
         self._metadatas = []
 
-        # Load on init
         self._refresh_cache()
 
     def _refresh_cache(self):
