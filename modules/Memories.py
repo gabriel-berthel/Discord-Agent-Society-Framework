@@ -14,39 +14,66 @@ class Memories:
         self.collection = self.client.create_collection(collection_name)
         self.model = SentenceTransformer(model_name)
 
+        # Cache
+        self._documents = []
+        self._embeddings = []
+        self._metadatas = []
+
+        # Load on init
+        self._refresh_cache()
+
+    def _refresh_cache(self):
+        try:
+            all_ids = self.collection.get(include=["documents"])["ids"]
+            result = self.collection.get(ids=all_ids, include=["documents", "embeddings", "metadatas"])
+            self._documents = result["documents"]
+            self._embeddings = result["embeddings"]
+            self._metadatas = result["metadatas"]
+        except Exception as e:
+            logging.error(f"Failed to refresh cache: {e}")
+            self._documents = []
+            self._embeddings = []
+            self._metadatas = []
+
     def add_document(self, document: str, doc_type: str, timestamp: Optional[float] = None):
         valid_types = ['FORMER-PLAN', 'MEMORY', 'KNOWLEDGE']
         if doc_type not in valid_types:
             return
-        
+
         embedding = self.model.encode(document, show_progress_bar=False)
 
-        metadatas = {
-            "type": doc_type
-        }
-
+        metadatas = {"type": doc_type}
         if doc_type in ['MEMORY', 'FORMER-PLAN']:
-            timestamp = timestamp if timestamp else time.time()
-            metadatas["timestamp"] = timestamp
+            metadatas["timestamp"] = timestamp if timestamp else time.time()
 
+        doc_id = str(uuid.uuid4())
         self.collection.add(
-            ids=[str(uuid.uuid4())],
+            ids=[doc_id],
             documents=[document],
             metadatas=[metadatas],
             embeddings=[embedding]
         )
 
+        # Update cache incrementally
+        self._documents.append(document)
+        self._embeddings.append(embedding)
+        self._metadatas.append(metadatas)
+
+    def get_all_documents(self):
+        return self._documents, self._embeddings, self._metadatas
+
     def query_multiple(self, queries: list, n_results: int = 5):
-        documents, embeddings, metadatas = self.get_all_documents()
+        if not self._documents:
+            return []
 
         results = []
         for query in queries:
             query_embedding = self.model.encode(query)
-            similarities = cosine_similarity([query_embedding], embeddings)[0]
+            similarities = cosine_similarity([query_embedding], self._embeddings)[0]
 
             docs_with_metadata = [
                 {'doc': doc, 'metadata': metadata, 'similarity': similarity}
-                for doc, metadata, similarity in zip(documents, metadatas, similarities)
+                for doc, metadata, similarity in zip(self._documents, self._metadatas, similarities)
             ]
 
             sorted_docs = sorted(
@@ -57,16 +84,12 @@ class Memories:
 
             results.extend([result['doc'] for result in sorted_docs[:n_results] if result['doc']])
 
-        print("Mem:", results)
         return results
 
-
     def get_last_n_memories(self, n: int = 1):
-        documents, embeddings, metadatas = self.get_all_documents()
-
         memory_docs = [
             {'doc': doc, 'metadata': metadata}
-            for doc, metadata in zip(documents, metadatas)
+            for doc, metadata in zip(self._documents, self._metadatas)
             if metadata.get('type') == 'MEMORY'
         ]
 
@@ -75,5 +98,4 @@ class Memories:
 
         sorted_memories = sorted(memory_docs, key=lambda x: x['metadata'].get('timestamp', 0), reverse=True)
         
-        print("Mem:", sorted_memories)
         return [memory['doc'] for memory in sorted_memories[:n] if memory['doc']]

@@ -33,7 +33,7 @@ def run(agent_conf, archetype):
 
         if event.author.id != agent.user_id: 
             if agent.monitoring_channel == event.channel_id:
-                await agent.event_queue.put((event.message.author.id, event.message.author.global_name, event.message.content))
+                await agent.event_queue.put((event.channel_id, event.message.author.id, event.message.author.global_name, event.message.content))
         
         agent.server.add_message(event.channel_id, event.message.author.id, event.message.author.global_name, event.message.content)
                 

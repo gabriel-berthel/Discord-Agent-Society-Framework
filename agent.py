@@ -20,7 +20,7 @@ class Agent:
         self.monitoring_channel = self.config['initial-channel-id']
         self.plan = "No specific plan at the moment. I am simply responding."
         self.special_instruction = special_instruction
-        self.memory = db.Memories(collection_name="AgentMemTest")
+        self.memory = db.Memories(collection_name=f"{archetype}_{user_id}")
         self.responses: asyncio.Queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()
@@ -45,14 +45,13 @@ class Agent:
             if self.event_queue.qsize() > 0:
                 context = await self.get_channel_context(self.monitoring_channel)
                 throttle = self.config['message_throttle']
-                print("Hi?")
                 # Batch mode: process all messages in queue
                 if throttle != -1:
                     messages = [self.server.format_message(await self.event_queue.get()) 
                                 for _ in range(self.event_queue.qsize())]
                 # Sequential mode
                 else:
-                    author_id, global_name, content = await self.event_queue.get()
+                    channel_id, author_id, global_name, content = await self.event_queue.get()
                     messages = [self.server.format_message(author_id, global_name, content)]
                     print(messages)
 
@@ -70,13 +69,12 @@ class Agent:
             if self.config['message_throttle'] != -1:
                 await asyncio.sleep(self.config['message_throttle'])
             else:
-                await asyncio.sleep(0)
+                await asyncio.sleep(1)
 
 
     async def plan_routine(self):
         while True and self.config['plan_interval'] != -1:
             await asyncio.sleep(self.config['plan_interval'])
-            print("Starting Plan Routine")
             
             context = await self.get_channel_context(self.monitoring_channel)
             neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
@@ -85,7 +83,7 @@ class Agent:
             most_recent_mem = self.memory.get_last_n_memories(3)
             unique_memories = list(set(memories + most_recent_mem))
 
-            updated_plan = await Planner(self.model).refine_plan(self.plan, context, unique_memories, self.get_bot_context())
+            updated_plan = await Planner(self.config['model']).refine_plan(self.plan, context, unique_memories, self.get_bot_context())
             
             if updated_plan:
                 self.memory.add_document(self.plan, 'FORMER-PLAN')
@@ -95,9 +93,7 @@ class Agent:
         while True and self.config['memory_interval'] != -1:
 
             await asyncio.sleep(self.config['memory_interval'])
-            print("Starting Memory Routine")
-
             messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
             if messages:
-                reflection = await Contextualizer(self.model).reflection(messages, self.get_bot_context())
+                reflection = await Contextualizer(self.config['model']).reflection(messages, self.get_bot_context())
                 self.memory.add_document(reflection, 'MEMORY')

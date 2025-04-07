@@ -40,9 +40,3 @@ To start the server, run `python server.py agent.env agent.yaml <archetype>` whe
 
 ## Run the BenchmarkingClient:
 
-Instantiate the benchmarking client: `agent = BenchmarkingClient('<config_file_name>.yaml', 'trouble_maker')` followed by `agent_client.run()`. You can begin to use the `.prompt(<message>)` method.
-
-Know that in the config file:
-- `message_throttle = -1` makes the responder routine sequential
-- `plan_interval = -1` deactivates planning
-- `memory_interval = -1` deactivates memories
