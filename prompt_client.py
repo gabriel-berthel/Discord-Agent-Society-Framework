@@ -8,7 +8,7 @@ class PromptClient:
         self.name = name
         self.id = id
         self.server = server
-        self.agent = Agent(1, agent_conf, server, archetype, 'You must always respond.')
+        self.agent = Agent(1, agent_conf, server, archetype, 'You must always respond to Interviewer.')
         
     async def start(self):
         asyncio.create_task(self.agent.respond_routine())
@@ -40,7 +40,7 @@ async def exemple():
         inter_resp = await interviewer.prompt(joey_resp, joey.id, joey.name)
         print(inter_resp)
         await asyncio.sleep(1)
-        joey_resp = await joey.prompt(inter_resp, interviewer.id, interviewer-.name)
+        joey_resp = await joey.prompt(inter_resp, interviewer.id, interviewer.name)
         print(joey_resp)
 
 if __name__ == '__main__':
