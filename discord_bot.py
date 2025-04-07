@@ -2,7 +2,7 @@ import hikari
 import os
 import asyncio
 import agent as ag
-from entities.DiscordServer import DiscordServer
+from modules.Environement import DiscordServer
 
 agent = None
 
