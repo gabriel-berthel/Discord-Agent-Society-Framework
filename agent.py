@@ -9,6 +9,7 @@ from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
 from modules.Planner import Planner
 from modules.Responder import Responder
+import utils
 
 class Agent:
     def __init__(self, user_id, agent_conf, server, archetype, special_instruction=""):
@@ -22,7 +23,7 @@ class Agent:
         self.server = server
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
-        self.archetype = archetype
+        self.archetype = utils.load_yaml('archetypes.yaml').get(archetype)
     
     def get_bot_context(self):
         ctx =  f"You are reading {self.server.get_channel(self.monitoring_channel)['name']} and it is {datetime.now():%Y-%m-%d %H:%M:%S}"
