@@ -1,9 +1,6 @@
 import asyncio
-import random
-import os
 from agent import Agent
 from modules.DiscordServer import DiscordServer
-import hikari
 
 class BenchmarkingClient:
     def __init__(self, agent_conf, archetype):
@@ -16,16 +13,35 @@ class BenchmarkingClient:
         
         self.agent = Agent(1, agent_conf, server, archetype, 'You must always respond to Interviewer.')
         
-        asyncio.create_task(self.agent.respond_routine())
-        asyncio.create_task(self.agent.memory_routine())
-        asyncio.create_task(self.agent.plan_routine())
+    async def start(self):
+        print('Starting Argent Tasks')
+        await asyncio.gather(
+            self.agent.respond_routine(),
+            self.agent.memory_routine(),
+            self.agent.plan_routine(),
+        )
     
     async def prompt(self, message):
+        print(message)
         event = (1, 2, 'Interviewer', message)
         self.agent.server.add_message(*event)
         self.agent.event_queue.put(event)
         
         message, _ = await self.agent.responses.get() 
+        print(message)
         return message
     
-agent = BenchmarkingClient('benchmark_config.yaml', 'trouble_maker')
+    async def run(self):
+        await self.start()
+        
+    
+async def main():
+    agent_client = BenchmarkingClient('benchmark_config.yaml', 'trouble_maker')
+
+    await agent_client.run()
+    
+    result = await agent_client.prompt("Hi! How are you doing?")
+    print(result)
+
+if __name__ == '__main__':
+    asyncio.run(main()) 

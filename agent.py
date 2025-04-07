@@ -16,12 +16,8 @@ class Agent:
     def __init__(self, user_id, agent_conf, server, archetype, special_instruction=""):
         
         self.config = utils.load_yaml(agent_conf)['config']
-        
-        if self.config['model'] not in [m['name'] for m in ollama.list()['models']]:  
-            ollama.pull(self.config['model'])
-        
         self.user_id = int(user_id)
-        self.monitoring_channel = self.config.get('initial-channel-id')
+        self.monitoring_channel = self.config['initial-channel-id']
         self.plan = "No specific plan at the moment. I am simply responding."
         self.special_instruction = special_instruction
         self.memory = db.Memories(collection_name="AgentMemTest")
@@ -29,7 +25,7 @@ class Agent:
         self.server = server
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
-        self.archetype = utils.load_yaml('archetypes.yaml')[archetype]
+        self.archetype = utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype]
     
     def get_bot_context(self):
         ctx =  f"You are reading {self.server.get_channel(self.monitoring_channel)['name']} and it is {datetime.now():%Y-%m-%d %H:%M:%S}"
@@ -71,7 +67,7 @@ class Agent:
                     await self.responses.put((response, self.monitoring_channel))
 
             # Only sleep if throttle is not -1
-            if self.config.get('message_throttle', -1) != -1:
+            if self.config['message_throttle'] != -1:
                 await asyncio.sleep(self.config['message_throttle'])
 
 
@@ -94,9 +90,9 @@ class Agent:
                 self.plan = updated_plan
 
     async def memory_routine(self):
-        while True and self.config.get('memory_interval') != -1:
+        while True and self.config['memory_interval'] != -1:
 
-            await asyncio.sleep(self.config.get('memory_interval'))
+            await asyncio.sleep(self.config['memory_interval'])
             print("Starting Memory Routine")
 
             messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]

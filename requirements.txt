@@ -7,3 +7,6 @@ numpy
 scikit-learn
 sentence-transformers
 uvloop; sys_platform != "win32"
+transformers 
+torch
+accelerate
