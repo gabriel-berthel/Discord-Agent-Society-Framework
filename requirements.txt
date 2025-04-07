@@ -1,0 +1,9 @@
+aiohttp
+ollama
+python-dotenv
+hikari
+chromadb
+numpy
+sklearn
+sentence-transformers
+uvloop
