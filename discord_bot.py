@@ -1,13 +1,12 @@
 import hikari
 import os
-import random
 import asyncio
 import agent as ag
 from entities.DiscordServer import DiscordServer
 
 agent = None
 
-def run(agent_conf):
+def run(agent_conf, archetype):
     async def initialize_known_users(agent):
         for guild in bot.get_guilds():
             async for member in guild.fetch_members():
@@ -45,11 +44,10 @@ def run(agent_conf):
                 
     @bot.listen(hikari.MemberCreateEvent)
     async def on_member_create(member: hikari.MemberCreateEvent):
-        server.update_user(event.author.id, member.display_name)
+        agent.server.update_user(event.author.id, member.display_name)
 
     @bot.listen(hikari.StoppingEvent)
     async def on_stopping(event: hikari.StoppingEvent) -> None:
-        # TODO : Gracefully end tasks.abs
         pass
     
     @bot.listen(hikari.StartedEvent)
@@ -68,7 +66,7 @@ def run(agent_conf):
             if isinstance(channel, hikari.TextableChannel):
                 server.add_channel(channel.id, channel.name)
 
-        agent = ag.Agent(os.getenv("USER_ID"), agent_conf, server)
+        agent = ag.Agent(os.getenv("USER_ID"), agent_conf, server, archetype)
   
         print(f"Loaded Server: {server}")
         print(f"Users: {server.users}")

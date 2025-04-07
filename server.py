@@ -28,7 +28,6 @@ def parse_arguments():
     args = parser.parse_args()
 
     # Check if .env file exists
-    
     agent_conf = os.path.join(args.agent, 'agent.yaml')
     agent_env = os.path.join(args.agent, 'agent.env')
 
@@ -40,7 +39,6 @@ def parse_arguments():
     if not os.path.isfile(agent_conf):
         print(f"Error: agent.conf not found in '{args.agent}'", file=sys.stderr)
         sys.exit(1)
-
 
     return args
 

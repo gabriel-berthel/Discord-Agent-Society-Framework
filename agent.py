@@ -16,11 +16,11 @@ from modules.Planner import Planner
 from modules.Responder import Responder
 
 class Agent:
-    def __init__(self, user_id, agent_conf, server):
+    def __init__(self, user_id, agent_conf, server, archetype):
         self.user_id = int(user_id)
         self.config = agent_conf['config']
         self.model = agent_conf['config']['model']
-        self.monitoring_channel = 1350127264871743498
+        self.monitoring_channel = self.config.get('initial-channel-id')
         self.plan = "Observe and wait."
         self.messages = deque()
         self.memory = db.Memories(collection_name="AgentMemTest")
@@ -28,48 +28,56 @@ class Agent:
         self.event_queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()
+        self.archetype = archetype
     
     def get_bot_context(self):
         return f"You are reading {self.server.get_channel(self.monitoring_channel)['name']} and it is {datetime.now():%Y-%m-%d %H:%M:%S}"
 
     async def get_channel_context(self, channel_id):
-        return await Contextualizer(self.model).neutral_context([msg for msg in self.server.get_messages(channel_id).copy()], self.get_bot_context())
+        return await Contextualizer(self.config.get('model')).neutral_context([msg for msg in self.server.get_messages(channel_id).copy()], self.get_bot_context())
     
     async def get_neutral_queries(self, channel_id):
-        return await QueryEngine(self.model).context_query([msg for msg in self.server.get_messages(channel_id).copy()])
+        return await QueryEngine(self.config.get('model')).context_query([msg for msg in self.server.get_messages(channel_id).copy()])
 
     async def respond_routine(self):
         while True:
             if self.event_queue.qsize() > 0:
                 context = await self.get_channel_context(self.monitoring_channel)
-                messages = [self.server.format_message(await self.event_queue.get()) for _ in range(self.event_queue.qsize())]
-                
-                queries = await QueryEngine(self.model).response_queries(self.plan, context, messages)
-                memories = self.memory.query_multiple(queries)
-                
-                # web_queries = await QueryEngine(self.model).web_queries(self.plan, context, messages)
-                # summary = .... web browser summary
-                # putting summary in memory
+                throttle = self.config.get('message_throttle', -1)
 
-                response = await Responder(self.model).respond(self.plan, context, memories, messages)
-                
+                # Batch mode: process all messages in queue
+                if throttle != -1:
+                    messages = [self.server.format_message(await self.event_queue.get()) for _ in range(self.event_queue.qsize())]
+                # Sequential mode
+                else:
+                    raw_event = await self.event_queue.get()
+                    messages = [self.server.format_message(raw_event)]
+
+                queries = await QueryEngine(self.config.get('model')).response_queries(self.plan, context, messages)
+                memories = self.memory.query_multiple(queries)
+
+                response = await Responder(self.config.get('model')).respond(self.plan, context, memories, messages)
+
                 for message in messages:
                     await self.processed_messages.put(message)
 
                 if response:
                     await self.responses.put((response, self.monitoring_channel))
 
-            await asyncio.sleep(self.config['message_throttle'])
+            # Only sleep if throttle is not -1
+            if self.config.get('message_throttle', -1) != -1:
+                await asyncio.sleep(self.config.get('message_throttle'))
+
 
     async def plan_routine(self):
-        while True:
-            await asyncio.sleep(self.config['plan_interval'])
+        while True and self.config.get('plan_interval') != -1:
+            await asyncio.sleep(self.config.get('plan_interval'))
             print("Starting Plan Routine")
             
             context = await self.get_channel_context(self.monitoring_channel)
             neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
 
-            memories = self.memory.query_multiple(neutral_queries + [self.plan])
+            memories = self.memory.query_multiple(neutral_queries)
             most_recent_mem = self.memory.get_last_n_memories(3)
             unique_memories = list(set(memories + most_recent_mem))
 
@@ -80,9 +88,9 @@ class Agent:
                 self.plan = updated_plan
 
     async def memory_routine(self):
-        while True:
-            # TODO : FIX THE QUUEUE
-            await asyncio.sleep(self.config['memory_interval'])
+        while True and self.config.get('memory_interval') != -1:
+
+            await asyncio.sleep(self.config.get('memory_interval'))
             print("Starting Memory Routine")
 
             messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
