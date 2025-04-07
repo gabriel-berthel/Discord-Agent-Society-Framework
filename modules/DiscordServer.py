@@ -16,9 +16,9 @@ class DiscordServer:
         if channel_id not in self.channels:
             self.channels[channel_id] = {"name": channel_name, "messages": deque(maxlen=25)}
 
-    def add_message(self, channel_id, event):
+    def add_message(self, channel_id, author_id, global_name, content):
         if channel_id in self.channels:
-            self.channels[channel_id]["messages"].append(self.format_message(event))
+            self.channels[channel_id]["messages"].append(self.format_message(author_id, global_name, content))
 
     def get_channel(self, channel_id):
         return self.channels.get(channel_id, None)
@@ -35,10 +35,9 @@ class DiscordServer:
             message = message.replace(f'<@{user_id}>', f'@{self.users[user_id]}')
 
         return message
-
-    def format_message(self, event: hikari.GuildMessageCreateEvent):
-        timestamp = event.message.timestamp
-        name = "You" if event.message.author.id == int(os.getenv('USER_ID')) else event.message.author.global_name
-        content = self.fix_message(event.message.content)
+    
+    def format_message(self, author_id, global_name, content):
+        name = "You" if author_id == int(os.getenv('USER_ID')) else global_name
+        content = self.fix_message(content)
 
         return f"{name} sent: {content}"

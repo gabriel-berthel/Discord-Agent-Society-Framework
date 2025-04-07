@@ -2,16 +2,11 @@ import hikari
 import os
 import asyncio
 import agent as ag
-from modules.Environement import DiscordServer
+from modules.DiscordServer import DiscordServer
 
 agent = None
 
 def run(agent_conf, archetype):
-    async def initialize_known_users(agent):
-        for guild in bot.get_guilds():
-            async for member in guild.fetch_members():
-                agent.known_users[member.id] = member.global_name
-
     async def message_handler():
         """Handles message queue and repond in the appropriate channel."""
         
@@ -38,13 +33,13 @@ def run(agent_conf, archetype):
 
         if event.author.id != agent.user_id: 
             if agent.monitoring_channel == event.channel_id:
-                await agent.event_queue.put(event)
+                await agent.event_queue.put((event.message.author.id, event.message.author.global_name, event.message.content))
         
-        agent.server.add_message(event.channel_id, event)
+        agent.server.add_message(event.channel_id, event.message.author.id, event.message.author.global_name, event.message.content)
                 
     @bot.listen(hikari.MemberCreateEvent)
     async def on_member_create(member: hikari.MemberCreateEvent):
-        agent.server.update_user(event.author.id, member.display_name)
+        agent.server.update_user(member.author.id, member.display_name)
 
     @bot.listen(hikari.StoppingEvent)
     async def on_stopping(event: hikari.StoppingEvent) -> None:

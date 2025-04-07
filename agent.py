@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from collections import deque
 from utils import *
-import Memories as db
+import modules.Memories as db
 from collections import defaultdict
 from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
@@ -11,22 +11,25 @@ from modules.Planner import Planner
 from modules.Responder import Responder
 
 class Agent:
-    def __init__(self, user_id, agent_conf, server, archetype):
+    def __init__(self, user_id, agent_conf, server, archetype, special_instruction=""):
         self.user_id = int(user_id)
-        self.config = agent_conf['config']
-        self.model = agent_conf['config']['model']
+        self.config = agent_conf.get('config')
         self.monitoring_channel = self.config.get('initial-channel-id')
-        self.plan = "Observe and wait."
-        self.messages = deque()
+        self.plan = "No specific plan at the moment. I am simply responding."
+        self.special_instruction = special_instruction
         self.memory = db.Memories(collection_name="AgentMemTest")
         self.responses: asyncio.Queue = asyncio.Queue()
-        self.event_queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()
+        self.event_queue = asyncio.Queue()
         self.archetype = archetype
     
     def get_bot_context(self):
-        return f"You are reading {self.server.get_channel(self.monitoring_channel)['name']} and it is {datetime.now():%Y-%m-%d %H:%M:%S}"
+        ctx =  f"You are reading {self.server.get_channel(self.monitoring_channel)['name']} and it is {datetime.now():%Y-%m-%d %H:%M:%S}"
+        if self.special_instruction:
+            ctx += ctx + f'\n{self.special_instruction}'
+        
+        return ctx
 
     async def get_channel_context(self, channel_id):
         return await Contextualizer(self.config.get('model')).neutral_context([msg for msg in self.server.get_messages(channel_id).copy()], self.get_bot_context())
@@ -42,11 +45,12 @@ class Agent:
 
                 # Batch mode: process all messages in queue
                 if throttle != -1:
-                    messages = [self.server.format_message(await self.event_queue.get()) for _ in range(self.event_queue.qsize())]
+                    messages = [self.server.format_message(await self.event_queue.get()) 
+                                for _ in range(self.event_queue.qsize())]
                 # Sequential mode
                 else:
-                    raw_event = await self.event_queue.get()
-                    messages = [self.server.format_message(raw_event)]
+                    author_id, global_name, content = await self.event_queue.get()
+                    messages = [self.server.format_message(author_id, global_name, content)]
 
                 queries = await QueryEngine(self.config.get('model')).response_queries(self.plan, context, messages)
                 memories = self.memory.query_multiple(queries)
