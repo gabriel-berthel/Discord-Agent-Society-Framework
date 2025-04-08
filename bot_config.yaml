@@ -1,0 +1,7 @@
+config:
+  message_throttle: 10 # -1 = sequential
+  plan_interval: 360 # -1 = deactivated
+  memory_interval: 60 # -1 = deactivated
+  model: "llama3.2"
+  base-plan: ""
+  initial-channel-id: 1350127264871743498

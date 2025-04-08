@@ -1,18 +1,12 @@
 import hikari
 import os
-import random
 import asyncio
 import agent as ag
-from entities.DiscordServer import DiscordServer
+from modules.DiscordServer import DiscordServer
 
 agent = None
 
-def run(agent_conf):
-    async def initialize_known_users(agent):
-        for guild in bot.get_guilds():
-            async for member in guild.fetch_members():
-                agent.known_users[member.id] = member.global_name
-
+def run(agent_conf, archetype):
     async def message_handler():
         """Handles message queue and repond in the appropriate channel."""
         
@@ -39,17 +33,16 @@ def run(agent_conf):
 
         if event.author.id != agent.user_id: 
             if agent.monitoring_channel == event.channel_id:
-                await agent.event_queue.put(event)
+                await agent.event_queue.put((event.channel_id, event.message.author.id, event.message.author.global_name, event.message.content))
         
-        agent.server.add_message(event.channel_id, event)
+        agent.server.add_message(event.channel_id, event.message.author.id, event.message.author.global_name, event.message.content)
                 
     @bot.listen(hikari.MemberCreateEvent)
     async def on_member_create(member: hikari.MemberCreateEvent):
-        server.update_user(event.author.id, member.display_name)
+        agent.server.update_user(member.author.id, member.display_name)
 
     @bot.listen(hikari.StoppingEvent)
     async def on_stopping(event: hikari.StoppingEvent) -> None:
-        # TODO : Gracefully end tasks.abs
         pass
     
     @bot.listen(hikari.StartedEvent)
@@ -59,7 +52,7 @@ def run(agent_conf):
         # Create server representation
         server_id = os.getenv("SERVER_ID")
         guild = await bot.rest.fetch_guild(server_id)
-        server = DiscordServer(server_id, guild.name)
+        server = DiscordServer(server_id, guild.name, os.getenv("USER_ID"))
         
         async for member in bot.rest.fetch_members(server_id):
             server.update_user(member.id, member.display_name)
@@ -68,7 +61,7 @@ def run(agent_conf):
             if isinstance(channel, hikari.TextableChannel):
                 server.add_channel(channel.id, channel.name)
 
-        agent = ag.Agent(os.getenv("USER_ID"), agent_conf, server)
+        agent = ag.Agent(os.getenv("USER_ID"), agent_conf, server, archetype)
   
         print(f"Loaded Server: {server}")
         print(f"Users: {server.users}")
