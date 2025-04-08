@@ -179,7 +179,48 @@ class WebBrowser:
         logger.info(f"Recherche complétée avec succès")
         return processed_results
         
+    
+    # perform search and gives a brieve summary of the results
+    async def summarize_search(self, query, max_length=150):
+        logger.info(f"Génération d'un résumé concis pour la requête: '{query}'")
 
+        full_results = await self._search(query)
+        if "error" in full_results:
+            return {"error": full_results["error"]}
+
+        summarize_prompt = f"""
+        Tu dois générer un résumé EXTRÊMEMENT CONCIS (maximum {max_length} caractères) de l'information suivante.
+        Le résumé doit contenir uniquement les informations les plus essentielles et pertinentes.
+        
+        Information à résumer:
+        {full_results["answer"]}
+        
+        IMPORTANT: Ton résumé ne doit pas dépasser {max_length} caractères.
+        """
+
+        try:
+            if self.use_ollama:
+                 response = ollama.chat(
+                model="llama3",
+                messages=[
+                    {"role": "system", "content": "Tu es un assistant spécialisé dans la création de résumés concis."},
+                    {"role": "user", "content": summarize_prompt}
+                ],
+                options={"temperature": 0.3}
+            )
+            summary = response['message']['content']
+        
+            logger.info(f"Résumé généré avec succès ({len(summary)} caractères)")
+        
+            return {
+                "summary": summary,
+                "full_answer": full_results["answer"],
+                "sources": full_results["sources"]
+            }
+        
+        except Exception as e:
+            logger.error(f"Exception lors de la génération du résumé: {str(e)}")
+            return {"error": f"Exception lors du résumé: {str(e)}"}
 
 
 
@@ -190,8 +231,14 @@ async def main():
 
 
     browser = WebBrowser(search_api_key, search_engine_id, llm_api_key)
-    results = await browser._search("Quelles sont les dernières avancées en intelligence artificielle?")
-    print(json.dumps(results, ensure_ascii=False, indent=2))
+
+    # test 
+    summary_results = await browser.summarize_search("Quelles sont les dernières avancées en intelligence artificielle?", max_length=150)
+    print("\n=== RÉSUMÉ ===")
+    print(summary_results["summary"])
+    print("\n=== RÉPONSE COMPLÈTE ===")
+    print(summary_results["full_answer"])
+
 
 if __name__ == "__main__":
     asyncio.run(main())
