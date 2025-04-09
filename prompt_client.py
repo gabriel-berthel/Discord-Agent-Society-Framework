@@ -29,7 +29,7 @@ async def exemple():
     server.add_channel(1, 'General')
     
     joey = PromptClient('benchmark_config.yaml', 'trouble_maker', 'Joey', 1, server)
-    interviewer = PromptClient('benchmark_config.yaml', 'moderator','Interviewer', 1, server)
+    interviewer = PromptClient('benchmark_config.yaml', 'moderator','Interviewer', 2, server)
     
     await joey.start()
     await interviewer.start()

@@ -12,7 +12,7 @@ class Responder():
             ('system', f'Your currents plans, goals and objectives are:\n{plan}'),
             ('system', f'You observed that:\n{context}'),
             ('system', f'You remembered that:\n{memories}'),
-            ('system', f'Respond to the following messages. If you do not wish to respond or find the message irrelevant, send "Ignore" or provide no answer.')
+            ('system', f'Respond to the following messages.')
         ]
         prompts += [('user', msg) for msg in messages]
 
@@ -21,5 +21,5 @@ class Responder():
             messages=format_llm_prompts(prompts)
         )
 
-        return response['message']['content'] if response not in ["Ignore", "IGNORE", "ignore"] else ''
+        return response['message']['content']
 
