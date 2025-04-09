@@ -56,8 +56,8 @@ class QueryEngine():
 
     async def response_queries(self, plan, context, messages=['No message at the moment.']):
         prompts = [
-            ('system', f'Your current plan is:\n{plan}'),
-            ('system', f'From the conversation, you made the following observations:\n{context}'),
+            ('assistant', f'{plan}'),
+            ('assistant', f'{context}'),
             ('system', base),
             ('system', f'Now write queries for the following messages:'),
         ] + [('user', msg) for msg in messages]
