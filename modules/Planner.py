@@ -14,9 +14,9 @@ class Planner():
     def __init__(self, model):
         self.model = model
 
-    async def refine_plan(self, plan, context, memories, channel_context, archetype_config):
+    async def refine_plan(self, plan, context, memories, channel_context, argent_base_prompt):
         prompts = [
-            ('system', get_base_prompt(archetype_config)),
+            ('system', argent_base_prompt),
             ('system', f'You recall that your previous plan and objectives were:\n{plan}'),
             ('system', f'From the current conversation, you made the following observations:\n{context}'),
             ('system', f'Allowing you to search your notebook and remember that: \n{list_to_text(memories)}'),

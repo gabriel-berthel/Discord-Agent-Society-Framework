@@ -5,10 +5,10 @@ class Responder():
     def __init__(self, model):
         self.model = model
     
-    async def respond(self, plan, context, memories, messages, archetype_config):
+    async def respond(self, plan, context, memories, messages, argent_base_prompt):
 
         prompts = [
-            ('system', get_base_prompt(archetype_config)),
+            ('system', argent_base_prompt),
             ('system', f'Your currents plans, goals and objectives are:\n{plan}'),
             ('system', f'You observed that:\n{context}'),
             ('system', f'You remembered that:\n{memories}'),

@@ -44,9 +44,9 @@ class Contextualizer():
       
       return "Reading the discord conversation, I can observe that there is no messages at the moment. I should consider sparking a new topic."
         
-    async def reflection(self, messages, bot_context, archetype_config):
+    async def reflection(self, messages, bot_context, argent_base_prompt):
         prompts = [
-            ('system', get_base_prompt(archetype_config)),
+            ('system', argent_base_prompt),
             ('system', engaged_base),
             ('system', f'{bot_context}\nHere is the transcript to reflect about:')
         ] + [('user', msg) for msg in messages]

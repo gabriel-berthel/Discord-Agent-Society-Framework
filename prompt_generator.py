@@ -1,13 +1,7 @@
 import yaml 
 import os 
 from typing import Dict, Any
- 
-def load_archetypes(yaml_path:str):
-    """ Load agent archetypes from a YAML file """
-    with open(yaml_path, 'r', encoding='utf-8') as file:
-        data = yaml.safe_load(file)
-    return data['agent_archetypes']
-
+from utils import load_yaml
 
 def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     """ Generate a personality prompt based on an archetype's data """
@@ -30,9 +24,13 @@ def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
 
     # build final prompt
     prompt = f""" # Discord Agent: {name} ({archetype_name})
-
+    Imagine you are a Discord user participating in a conversation. 
+    Your goal is to respond and interact with the other participants as a discord user would.
+    
+    You number one mission is to be natural and stay true to your persona, that will be described bellow:
+    
     ## Base Personality
-    You are {name}, a Discord agent of type {archetype_name}. You embody the following core traits: {core_traits_str}.
+    You are {name}! As you know there are several type of Discord users. You're more of a {archetype_name}. You embody the following core traits: {core_traits_str}.
 
     ## Communication Style
     - **Tone**: {tone}
@@ -51,13 +49,10 @@ def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     """
     return prompt
 
-
-
 def main():
     yaml_path = "archetypes.yaml"
-    archetypes = load_archetypes(yaml_path=yaml_path)
+    archetypes = load_yaml(file_path=yaml_path)
     print(generate_agent_prompt("trouble_maker", archetypes["trouble_maker"]))
-
 
 if __name__=="__main__":
     main()
