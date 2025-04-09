@@ -25,7 +25,7 @@ class Agent:
         self.server = server
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
-        self.archetype = utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype]
+        self.archetype_config = utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype]
     
     def get_bot_context(self):
         ctx =  f"You are reading {self.server.get_channel(self.monitoring_channel)['name']} and it is {datetime.now():%Y-%m-%d %H:%M:%S}"
@@ -58,7 +58,7 @@ class Agent:
                 queries = await QueryEngine(self.config['model']).response_queries(self.plan, context, messages)
                 memories = self.memory.query_multiple(queries)
 
-                response = await Responder(self.config['model']).respond(self.plan, context, memories, messages)
+                response = await Responder(self.config['model']).respond(self.plan, context, memories, messages, self.archetype_config)
 
                 for message in messages:
                     await self.processed_messages.put(message)
@@ -83,7 +83,7 @@ class Agent:
             most_recent_mem = self.memory.get_last_n_memories(3)
             unique_memories = list(set(memories + most_recent_mem))
 
-            updated_plan = await Planner(self.config['model']).refine_plan(self.plan, context, unique_memories, self.get_bot_context())
+            updated_plan = await Planner(self.config['model']).refine_plan(self.plan, context, unique_memories, self.get_bot_context(), self.archetype_config)
             
             if updated_plan:
                 self.memory.add_document(self.plan, 'FORMER-PLAN')
@@ -95,5 +95,5 @@ class Agent:
             await asyncio.sleep(self.config['memory_interval'])
             messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
             if messages:
-                reflection = await Contextualizer(self.config['model']).reflection(messages, self.get_bot_context())
+                reflection = await Contextualizer(self.config['model']).reflection(messages, self.get_bot_context(), self.archetype_config)
                 self.memory.add_document(reflection, 'MEMORY')
