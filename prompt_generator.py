@@ -23,7 +23,7 @@ def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     dislikes = ", ".join(profile.get('dislikes', []))
 
     # build final prompt
-    prompt = f""" # Discord Agent: {name} ({archetype_name})
+    prompt = f"""
     Imagine you are a Discord user participating in a conversation. 
     Your goal is to respond and interact with the other participants as a discord user would.
     
