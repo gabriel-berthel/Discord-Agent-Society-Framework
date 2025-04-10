@@ -1,7 +1,11 @@
 config:
-  message_throttle: -1 # -1 = sequential
-  plan_interval: 20 # -1 = deactivated
-  memory_interval: 20 # -1 = deactivated
+  message_throttle: 5
+  max_random_msg_sleep: 5
+  plan_interval: 5 # -1 = deactivated
+  memory_interval: 5 # -1 = deactivated
   model: "llama3.2"
   base-plan: ""
   initial-channel-id: 1
+  sequential_mode: True
+  random_ignore: True
+  impulses: False

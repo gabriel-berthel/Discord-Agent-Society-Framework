@@ -15,7 +15,7 @@ class DiscordServer:
 
     def add_channel(self, channel_id, channel_name):
         if channel_id not in self.channels:
-            self.channels[channel_id] = {"name": channel_name, "messages": deque(maxlen=25)}
+            self.channels[channel_id] = {"name": channel_name, "messages": deque(maxlen=15)}
 
     def add_message(self, channel_id, author_id, global_name, content):
         if channel_id in self.channels:

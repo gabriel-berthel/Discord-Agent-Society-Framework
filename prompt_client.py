@@ -18,7 +18,7 @@ class PromptClient:
     async def prompt(self, message, user_id, username):
         event = (1, user_id, username, message)
         self.agent.server.add_message(*event) 
-        await self.agent.event_queue.put(event)  
+        await self.agent.add_event(event)  
         message, _ = await self.agent.responses.get() 
         return message
 
@@ -28,8 +28,8 @@ async def exemple():
     server.update_user(2, 'Interviewer')
     server.add_channel(1, 'General')
     
-    joey = PromptClient('benchmark_config.yaml', 'trouble_maker', 'Joey', 1, server)
-    interviewer = PromptClient('benchmark_config.yaml', 'moderator','Interviewer', 1, server)
+    joey = PromptClient('benchmark_config.yaml', 'trouble_maker', 'Rowan', 1, server)
+    interviewer = PromptClient('benchmark_config.yaml', 'interviewer','Quinn', 2, server)
     
     await joey.start()
     await interviewer.start()
@@ -39,8 +39,8 @@ async def exemple():
     while True:
         inter_resp = await interviewer.prompt(joey_resp, joey.id, joey.name)
         print(inter_resp)
-        await asyncio.sleep(1)
         joey_resp = await joey.prompt(inter_resp, interviewer.id, interviewer.name)
+        print("----")   
         print(joey_resp)
 
 if __name__ == '__main__':

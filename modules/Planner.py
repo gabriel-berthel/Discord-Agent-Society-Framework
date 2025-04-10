@@ -2,27 +2,34 @@ import ollama
 from utils import *
 
 base = """
-Imagine you're reflecting on your plans and objectives in your personal notebook. 
-Based on your previous experiences, decisions, and memories, write a paragraph outlining what you would like to achieve moving forward. 
-Your plan should be expressed in the first person, as if you're speaking directly to yourself. 
-Begin with statements like, 'I want to do this,' 'I would like to try that,' or 'I want to see if... because...' Incorporate any relevant memories or past plans that could influence your current objectives. 
-Consider any recent decisions you've made and explain how they align with what you want to accomplish. 
-This is your personal reflection, so feel free to express your thoughts freely and honestly."
+Imagine you’re writing a forward-looking entry in your personal notebook, grounded in self-reflection and past experience. This is your space to explore your current goals, intentions, and desires based on what you've learned about yourself over time.
+
+Write a thoughtful paragraph in the first person, as if you're speaking directly to yourself. Begin with phrases like:
+“I want to…”, “I would like to try…”, or “I’m curious to see if…”
+These statements should express not only what you hope to do, but also why these goals matter to you.
+
+As you write, consider including:
+    Memories, previous plans, or decisions that are influencing your current mindset
+    Lessons learned from recent experiences or turning points
+    How recent choices or shifts in direction align with your evolving objectives
+    Any emotions, doubts, or motivations you feel as you look ahead
+
+This entry is a personal reflection—honest, unfiltered, and meaningful to you. Use it as a tool to clarify your direction and to capture a snapshot of your mindset, so you can revisit it later and see how your goals and self-understanding have developed over time.
 """
 
 class Planner():
     def __init__(self, model):
         self.model = model
 
-    async def refine_plan(self, plan, context, memories, channel_context):
+    async def refine_plan(self, plan, context, memories, channel_context, argent_base_prompt):
         prompts = [
-            ('system', get_base_prompt()),
-            ('system', f'You recall that your previous plan and objectives were:\n{plan}'),
-            ('system', f'From the current conversation, you made the following observations:\n{context}'),
-            ('system', f'Allowing you to search your notebook and remember that: \n{list_to_text(memories)}'),
+            ('assistant', argent_base_prompt),
+            ('assistant', f'{plan}'),
+            ('assistant', f'{context}'),
+            ('assistant', f'{list_to_text(memories)}'),
             ('system', f'{channel_context}'),
             ('system', base),
-            ('user', 'Please procede to write your new plan in your personal diary'),
+            ('user', 'I am waiting for your notebook entry! What is it?'),
         ]
 
         response = await ollama.AsyncClient().chat(
