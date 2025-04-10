@@ -1,115 +1,75 @@
+import asyncio
 import json
-import time
-import requests
-from datetime import datetime
-from pathlib import Path
-import ollama
+from prompt_client import PromptClient
+from modules.DiscordServer import DiscordServer
+from dotenv import load_dotenv
 
-# ====== Config ======
-PROMPTS_FILE = 'prompts.jsonl'
-RESULTS_FILE = 'results.jsonl'
-DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/TON_WEBHOOK_ICI'  # Remplace par ton webhook
-MODELS = ['base_model', 'archetype_1', 'archetype_2', 'archetype_3', 'archetype_4', 'archetype_5']
+# Liste des archétypes à tester
+ARCHETYPES = ['baseline', 'trouble_maker', 'fact_checker', 'activist', 'moderator']
 
-# Contrainte de délai de config = -1
-OLLAMA_OPTIONS = {
-    'num_predict': -1,
-    'temperature': 0.7,
-}
+PROMPTS = [
+    "Salut girl",
+    "Comment vas tu ?",
+    "Quelle est la difference entre la science de donnee et la valorisation des donnees",
+    "Est ce que tu connais Bang Liu"
+    "Que pensez-vous de l'IA dans l'éducation ?",
+    "Pouvez-vous expliquer le changement climatique en termes simples ?",
+    "L'exploration spatiale vaut-elle l'investissement ?",
+    "Quelle est votre opinion sur le télétravail ?",
+    "Comment la société devrait-elle gérer la désinformation ?",
+    "Pouvez-vous décrire l'avenir des énergies renouvelables ?",
+    "Quels sont les risques de l'IA ?",
+    "Les gouvernements devraient-ils réglementer les réseaux sociaux ?",
+    "Parlez-moi de l'impact de la technologie sur la santé mentale.",
+    "Que pensez-vous du revenu universel de base ?"
+]
 
-# Freeze mémoire pour éviter les fuites
-import gc
-import tracemalloc
-tracemalloc.start()
+# Fonction principale
+async def run_benchmark():
+    # Initialiser le serveur Discord simulé
+    server = DiscordServer(1, 'Benchmarking', 1)
+    server.update_user(1, 'User')
+    server.add_channel(1, 'General')
 
-# ====== Fonctions utiles ======
+    results = []
 
-def load_prompts(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return [json.loads(line.strip()) for line in f if line.strip()]
+    # Pour chaque archétype, créer un agent et faire les tests
+    for archetype in ARCHETYPES:
+        print(f"\nTesting archetype: {archetype}")
 
-def save_result(result, file_path):
-    with open(file_path, 'a', encoding='utf-8') as f:
-        f.write(json.dumps(result, ensure_ascii=False) + '\n')
+        agent = PromptClient('benchmark_config.yaml', archetype, f"{archetype}_agent", 1, server)
 
-def send_to_discord(content):
-    data = {"content": content}
-    try:
-        response = requests.post(DISCORD_WEBHOOK_URL, json=data)
-        if response.status_code != 204:
-            print(f"Erreur Discord: {response.text}")
-    except Exception as e:
-        print(f"Erreur lors de l'envoi Discord: {e}")
+        # Override get_bot_context pour forcer la réponse
+        def forced_context():
+            return "Toujours répondre quoi qu'il arrive.."
 
-def override_get_bot_context():
-    # Mock de la fonction pour toujours forcer la réponse
-    def always_reply(*args, **kwargs):
-        return "Always reply override active."
-    return always_reply
+        agent.agent.get_bot_context = forced_context
 
-def clean_memory():
-    gc.collect()
-    tracemalloc.reset_peak()
+        await agent.start()
 
-# ====== Routine de benchmark ======
+        # Pour chaque prompt, envoyer le message et collecter la réponse
+        for prompt in PROMPTS:
+            print(f"Prompt: {prompt}")
 
-def benchmark():
-    prompts = load_prompts(PROMPTS_FILE)
-    print(f"📝 {len(prompts)} prompts chargés pour le benchmark.")
+            # Envoyer le message comme un utilisateur
+            server.add_message(1, 1, 'User', prompt)
+            response = await agent.prompt(prompt, 1, 'User')
 
-    for model_name in MODELS:
-        print(f"\n🚀 Benchmarking modèle : {model_name}")
-        for prompt_data in prompts:
-            user_prompt = prompt_data['prompt']
-            metadata = {
-                'timestamp': datetime.utcnow().isoformat(),
-                'model': model_name,
-                'prompt': user_prompt,
-            }
+            print(f"Response: {response}")
 
-            # Override du contexte pour forcer la réponse
-            bot_context = override_get_bot_context()
+            results.append({
+                'archetype': archetype,
+                'input': prompt,
+                'response': response
+            })
 
-            # Mesurer le temps de réponse
-            start_time = time.time()
+            await asyncio.sleep(0.5)  # petite pause pour la stabilité
 
-            try:
-                response = ollama.chat(
-                    model=model_name,
-                    messages=[{'role': 'user', 'content': user_prompt}],
-                    options=OLLAMA_OPTIONS
-                )
-                elapsed_time = time.time() - start_time
+    # Sauvegarder les résultats dans un fichier JSON
+    with open('benchmark_results.json', 'w', encoding='utf-8') as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
 
-                answer = response['message']['content'].strip()
-
-                metadata.update({
-                    'response': answer,
-                    'elapsed_time_sec': round(elapsed_time, 3),
-                    'success': bool(answer),
-                })
-
-                # Log et envoi Discord
-                print(f"✅ Réponse : {answer[:80]}...")
-                send_to_discord(f"🧩 [{model_name}] {answer}")
-
-            except Exception as e:
-                metadata.update({
-                    'error': str(e),
-                    'success': False
-                })
-                print(f"❌ Erreur pour {model_name}: {e}")
-                send_to_discord(f"⚠️ Erreur pour {model_name}: {e}")
-
-            # Sauvegarde du résultat
-            save_result(metadata, RESULTS_FILE)
-
-            # Nettoyage mémoire après chaque prompt
-            clean_memory()
-
-    print("\n🎉 Benchmark terminé.")
-
-# ====== Exécution principale ======
+    print("\nBenchmark terminé. Résultats sauvegardés dans 'benchmark_results.json'.")
 
 if __name__ == '__main__':
-    benchmark()
+    asyncio.run(run_benchmark())
