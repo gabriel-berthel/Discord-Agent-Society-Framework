@@ -43,10 +43,10 @@ class WebBrowser:
                     if response.status == 200:
                         return await response.json()
                     else:
-                        logger.error(f"Erreur lors de la recherche Google: {response.status}")
-                        return {"error": f"Statut HTTP: {response.status}"}
+                        logger.error(f"Error during Google search: {response.status}")
+                        return {"error": f"HTTP Status: {response.status}"}
         except Exception as e:
-            logger.error(f"Exception lors de la recherche: {str(e)}")
+            logger.error(f"Exception during search: {str(e)}")
             return {"error": str(e)} 
 
 
@@ -69,18 +69,18 @@ class WebBrowser:
 
         # llm prompt 
         prompt = f"""
-        En te basant sur les résultats de recherche suivants, réponds à la question: "{query}"
+        Based on the following search results, answer the question: "{query}"
         
-        Résultats de recherche:
+        Search results:
         {json.dumps(websites, ensure_ascii=False, indent=2)}
         
-        Réponds de manière concise mais complète. Cite tes sources quand c'est pertinent.
+        Answer concisely but completely. Cite your sources when relevant.
         """
 
         payload = {
             "model": "gpt-4o",
             "messages": [
-                {"role": "system", "content": "Tu es un assistant de recherche web qui analyse les résultats et fournit des réponses précises."},
+                {"role": "system", "content": "You are a web research assistant who analyzes results and provides accurate answers."},
                 {"role": "user", "content": prompt}
             ],
             "temperature": 0.3
@@ -97,11 +97,11 @@ class WebBrowser:
                         }
                     else:
                         error_text = await response.text()
-                        logger.error(f"Erreur LLM: {response.status} - {error_text}")
-                        return {"error": f"Erreur LLM: {response.status}"}
+                        logger.error(f"LLM Error: {response.status} - {error_text}")
+                        return {"error": f"LLM Error: {response.status}"}
         except Exception as e:
-            logger.error(f"Exception lors du traitement LLM: {str(e)}")
-            return {"error": f"Exception LLM: {str(e)}"}
+            logger.error(f"Exception during LLM processing: {str(e)}")
+            return {"error": f"LLM Exception: {str(e)}"}
         
 
     # process the research results with llm
@@ -118,12 +118,12 @@ class WebBrowser:
                 }) 
                 
         prompt = f"""
-        En te basant sur les résultats de recherche suivants, réponds à la question: "{query}"
+        Based on the following search results, answer the question: "{query}"
         
-        Résultats de recherche:
+        Search results:
         {json.dumps(websites, ensure_ascii=False, indent=2)}
         
-        Réponds de manière concise mais complète. Cite tes sources quand c'est pertinent.
+        Answer concisely but completely. Cite your sources when relevant.
         """
         payload = {
             "model": "llama3", # or another ollama model
@@ -141,16 +141,16 @@ class WebBrowser:
                     if response.status == 200:
                         result = await response.json()
                         return {
-                            "answer": result.get("response", "Pas de réponse obtenue."),
+                            "answer": result.get("response", "No response obtained."),
                             "sources": websites
                         }
                     else:
                         error_text = await response.text()
-                        logger.error(f"Erreur Ollama: {response.status} - {error_text}")
-                        return {"error": f"Erreur Ollama: {response.status}"}
+                        logger.error(f"Ollama Error: {response.status} - {error_text}")
+                        return {"error": f"Ollama Error: {response.status}"}
         except Exception as e:
-            logger.error(f"Exception lors du traitement Ollama: {str(e)}")
-            return {"error": f"Exception Ollama: {str(e)}"}
+            logger.error(f"Exception during Ollama processing: {str(e)}")
+            return {"error": f"Ollama Exception: {str(e)}"}
 
 
 
@@ -159,14 +159,14 @@ class WebBrowser:
 
     # combine the two functions for searching and treating using the llm
     async def _search(self, query):
-        logger.info(f"Recherche Google démarrée pour: '{query}'")
+        logger.info(f"Google search started for: '{query}'")
     
         search_results = await self._fetch_search_results(query)
         
         if "error" in search_results:
             return {"error": search_results["error"]}
         
-        logger.info(f"Résultats de recherche Google obtenus, traitement par LLM en cours...")
+        logger.info(f"Google search results obtained, LLM processing in progress...")
         
         if self.use_ollama:
             processed_results = await self._process_with_ollama(query, search_results)
@@ -176,26 +176,26 @@ class WebBrowser:
         if "error" in processed_results:
             return {"error": processed_results["error"]}
         
-        logger.info(f"Recherche complétée avec succès")
+        logger.info(f"Search completed successfully")
         return processed_results
         
     
     # perform search and gives a brieve summary of the results
     async def summarize_search(self, query, max_length=150):
-        logger.info(f"Génération d'un résumé concis pour la requête: '{query}'")
+        logger.info(f"Generating a concise summary for the query: '{query}'")
 
         full_results = await self._search(query)
         if "error" in full_results:
             return {"error": full_results["error"]}
 
         summarize_prompt = f"""
-        Tu dois générer un résumé EXTRÊMEMENT CONCIS (maximum {max_length} caractères) de l'information suivante.
-        Le résumé doit contenir uniquement les informations les plus essentielles et pertinentes.
+        You must generate an EXTREMELY CONCISE summary (maximum {max_length} characters) of the following information.
+        The summary must contain only the most essential and relevant information.
         
-        Information à résumer:
+        Information to summarize:
         {full_results["answer"]}
         
-        IMPORTANT: Ton résumé ne doit pas dépasser {max_length} caractères.
+        IMPORTANT: Your summary must not exceed {max_length} characters.
         """
 
         try:
@@ -203,14 +203,14 @@ class WebBrowser:
                  response = ollama.chat(
                 model="llama3",
                 messages=[
-                    {"role": "system", "content": "Tu es un assistant spécialisé dans la création de résumés concis."},
+                    {"role": "system", "content": "You are an assistant specialized in creating concise summaries."},
                     {"role": "user", "content": summarize_prompt}
                 ],
                 options={"temperature": 0.3}
             )
             summary = response['message']['content']
         
-            logger.info(f"Résumé généré avec succès ({len(summary)} caractères)")
+            logger.info(f"Summary generated successfully ({len(summary)} characters)")
         
             return {
                 "summary": summary,
@@ -219,8 +219,8 @@ class WebBrowser:
             }
         
         except Exception as e:
-            logger.error(f"Exception lors de la génération du résumé: {str(e)}")
-            return {"error": f"Exception lors du résumé: {str(e)}"}
+            logger.error(f"Exception during summary generation: {str(e)}")
+            return {"error": f"Summary Exception: {str(e)}"}
 
 
 
@@ -233,10 +233,10 @@ async def main():
     browser = WebBrowser(search_api_key, search_engine_id, llm_api_key)
 
     # test 
-    summary_results = await browser.summarize_search("Quelles sont les dernières avancées en intelligence artificielle?", max_length=150)
-    print("\n=== RÉSUMÉ ===")
+    summary_results = await browser.summarize_search("What are the latest advances in artificial intelligence?", max_length=150)
+    print("\n=== SUMMARY ===")
     print(summary_results["summary"])
-    print("\n=== RÉPONSE COMPLÈTE ===")
+    print("\n=== FULL ANSWER ===")
     print(summary_results["full_answer"])
 
 
