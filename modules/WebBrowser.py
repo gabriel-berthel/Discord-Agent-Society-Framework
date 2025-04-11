@@ -154,9 +154,6 @@ class WebBrowser:
 
 
 
-
-
-
     # combine the two functions for searching and treating using the llm
     async def _search(self, query):
         logger.info(f"Google search started for: '{query}'")
@@ -181,47 +178,65 @@ class WebBrowser:
         
     
     # perform search and gives a brieve summary of the results
-    async def summarize_search(self, query, max_length=150):
-        logger.info(f"Generating a concise summary for the query: '{query}'")
-
-        full_results = await self._search(query)
-        if "error" in full_results:
-            return {"error": full_results["error"]}
-
+    async def summarize_search(self, queries, max_length=300):
+        if isinstance(queries, str):
+            queries = [queries]
+            
+        logger.info(f"Generating a combined summary for {len(queries)} queries")
+        
+        search_tasks = [self._search(query) for query in queries]
+        search_results = await asyncio.gather(*search_tasks)
+        
+        errors = [result["error"] for result in search_results if "error" in result]
+        if errors:
+            return {"error": f"Errors in {len(errors)} queries: {', '.join(errors[:3])}" + 
+                    ("..." if len(errors) > 3 else "")}
+        
+        combined_answers = []
+        all_sources = []
+        
+        for i, (query, result) in enumerate(zip(queries, search_results)):
+            combined_answers.append(f"Query: {query}\nAnswer: {result['answer']}")
+            all_sources.extend(result["sources"])
+            
+        combined_text = "\n\n".join(combined_answers)
+        
         summarize_prompt = f"""
-        You must generate an EXTREMELY CONCISE summary (maximum {max_length} characters) of the following information.
-        The summary must contain only the most essential and relevant information.
+        You must generate an EXTREMELY CONCISE summary (maximum {max_length} characters) of the following information 
+        from multiple search queries.
+        
+        The summary should synthesize the key findings across all queries and highlight common themes or contradictions.
+        Only include the most essential and relevant information.
         
         Information to summarize:
-        {full_results["answer"]}
+        {combined_text}
         
         IMPORTANT: Your summary must not exceed {max_length} characters.
         """
 
         try:
             if self.use_ollama:
-                 response = ollama.chat(
-                model="llama3",
-                messages=[
-                    {"role": "system", "content": "You are an assistant specialized in creating concise summaries."},
-                    {"role": "user", "content": summarize_prompt}
-                ],
-                options={"temperature": 0.3}
-            )
-            summary = response['message']['content']
-        
-            logger.info(f"Summary generated successfully ({len(summary)} characters)")
-        
-            return {
-                "summary": summary,
-                "full_answer": full_results["answer"],
-                "sources": full_results["sources"]
-            }
-        
+                response = ollama.chat(
+                    model="llama3",
+                    messages=[
+                        {"role": "system", "content": "You are an assistant specialized in creating concise summaries of multiple research findings."},
+                        {"role": "user", "content": summarize_prompt}
+                    ],
+                    options={"temperature": 0.3}
+                )
+                summary = response['message']['content']
+            
+                logger.info(f"Combined summary generated successfully ({len(summary)} characters)")
+            
+                return {
+                    "summary": summary,
+                    "full_answers": {queries[i]: result["answer"] for i, result in enumerate(search_results)},
+                    "sources": all_sources
+                }
+            
         except Exception as e:
             logger.error(f"Exception during summary generation: {str(e)}")
             return {"error": f"Summary Exception: {str(e)}"}
-
 
 
 async def main():
@@ -231,6 +246,15 @@ async def main():
 
 
     browser = WebBrowser(search_api_key, search_engine_id, llm_api_key)
+
+    # Test with multiple queries
+    queries = [
+        "What are the latest advances in artificial intelligence?",
+        "How is AI being used in healthcare?",
+        "What are the ethical concerns with AI development?"
+    ]
+    
+    summary_results = await browser.summarize_search(queries, max_length=300)
 
     # test 
     summary_results = await browser.summarize_search("What are the latest advances in artificial intelligence?", max_length=150)
