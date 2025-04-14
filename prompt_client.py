@@ -60,7 +60,7 @@ class PromptClient:
         return clients
 
     @staticmethod
-    async def run_simulation(duration: float, clients = None):
+    async def run_simulation(duration: float, print_replies, clients = None):
         clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml')
         
         await asyncio.gather(*(client.start() for client in clients.values()))
@@ -73,7 +73,11 @@ class PromptClient:
         current_client = clients[current_archetype]
         message = "Hi"
         
-        historic.append(f"[{current_client.name}] said {message}")
+        msg = f"[{current_client.name}] said {message}"
+        historic.append(msg)
+        
+        if print_replies:
+            print(msg)
         
         while time.time() - start_time < duration:
             archetype = [r for r in roles if r != current_archetype]
@@ -81,7 +85,11 @@ class PromptClient:
             next_client = clients[next_archetype]
 
             response = await next_client.prompt(message, user_id=current_client.id, username=current_client.name)
-            historic.append(f"[{next_client.name}] said {response}")
+            msg = f"[{next_client.name}] said {response}"
+            historic.append(msg)
+            
+            if print_replies:
+                print(msg)
 
             current_archetype = next_archetype
             current_client = next_client
