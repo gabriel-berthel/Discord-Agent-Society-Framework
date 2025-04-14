@@ -54,7 +54,7 @@ greetings = [
 ]
 
 class Agent:
-    def __init__(self, user_id, agent_conf, server, archetype, special_instruction="", logs=False):
+    def __init__(self, user_id, agent_conf, server, archetype, special_instruction="", persistance_prefix="", logs=False):
         
         archetype_conf = utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype]
         
@@ -64,7 +64,7 @@ class Agent:
         self.monitoring_channel = self.config['initial-channel-id']
         self.plan = "No specific plan at the moment. I am simply responding."
         self.special_instruction = special_instruction
-        self.memory = db.Memories(collection_name=f"{archetype}_{user_id}")
+        self.memory = db.Memories(collection_name=f"{archetype}_{user_id}_{persistance_prefix}")
         self.responses: asyncio.Queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()
