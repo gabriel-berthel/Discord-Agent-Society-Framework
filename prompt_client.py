@@ -8,7 +8,8 @@ class PromptClient:
         self.name = name
         self.id = id
         self.server = server
-        self.agent = Agent(1, agent_conf, server, archetype, 'You must always respond to Interviewer.')
+        self.agent = Agent(id, agent_conf, server, archetype, 'You must always respond to Interviewer.')
+        self.server.update_user(id, self.agent.name)
         
     async def start(self):
         asyncio.create_task(self.agent.respond_routine())
@@ -16,11 +17,14 @@ class PromptClient:
         asyncio.create_task(self.agent.plan_routine())
     
     async def prompt(self, message, user_id, username):
+        self.server.update_user(user_id, username)
         event = (1, user_id, username, message)
         self.agent.server.add_message(*event) 
         await self.agent.add_event(event)  
         message, _ = await self.agent.responses.get() 
         return message
+    
+    
 
 async def exemple():
     server = DiscordServer(1, 'Benchmarking', 1)

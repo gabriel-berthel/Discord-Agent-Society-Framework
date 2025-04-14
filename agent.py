@@ -56,8 +56,11 @@ greetings = [
 class Agent:
     def __init__(self, user_id, agent_conf, server, archetype, special_instruction="", logs=False):
         
+        archetype_conf = utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype]
+        
         self.config = utils.load_yaml(agent_conf)['config']
         self.user_id = int(user_id)
+        self.name = archetype_conf['name']
         self.monitoring_channel = self.config['initial-channel-id']
         self.plan = "No specific plan at the moment. I am simply responding."
         self.special_instruction = special_instruction
@@ -66,7 +69,7 @@ class Agent:
         self.server = server
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
-        self.personnality_prompt = generate_agent_prompt(archetype, utils.load_yaml('archetypes.yaml')['agent_archetypes'])
+        self.personnality_prompt = generate_agent_prompt(archetype, archetype_conf)
         self.log = False
         self.is_online = True
         self.impulses = self.config['impulses']
