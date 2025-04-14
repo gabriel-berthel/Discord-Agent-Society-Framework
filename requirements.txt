@@ -4,7 +4,6 @@ aiohttp
 ollama
 python-dotenv
 hikari
-chromadb
 numpy
 scikit-learn
 sentence-transformers
