@@ -10,6 +10,7 @@ from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
 from modules.Planner import Planner
 from modules.Responder import Responder
+from modules.WebBrowser import WebBrowser
 import utils
 import ollama
 from prompt_generator import generate_agent_prompt
@@ -53,24 +54,25 @@ greetings = [
 ]
 
 class Agent:
-    def __init__(self, user_id, agent_conf, server, archetype, special_instruction="", logs=False):
+    def __init__(self, user_id, agent_conf, server, archetype, persitance_prefix="", logs=False):
+        
+        archetype_conf = utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype]
         
         self.config = utils.load_yaml(agent_conf)['config']
         self.user_id = int(user_id)
+        self.name = archetype_conf['name']
         self.monitoring_channel = self.config['initial-channel-id']
         self.plan = "No specific plan at the moment. I am simply responding."
-        self.special_instruction = special_instruction
-        self.memory = db.Memories(collection_name=f"{archetype}_{user_id}")
+        self.memory = db.Memories(collection_name=f"{persitance_prefix}_{archetype}_{user_id}")
         self.responses: asyncio.Queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
-        self.personnality_prompt = generate_agent_prompt(archetype, utils.load_yaml('archetypes.yaml')['agent_archetypes'])
+        self.personnality_prompt = generate_agent_prompt(archetype, archetype_conf)
         self.log = False
         self.is_online = True
         self.impulses = self.config['impulses']
         self.sequential = self.config['sequential_mode']
-        self.random_ignore = self.config['random_ignore']
         
         self.logs = {
             'plans': [],
@@ -78,7 +80,9 @@ class Agent:
             'context_queries': [],
             'neutral_ctxs': [],
             'response_queries': [],
-            'memories': []
+            'memories': [],
+            'summuries': [],
+            'web_queries': []
         }
         
     async def add_event(self, event):
@@ -87,8 +91,6 @@ class Agent:
         
     def get_bot_context(self):
         ctx =  f"You are reading {self.server.get_channel(self.monitoring_channel)['name']} and it is {datetime.now():%Y-%m-%d %H:%M:%S}"
-        if self.special_instruction:
-            ctx += ctx + f'\n{self.special_instruction}'
         
         return ctx
 
@@ -133,6 +135,23 @@ class Agent:
             
         return memories
     
+    async def get_search(self, plan, context, messages):
+        queries = await QueryEngine(self.config['model']).web_queries(plan, context, messages)                    
+        summury = WebBrowser().summarize_search(queries, 1024)
+        
+        if self.log:
+            self.logs['web_queries'].append({
+                'input': (plan, context, messages),
+                'ouput':  queries
+            })
+            
+            self.logs['summuries'].append({
+                'input': (queries),
+                'ouput':  summury
+            })
+            
+        return summury
+    
     async def get_response(self, plan, context, memories, messages, base_prompt):
         response = await Responder(self.config['model']).respond(plan, context, memories, messages, base_prompt)
 
@@ -167,7 +186,7 @@ class Agent:
         return plan
     
     async def get_new_topic(self, plan, personnality_prompt):
-        msg = await Responder(self.config['model']).new_discussion(self.plan, personnality_prompt)
+        msg = await Responder(self.config['model']).new_discussion(plan, personnality_prompt)
         return msg
     
     async def respond_routine(self):
@@ -177,12 +196,12 @@ class Agent:
 
                 # Batch mode: process all messages in queue
                 if not self.sequential:
-                    messages = [self.server.format_message(await self.event_queue.get()) 
+                    messages = [self.server.format_message(*(await self.event_queue.get()), self.user_id) 
                                 for _ in range(self.event_queue.qsize())]
                 # Sequential mode
                 else:
                     _, author_id, global_name, content = await self.event_queue.get()
-                    messages = [self.server.format_message(author_id, global_name, content)]
+                    messages = [self.server.format_message(author_id, global_name, content, self.user_id)]
                     
                 for message in messages:
                     await self.processed_messages.put(message)

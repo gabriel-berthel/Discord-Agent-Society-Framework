@@ -1,66 +1,55 @@
-import chromadb
+import pickle
 import time
 import uuid
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from typing import Optional
-import logging
-import os
 from sentence_transformers import SentenceTransformer
+import os
 
 class Memories:
-    def __init__(self, collection_name: str, model_name: str = 'all-MiniLM-L6-v2'):
-        self.client = chromadb.Client()
-        self.collection = self.client.create_collection(collection_name)
+    def __init__(self, collection_name, model_name='all-MiniLM-L6-v2'):
+        os.makedirs('memories', exist_ok=True)
+        self.file_path = os.path.join('memories', collection_name)
         self.model = SentenceTransformer(model_name)
+        self._load_memory()
 
-        self._documents = []
-        self._embeddings = []
-        self._metadatas = []
-
-        self._refresh_cache()
-
-    def _refresh_cache(self):
-        try:
-            all_ids = self.collection.get(include=["documents"])["ids"]
-            result = self.collection.get(ids=all_ids, include=["documents", "embeddings", "metadatas"])
-            self._documents = result["documents"]
-            self._embeddings = result["embeddings"]
-            self._metadatas = result["metadatas"]
-        except Exception as e:
-            logging.error(f"No memories were retrieved")
+    def _load_memory(self):
+        if os.path.exists(self.file_path):
+            with open(self.file_path, 'rb') as f:
+                data = pickle.load(f)
+                self._documents = data.get('documents', [])
+                self._embeddings = data.get('embeddings', [])
+                self._metadatas = data.get('metadatas', [])
+        else:
             self._documents = []
             self._embeddings = []
             self._metadatas = []
 
-    def add_document(self, document: str, doc_type: str, timestamp: Optional[float] = None):
-        valid_types = ['FORMER-PLAN', 'MEMORY', 'KNOWLEDGE']
-        if doc_type not in valid_types:
-            return
+    def _save_memory(self):
+        with open(self.file_path, 'wb') as f:
+            pickle.dump({
+                'documents': self._documents,
+                'embeddings': self._embeddings,
+                'metadatas': self._metadatas
+            }, f)
 
+    def add_document(self, document, doc_type, timestamp=None):
         embedding = self.model.encode(document, show_progress_bar=False)
-
         metadatas = {"type": doc_type}
-        if doc_type in ['MEMORY', 'FORMER-PLAN']:
-            metadatas["timestamp"] = timestamp if timestamp else time.time()
+        metadatas["timestamp"] = timestamp if timestamp else time.time()
 
         doc_id = str(uuid.uuid4())
-        self.collection.add(
-            ids=[doc_id],
-            documents=[document],
-            metadatas=[metadatas],
-            embeddings=[embedding]
-        )
-
-        self._documents.append(document)
+        self._documents.append(document + '\n')
         self._embeddings.append(embedding)
         self._metadatas.append(metadatas)
+
+        self._save_memory()
 
     def get_all_documents(self):
         return self._documents, self._embeddings, self._metadatas
 
-    def query_multiple(self, queries: list, n_results: int = 5):
-        if not self._documents:
+    def query_multiple(self, queries, n_results=5):
+        if not self._embeddings:
             return []
 
         results = []
@@ -83,7 +72,7 @@ class Memories:
 
         return results
 
-    def get_last_n_memories(self, n: int = 1):
+    def get_last_n_memories(self, n=1):
         memory_docs = [
             {'doc': doc, 'metadata': metadata}
             for doc, metadata in zip(self._documents, self._metadatas)

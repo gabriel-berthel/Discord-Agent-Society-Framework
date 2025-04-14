@@ -1,47 +1,118 @@
 import asyncio
+import random
+import time
 from agent import Agent
 from modules.DiscordServer import DiscordServer
 from dotenv import load_dotenv
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+logging.getLogger("tqdm").setLevel(logging.ERROR) 
+logging.getLogger("httpx").setLevel(logging.ERROR) 
 
 class PromptClient:
-    def __init__(self, agent_conf, archetype, name, id, server):
+    def __init__(self, agent_conf, archetype, name, id, server, persitance_prefix=""):
         self.name = name
         self.id = id
         self.server = server
-        self.agent = Agent(1, agent_conf, server, archetype, 'You must always respond to Interviewer.')
+        self.agent = Agent(id, agent_conf, server, archetype, persitance_prefix=persitance_prefix)
+        self.tasks = []
+        self.server.update_user(id, self.agent.name)
         
     async def start(self):
-        asyncio.create_task(self.agent.respond_routine())
-        asyncio.create_task(self.agent.memory_routine())
-        asyncio.create_task(self.agent.plan_routine())
+        self.tasks = [
+            asyncio.create_task(self.agent.respond_routine()),
+            asyncio.create_task(self.agent.memory_routine()),
+            asyncio.create_task(self.agent.plan_routine())
+        ]
+        
+    async def stop(self):
+        for task in self.tasks:
+            task.cancel()
+        for task in self.tasks:
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
     
-    async def prompt(self, message, user_id, username):
-        event = (1, user_id, username, message)
+    async def prompt(self, message, user_id, username, channel_id=1):
+        self.server.update_user(user_id, username)
+        event = (channel_id, user_id, username, message)
         self.agent.server.add_message(*event) 
         await self.agent.add_event(event)  
         message, _ = await self.agent.responses.get() 
+        self.server.add_message(channel_id, user_id, username, message)
         return message
-
-async def exemple():
-    server = DiscordServer(1, 'Benchmarking', 1)
-    server.update_user(1, 'Joey')
-    server.update_user(2, 'Interviewer')
-    server.add_channel(1, 'General')
     
-    joey = PromptClient('benchmark_config.yaml', 'trouble_maker', 'Rowan', 1, server)
-    interviewer = PromptClient('benchmark_config.yaml', 'interviewer','Quinn', 2, server)
-    
-    await joey.start()
-    await interviewer.start()
+    @staticmethod
+    def build_clients(config_file='benchmark_config.yaml', persitance_prefix=""):
+        server = DiscordServer(1, 'Benchmarking')
+        server.add_channel(1, 'General')
+        
+        roles = [
+            ('fact_checker', 'Caspian', 1),
+            ('activist', 'Zora', 2),
+            ('interviewer', 'Quinn', 3),
+            ('baseline', 'Neutri', 4),
+            ('trouble_maker', 'Rowan', 5)
+        ]
+        
+        clients = {
+            role: PromptClient(config_file, role, name, client_id, server, persitance_prefix=persitance_prefix)
+            for role, name, client_id in roles
+        }
 
-    joey_resp = await joey.prompt("Hi! How are you doing?", 2, 'Interviewer')
-    print(joey_resp)
-    while True:
-        inter_resp = await interviewer.prompt(joey_resp, joey.id, joey.name)
-        print(inter_resp)
-        joey_resp = await joey.prompt(inter_resp, interviewer.id, interviewer.name)
-        print("----")   
-        print(joey_resp)
+        return clients
 
-if __name__ == '__main__':
-    asyncio.run(exemple())
+    @staticmethod
+    async def run_simulation(duration: float, print_replies, clients=None):
+        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml', persitance_prefix="benchmark")
+        
+        await asyncio.gather(*(client.start() for client in clients.values()))
+
+        roles = list(clients.keys())
+        start_time = time.time()
+        historic = ['Hi']
+
+        current_archetype = random.choice(roles)
+        current_client = clients[current_archetype]
+        message = "Hi"
+        
+        msg = f"[{current_client.name}] said {message}"
+        historic.append(msg)
+        
+        if print_replies:
+            print(msg)
+        
+        while time.time() - start_time < duration:
+            archetype = [r for r in roles if r != current_archetype]
+            next_archetype = random.choice(archetype)
+            next_client = clients[next_archetype]
+
+            response = await next_client.prompt(message, user_id=current_client.id, username=current_client.name)
+            msg = f"[{next_client.name}] said {response}"
+            historic.append(msg)
+            
+            if print_replies:
+                print(msg)
+
+            current_archetype = next_archetype
+            current_client = next_client
+            message = response
+
+        return clients, historic
+
+
+async def main():
+    print_replies = True
+    simulation_duration = 30
+    clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies)
+
+    print("\nSimulation Complete")
+    print(f"Historic conversation: {historic}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
