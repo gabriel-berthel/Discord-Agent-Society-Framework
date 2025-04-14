@@ -4,6 +4,8 @@ from modules.DiscordServer import DiscordServer
 from dotenv import load_dotenv
 import time
 import random
+import os
+import pickle
 
 import logging
 from sentence_transformers import SentenceTransformer
@@ -58,36 +60,31 @@ class PromptClient:
         return clients
 
     @staticmethod
-    async def run_simulation(duration: float, clients = build_clients('benchmark_config.yaml')):
+    async def run_simulation(duration: float, clients = None):
+        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml')
+        
         await asyncio.gather(*(client.start() for client in clients.values()))
 
         roles = list(clients.keys())
         start_time = time.time()
+        historic = ['Hi']
 
         current_archetype = random.choice(roles)
         current_client = clients[current_archetype]
         message = "Hi"
         
-        print(f"[{current_client.name}] says: {message}")
-
+        historic.append(f"[{current_client.name}] said {message}")
+        
         while time.time() - start_time < duration:
             archetype = [r for r in roles if r != current_archetype]
             next_archetype = random.choice(archetype)
             next_client = clients[next_archetype]
 
             response = await next_client.prompt(message, user_id=current_client.id, username=current_client.name)
-            print(f"[{next_client.name}] replies to [{current_client.name}]: {response}")
+            historic.append(f"[{next_client.name}] said {response}")
 
             current_archetype = next_archetype
             current_client = next_client
             message = response
 
-        return clients
-
-async def main():
-    print("Starting simulation for 90 seconds...\n")
-    await PromptClient.run_simulation(duration=90)
-    print("\nSimulation complete.")
-
-if __name__ == "__main__":
-    asyncio.run(main())
+        return clients, historic
