@@ -200,12 +200,12 @@ class Agent:
 
                 # Batch mode: process all messages in queue
                 if not self.sequential:
-                    messages = [self.server.format_message(await self.event_queue.get()) 
+                    messages = [self.server.format_message(*(await self.event_queue.get()), self.user_id) 
                                 for _ in range(self.event_queue.qsize())]
                 # Sequential mode
                 else:
                     _, author_id, global_name, content = await self.event_queue.get()
-                    messages = [self.server.format_message(author_id, global_name, content)]
+                    messages = [self.server.format_message(author_id, global_name, content, self.user_id)]
                     
                 for message in messages:
                     await self.processed_messages.put(message)

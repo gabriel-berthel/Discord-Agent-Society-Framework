@@ -16,36 +16,30 @@ class PromptClient:
         asyncio.create_task(self.agent.memory_routine())
         asyncio.create_task(self.agent.plan_routine())
     
-    async def prompt(self, message, user_id, username):
+    async def prompt(self, message, user_id, username, channel_id=1):
         self.server.update_user(user_id, username)
-        event = (1, user_id, username, message)
+        event = (channel_id, user_id, username, message)
         self.agent.server.add_message(*event) 
         await self.agent.add_event(event)  
         message, _ = await self.agent.responses.get() 
         return message
     
-    
+    def build_clients(config_file='benchmark_config.yaml'):
+        server = DiscordServer(1, 'Benchmarking')
+        server.add_channel(1, 'General')
+        
+        roles = [
+            ('fact_checker', 'Caspian', 1),
+            ('activist', 'Zora', 2),
+            ('interviewer', 'Quinn', 3),
+            ('baseline', 'Neutri', 4),
+            ('trouble_maker', 'Rowan', 5)
+        ]
 
-async def exemple():
-    server = DiscordServer(1, 'Benchmarking', 1)
-    server.update_user(1, 'Joey')
-    server.update_user(2, 'Interviewer')
-    server.add_channel(1, 'General')
-    
-    joey = PromptClient('benchmark_config.yaml', 'trouble_maker', 'Rowan', 1, server)
-    interviewer = PromptClient('benchmark_config.yaml', 'interviewer','Quinn', 2, server)
-    
-    await joey.start()
-    await interviewer.start()
+        clients = [
+            PromptClient(config_file, role, name, client_id, server)
+            for role, name, client_id in roles
+        ]
 
-    joey_resp = await joey.prompt("Hi! How are you doing?", 2, 'Interviewer')
-    print(joey_resp)
-    while True:
-        inter_resp = await interviewer.prompt(joey_resp, joey.id, joey.name)
-        print(inter_resp)
-        joey_resp = await joey.prompt(inter_resp, interviewer.id, interviewer.name)
-        print("----")   
-        print(joey_resp)
+        return tuple(clients)
 
-if __name__ == '__main__':
-    asyncio.run(exemple())
