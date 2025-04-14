@@ -13,11 +13,11 @@ logging.getLogger("tqdm").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR) 
 
 class PromptClient:
-    def __init__(self, agent_conf, archetype, name, id, server):
+    def __init__(self, agent_conf, archetype, name, id, server, persitance_prefix=""):
         self.name = name
         self.id = id
         self.server = server
-        self.agent = Agent(id, agent_conf, server, archetype, 'You must always respond to Interviewer.')
+        self.agent = Agent(id, agent_conf, server, archetype, persitance_prefix=persitance_prefix)
         self.tasks = []
         self.server.update_user(id, self.agent.name)
         
@@ -47,7 +47,7 @@ class PromptClient:
         return message
     
     @staticmethod
-    def build_clients(config_file='benchmark_config.yaml'):
+    def build_clients(config_file='benchmark_config.yaml', persitance_prefix=""):
         server = DiscordServer(1, 'Benchmarking')
         server.add_channel(1, 'General')
         
@@ -60,7 +60,7 @@ class PromptClient:
         ]
         
         clients = {
-            role: PromptClient(config_file, role, name, client_id, server)
+            role: PromptClient(config_file, role, name, client_id, server, persitance_prefix=persitance_prefix)
             for role, name, client_id in roles
         }
 
@@ -68,7 +68,7 @@ class PromptClient:
 
     @staticmethod
     async def run_simulation(duration: float, print_replies, clients=None):
-        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml')
+        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml', persitance_prefix="benchmark")
         
         await asyncio.gather(*(client.start() for client in clients.values()))
 
