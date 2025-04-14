@@ -9,18 +9,19 @@ import os
 from sentence_transformers import SentenceTransformer
 
 class Memories:
-    def __init__(self, collection_name: str, model_name: str = 'all-MiniLM-L6-v2'):
-        self.client = chromadb.Client()
-        self.collection = self.client.create_collection(collection_name)
+    def __init__(self, collection_name: str, model_name: str = 'all-MiniLM-L6-v2'): 
+        os.makedirs('chroma_db', exist_ok=True)
+        self.client = chromadb.PersistentClient(path="./chroma_db")
+        self.collection = self.client.get_or_create_collection(collection_name)
         self.model = SentenceTransformer(model_name)
 
         self._documents = []
         self._embeddings = []
         self._metadatas = []
 
-        self._refresh_cache()
+        self._update_cache()
 
-    def _refresh_cache(self):
+    def _update_cache(self):
         try:
             all_ids = self.collection.get(include=["documents"])["ids"]
             result = self.collection.get(ids=all_ids, include=["documents", "embeddings", "metadatas"])
@@ -28,10 +29,7 @@ class Memories:
             self._embeddings = result["embeddings"]
             self._metadatas = result["metadatas"]
         except Exception as e:
-            logging.error(f"No memories were retrieved")
-            self._documents = []
-            self._embeddings = []
-            self._metadatas = []
+            pass
 
     def add_document(self, document: str, doc_type: str, timestamp: Optional[float] = None):
         valid_types = ['FORMER-PLAN', 'MEMORY', 'KNOWLEDGE']

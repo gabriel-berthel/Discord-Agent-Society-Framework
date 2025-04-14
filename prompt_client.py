@@ -1,14 +1,10 @@
 import asyncio
+import random
+import time
 from agent import Agent
 from modules.DiscordServer import DiscordServer
 from dotenv import load_dotenv
-import time
-import random
-import os
-import pickle
-
 import logging
-from sentence_transformers import SentenceTransformer
 
 logging.basicConfig(level=logging.WARNING)
 logging.getLogger("transformers").setLevel(logging.ERROR)
@@ -22,13 +18,24 @@ class PromptClient:
         self.id = id
         self.server = server
         self.agent = Agent(id, agent_conf, server, archetype, 'You must always respond to Interviewer.')
-
+        self.tasks = []
         self.server.update_user(id, self.agent.name)
         
     async def start(self):
-        asyncio.create_task(self.agent.respond_routine())
-        asyncio.create_task(self.agent.memory_routine())
-        asyncio.create_task(self.agent.plan_routine())
+        self.tasks = [
+            asyncio.create_task(self.agent.respond_routine()),
+            asyncio.create_task(self.agent.memory_routine()),
+            asyncio.create_task(self.agent.plan_routine())
+        ]
+        
+    async def stop(self):
+        for task in self.tasks:
+            task.cancel()
+        for task in self.tasks:
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
     
     async def prompt(self, message, user_id, username, channel_id=1):
         self.server.update_user(user_id, username)
@@ -60,7 +67,7 @@ class PromptClient:
         return clients
 
     @staticmethod
-    async def run_simulation(duration: float, print_replies, clients = None):
+    async def run_simulation(duration: float, print_replies, clients=None):
         clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml')
         
         await asyncio.gather(*(client.start() for client in clients.values()))
@@ -96,3 +103,16 @@ class PromptClient:
             message = response
 
         return clients, historic
+
+
+async def main():
+    print_replies = True
+    simulation_duration = 30
+    clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies)
+
+    print("\nSimulation Complete")
+    print(f"Historic conversation: {historic}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
