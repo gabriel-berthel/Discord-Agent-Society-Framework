@@ -37,10 +37,12 @@ class PromptClient:
             ('trouble_maker', 'Rowan', 5)
         ]
 
-        clients = [
-            PromptClient(config_file, role, name, client_id, server)
+        
+        clients = {
+            role: PromptClient(config_file, role, name, client_id, server)
             for role, name, client_id in roles
-        ]
+        }
 
         return tuple(clients)
 
+    @staticmethod
