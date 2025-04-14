@@ -1,3 +1,5 @@
+# Promptbench will not compilles above version 11.4
+
 aiohttp
 ollama
 python-dotenv
@@ -10,3 +12,4 @@ uvloop; sys_platform != "win32"
 transformers 
 torch
 accelerate
+promptbench

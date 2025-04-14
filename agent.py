@@ -10,6 +10,7 @@ from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
 from modules.Planner import Planner
 from modules.Responder import Responder
+from modules.WebBrowser import WebBrowser
 import utils
 import ollama
 from prompt_generator import generate_agent_prompt
@@ -78,7 +79,9 @@ class Agent:
             'context_queries': [],
             'neutral_ctxs': [],
             'response_queries': [],
-            'memories': []
+            'memories': [],
+            'summuries': [],
+            'web_queries': []
         }
         
     async def add_event(self, event):
@@ -133,6 +136,23 @@ class Agent:
             
         return memories
     
+    async def get_search(self, plan, context, messages):
+        queries = await QueryEngine(self.config['model']).web_queries(plan, context, messages)                    
+        summury = WebBrowser().summarize_search(queries, 1024)
+        
+        if self.log:
+            self.logs['web_queries'].append({
+                'input': (plan, context, messages),
+                'ouput':  queries
+            })
+            
+            self.logs['summuries'].append({
+                'input': (queries),
+                'ouput':  summury
+            })
+            
+        return summury
+    
     async def get_response(self, plan, context, memories, messages, base_prompt):
         response = await Responder(self.config['model']).respond(plan, context, memories, messages, base_prompt)
 
@@ -167,7 +187,7 @@ class Agent:
         return plan
     
     async def get_new_topic(self, plan, personnality_prompt):
-        msg = await Responder(self.config['model']).new_discussion(self.plan, personnality_prompt)
+        msg = await Responder(self.config['model']).new_discussion(plan, personnality_prompt)
         return msg
     
     async def respond_routine(self):

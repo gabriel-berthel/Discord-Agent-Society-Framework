@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -19,10 +18,10 @@ class WebBrowser:
     Class for online research 
     """
 
-    def __init__(self, search_api_key, search_engine_id, llm_api_key, use_ollama=True):
-        self.search_api_key = search_api_key 
-        self.search_engine_id = search_engine_id
-        self.llm_api_key = llm_api_key
+    def __init__(self, use_ollama=True):
+        self.search_api_key = os.getenv("GOOGLE_API_KEY") 
+        self.search_engine_id = os.getenv("GOOGLE_CSE_ID")
+        self.llm_api_key = os.getenv("LLM_API_KEY")
         self.use_ollama=use_ollama
         self.search_endpoint = "https://www.googleapis.com/customsearch/v1"
         self.llm_endpoint = "https://api.openai.com/v1/chat/completions"
