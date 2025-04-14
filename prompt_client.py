@@ -44,5 +44,3 @@ class PromptClient:
         }
 
         return tuple(clients)
-
-    @staticmethod
