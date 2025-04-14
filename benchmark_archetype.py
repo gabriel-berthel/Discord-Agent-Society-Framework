@@ -2,43 +2,61 @@ import promptbench as pb
 import json
 from datetime import datetime
 from tqdm import tqdm
+import prompt_client
+import asyncio
+import ollama
 
-ARCHETYPES = ["trouble_maker", "fact_checker", "activist", "moderator", "baseline"]
+async def prompt_ollama(prompt):
+    
+    return ollama.generate("llama3.2", prompt)["response"]
+
+async def prompt_agent(prompt, client): 
+    
+    return await client.prompt(prompt, 2, "moderateur")
+
 RESULTS = []
-
+clients = prompt_client.PromptClient.build_clients()
 def get_projection_fn():
     return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
 
-def run_agents_benchmark():
-    datasets = ["sst2"]
+tasks = [
+    ("sentiment", pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"]), get_projection_fn, "sst2"),
+    
+]
 
-    for agent_name in ARCHETYPES:
-        #model = pb.LLMModel(model="google/flan-t5-large", max_new_tokens=10, temperature=0.0001, device='cpu')
-        for dataset_name in datasets:
-            dataset = pb.DatasetLoader.load_dataset(dataset_name)
-            prompts = pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"])
-            projection_fn = get_projection_fn()
+async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []):
+     for prompt in prompts:
+        preds, labels = [], []
+        for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
+            input_text = pb.InputProcess.basic_format(prompt, data)
+            label = data['label']
+            raw_pred = await prompt_fn(input_text, *args)
+            pred = pb.OutputProcess.cls(raw_pred, projection)
+            preds.append(pred, label)
+        # evaluate
+        return pb.Eval.compute_cls_accuracy(preds, labels) 
 
-            for prompt in prompts:
-                for data in tqdm(dataset, desc=f"{agent_name} - {dataset_name}"):
-                    input_text = pb.InputProcess.basic_format(prompt, data)
-                    label = data['label']
-                    raw_pred = model(input_text)
-                    pred = pb.OutputProcess.cls(raw_pred, projection_fn)
+async def run_agents_benchmark():
 
-                    RESULTS.append({
-                        "task": dataset_name,
-                        "archetype": agent_name,
-                        "input": input_text,
-                        "response": raw_pred,
-                        "predicted_label": pred,
-                        "expected_answer": label,
-                    })
+    for task, prompts, projection, dataset in tasks :
 
-    filename = f"agents_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(RESULTS, f, ensure_ascii=False, indent=2)
-    print(f"✅ Résultats sauvegardés dans '{filename}'.")
+        dataset = pb.DatasetLoader.load_dataset(dataset)
+        scores = []
+        for architype, client in clients.items():
+            await client.start() 
+            score = await run_task(prompts, dataset, architype, projection, prompt_agent, [client])
+            scores.append((architype, score))
+            await client.stop()
+        baseline_score = await run_task(prompts, dataset, architype, projection, prompt_ollama)
+
+        RESULTS.append({
+        "dataset": dataset,
+        "scores": scores,
+        "task": task,
+        "baseline": baseline_score
+        })
+
+    
 
 if __name__ == '__main__':
-    run_agents_benchmark()
+    asyncio.run(run_agents_benchmark())
