@@ -1,61 +1,44 @@
-import asyncio
+import promptbench as pb
 import json
-import time
 from datetime import datetime
-from promptbench import load_benchmark
-from prompt_client import PromptClient
-from modules.DiscordServer import DiscordServer
+from tqdm import tqdm
 
-ARCHETYPES = ['baseline', 'trouble_maker', 'fact_checker', 'activist', 'moderator']
+ARCHETYPES = ["trouble_maker", "fact_checker", "activist", "moderator", "baseline"]
+RESULTS = []
 
-async def run_agents_benchmark():
-    server = DiscordServer(1, 'Benchmarking', 1)
-    server.update_user(1, 'User')
-    server.add_channel(1, 'General')
+def get_projection_fn():
+    return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
 
-    results = []
-    tasks = ["commonsense_reasoning", "logical_reasoning", "world_knowledge"]
+def run_agents_benchmark():
+    datasets = ["sst2"]
 
-    for archetype in ARCHETYPES:
-        print(f"\nBenchmarking archetype: {archetype}")
-        agent = PromptClient('benchmark_config.yaml', archetype, f"{archetype}_agent", 1, server)
+    for agent_name in ARCHETYPES:
+        #model = pb.LLMModel(model="google/flan-t5-large", max_new_tokens=10, temperature=0.0001, device='cpu')
+        for dataset_name in datasets:
+            dataset = pb.DatasetLoader.load_dataset(dataset_name)
+            prompts = pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"])
+            projection_fn = get_projection_fn()
 
-        # Override get_bot_context pour forcer la réponse
-        def forced_context():
-            return "Répondez toujours quoi qu'il arrive."
+            for prompt in prompts:
+                for data in tqdm(dataset, desc=f"{agent_name} - {dataset_name}"):
+                    input_text = pb.InputProcess.basic_format(prompt, data)
+                    label = data['label']
+                    raw_pred = model(input_text)
+                    pred = pb.OutputProcess.cls(raw_pred, projection_fn)
 
-        agent.agent.get_bot_context = forced_context
-
-        await agent.start()
-
-        for task in tasks:
-            print(f"Task: {task}")
-            dataset = load_benchmark(task)
-
-            for sample in dataset:
-                prompt = sample["input"]
-                server.add_message(1, 1, 'User', prompt)
-
-                start_time = time.time()
-                response = await agent.prompt(prompt, 1, 'User')
-                end_time = time.time()
-
-                results.append({
-                    "task": task,
-                    "archetype": archetype,
-                    "input": prompt,
-                    "response": response,
-                    "response_time": end_time - start_time,
-                    "response_length": len(response.split())
-                })
-
-                await asyncio.sleep(0.5)
+                    RESULTS.append({
+                        "task": dataset_name,
+                        "archetype": agent_name,
+                        "input": input_text,
+                        "response": raw_pred,
+                        "predicted_label": pred,
+                        "expected_answer": label,
+                    })
 
     filename = f"agents_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-
-    print(f"\n✅ Benchmark des agents terminé. Résultats sauvegardés dans '{filename}'.")
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(RESULTS, f, ensure_ascii=False, indent=2)
+    print(f"✅ Résultats sauvegardés dans '{filename}'.")
 
 if __name__ == '__main__':
-    asyncio.run(run_agents_benchmark())
+    run_agents_benchmark()
