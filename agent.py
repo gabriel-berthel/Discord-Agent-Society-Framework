@@ -74,7 +74,6 @@ class Agent:
         self.is_online = True
         self.impulses = self.config['impulses']
         self.sequential = self.config['sequential_mode']
-        self.random_ignore = self.config['random_ignore']
         
         self.logs = {
             'plans': [],

@@ -8,10 +8,11 @@ import sys
 import logging
 from sentence_transformers import SentenceTransformer
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 logging.getLogger("tqdm").setLevel(logging.ERROR) 
+logging.getLogger("httpx").setLevel(logging.ERROR) 
 
 # Linux optimisations for asyncio.
 if os.name != "nt":

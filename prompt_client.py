@@ -2,6 +2,17 @@ import asyncio
 from agent import Agent
 from modules.DiscordServer import DiscordServer
 from dotenv import load_dotenv
+import time
+import random
+
+import logging
+from sentence_transformers import SentenceTransformer
+
+logging.basicConfig(level=logging.WARNING)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+logging.getLogger("tqdm").setLevel(logging.ERROR) 
+logging.getLogger("httpx").setLevel(logging.ERROR) 
 
 class PromptClient:
     def __init__(self, agent_conf, archetype, name, id, server):
@@ -9,6 +20,7 @@ class PromptClient:
         self.id = id
         self.server = server
         self.agent = Agent(id, agent_conf, server, archetype, 'You must always respond to Interviewer.')
+
         self.server.update_user(id, self.agent.name)
         
     async def start(self):
@@ -22,6 +34,7 @@ class PromptClient:
         self.agent.server.add_message(*event) 
         await self.agent.add_event(event)  
         message, _ = await self.agent.responses.get() 
+        self.server.add_message(channel_id, user_id, username, message)
         return message
     
     @staticmethod
@@ -36,11 +49,45 @@ class PromptClient:
             ('baseline', 'Neutri', 4),
             ('trouble_maker', 'Rowan', 5)
         ]
-
         
         clients = {
             role: PromptClient(config_file, role, name, client_id, server)
             for role, name, client_id in roles
         }
 
-        return tuple(clients)
+        return clients
+
+    @staticmethod
+    async def run_simulation(duration: float, clients = build_clients('benchmark_config.yaml')):
+        await asyncio.gather(*(client.start() for client in clients.values()))
+
+        roles = list(clients.keys())
+        start_time = time.time()
+
+        current_archetype = random.choice(roles)
+        current_client = clients[current_archetype]
+        message = "Hi"
+        
+        print(f"[{current_client.name}] says: {message}")
+
+        while time.time() - start_time < duration:
+            archetype = [r for r in roles if r != current_archetype]
+            next_archetype = random.choice(archetype)
+            next_client = clients[next_archetype]
+
+            response = await next_client.prompt(message, user_id=current_client.id, username=current_client.name)
+            print(f"[{next_client.name}] replies to [{current_client.name}]: {response}")
+
+            current_archetype = next_archetype
+            current_client = next_client
+            message = response
+
+        return clients
+
+async def main():
+    print("Starting simulation for 90 seconds...\n")
+    await PromptClient.run_simulation(duration=90)
+    print("\nSimulation complete.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
