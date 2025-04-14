@@ -24,6 +24,7 @@ class PromptClient:
         message, _ = await self.agent.responses.get() 
         return message
     
+    @staticmethod
     def build_clients(config_file='benchmark_config.yaml'):
         server = DiscordServer(1, 'Benchmarking')
         server.add_channel(1, 'General')
