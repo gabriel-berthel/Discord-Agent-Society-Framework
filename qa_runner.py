@@ -70,7 +70,6 @@ def run_benchmarks(archetype_logs):
         results['a2']['archetypes'][archetype] = run_a2(logs.client, Prober, logs.historic)
         results['a3']['archetypes'][archetype] = run_a3(logs.client, Prober, logs.agent_memories)
         
-        
         # results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)
         # results['b2']['archetypes'][archetype] = run_b2(logs.response_queries, memory)
         # results['c1']['archetypes'][archetype] = run_c1(logs.neutral_ctxs, Contextualizer('llama3.2'))
