@@ -12,3 +12,5 @@ transformers
 torch
 accelerate
 promptbench
+pytextrank
+spacy

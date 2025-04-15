@@ -2,8 +2,9 @@
 
 import warnings
 from types import SimpleNamespace
-from qa_tasks import run_b1, run_b2, compute_cosine_distances
+from qa_tasks import run_b1, run_b2, run_c1
 from modules.Memories import Memories
+from modules.Contextualizer import Contextualizer
 import pickle
 
 warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hub.file_download")
@@ -33,13 +34,15 @@ def load_qa_bench_data():
 def run_benchmarks(archetype_logs):
     results = {
         'b1': {'description': 'Context Queries Relevancy', 'archetypes': {}},
-        'b2': {'description': 'Responder Queries Relevancy', 'archetypes': {}}
+        'b2': {'description': 'Responder Queries Relevancy', 'archetypes': {}},
+        'c1': {'description': 'Context Accuracy', 'archetypes': {}}
     }
 
     for archetype, logs in archetype_logs:
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
-        results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)
-        results['b2']['archetypes'][archetype] = run_b2(logs.response_queries, memory)
+        # results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)
+        # results['b2']['archetypes'][archetype] = run_b2(logs.response_queries, memory)
+        results['c1']['archetypes'][archetype] = run_c1(logs.neutral_ctxs, Contextualizer('llama3.2'))
 
     return results
 

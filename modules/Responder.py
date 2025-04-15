@@ -39,5 +39,4 @@ class Responder():
             messages=format_llm_prompts(prompts)
         )
 
-
         return response['message']['content']
