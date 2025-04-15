@@ -24,9 +24,9 @@ task_name_map = {
 
 
 tasks = []
-tasks += build_tasks_from_prompts(task_oriented, "task_oriented", task_name_map)
-tasks += build_tasks_from_prompts(method_oriented, "method_oriented", task_name_map)
-tasks += build_tasks_from_prompts(role_oriented, "role_oriented", task_name_map)
+tasks += build_tasks_from_prompts(task_oriented.TASK_ORIENTED_PROMPTS, "task_oriented", task_name_map)
+tasks += build_tasks_from_prompts(method_oriented.METHOD_ORIENTED_PROMPTS, "method_oriented", task_name_map)
+tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_oriented", task_name_map)
 
 
 async def prompt_ollama(prompt):
