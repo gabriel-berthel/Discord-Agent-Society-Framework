@@ -5,7 +5,9 @@ config:
   memory_interval: 60
   model: "llama3.2"
   base-plan: ""
-  initial-channel-id: 1350127264871743498
+  channel_id: 1350127264871743498
   sequential_mode: False
   random_ignore: False
   impulses: False
+  save_logs: False
+  persitance_prefix: 'production'

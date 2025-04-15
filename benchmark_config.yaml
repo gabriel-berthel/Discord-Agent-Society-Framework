@@ -5,7 +5,9 @@ config:
   memory_interval: 60 # -1 = deactivated
   model: "llama3.2"
   base-plan: ""
-  initial-channel-id: 1
+  channel_id: 1
   sequential_mode: True
   random_ignore: False
   impulses: False
+  save_logs: False
+  persitance_prefix: 'benchmark'

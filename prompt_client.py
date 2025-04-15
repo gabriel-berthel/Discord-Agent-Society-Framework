@@ -13,11 +13,11 @@ logging.getLogger("tqdm").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR) 
 
 class PromptClient:
-    def __init__(self, agent_conf, archetype, name, id, server, persitance_prefix=""):
+    def __init__(self, agent_conf, archetype, name, id, server):
         self.name = name
         self.id = id
         self.server = server
-        self.agent = Agent(id, agent_conf, server, archetype, persitance_prefix=persitance_prefix)
+        self.agent = Agent(id, agent_conf, server, archetype)
         self.tasks = []
         self.server.update_user(id, self.agent.name)
         
@@ -34,6 +34,7 @@ class PromptClient:
         for task in self.tasks:
             try:
                 await task
+                self.agent.stop()
             except asyncio.CancelledError:
                 pass
     
@@ -47,7 +48,7 @@ class PromptClient:
         return message
     
     @staticmethod
-    def build_clients(config_file='benchmark_config.yaml', persitance_prefix=""):
+    def build_clients(config_file='benchmark_config.yaml'):
         server = DiscordServer(1, 'Benchmarking')
         server.add_channel(1, 'General')
         
@@ -60,7 +61,7 @@ class PromptClient:
         ]
         
         clients = {
-            role: PromptClient(config_file, role, name, client_id, server, persitance_prefix=persitance_prefix)
+            role: PromptClient(config_file, role, name, client_id, server)
             for role, name, client_id in roles
         }
 
@@ -68,7 +69,7 @@ class PromptClient:
 
     @staticmethod
     async def run_simulation(duration: float, print_replies, clients=None):
-        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml', persitance_prefix="benchmark")
+        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml')
         
         await asyncio.gather(*(client.start() for client in clients.values()))
 
@@ -107,9 +108,9 @@ class PromptClient:
 
 async def main():
     print_replies = True
-    simulation_duration = 30
+    simulation_duration = 180 * 6
     clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies)
-
+    
     print("\nSimulation Complete")
     print(f"Historic conversation: {historic}")
 
