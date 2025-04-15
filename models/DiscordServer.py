@@ -37,7 +37,7 @@ class DiscordServer:
         return message
     
     def format_message(self, author_id, global_name, content, as_user=None):
-        name = "You" if author_id == as_user else global_name
+        name = "Me" if author_id == as_user else global_name
         content = self.fix_message(content)
 
-        return f"{name} sent: {content}"
+        return f"{name}: {content}"

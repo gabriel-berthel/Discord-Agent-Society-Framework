@@ -9,7 +9,7 @@ Start the summary with:
 
 Guidelines for your summary:
 
-    Use first-person language to represent your own contributions. Any statements attributed to "You" in the transcript should be written in the first person.
+    Use first-person language to represent your own contributions. Any statements attributed to "Me" in the transcript should be written in the first person.
 
     Write the summary in a single paragraph, adjusting its length and detail based on the conversation's complexity.
 
