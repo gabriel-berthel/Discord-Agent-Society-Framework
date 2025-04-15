@@ -32,6 +32,7 @@ class PromptClient:
         ]
         
     async def stop(self):
+        self.agent.stop()
         for task in self.tasks:
             task.cancel()
         for task in self.tasks:

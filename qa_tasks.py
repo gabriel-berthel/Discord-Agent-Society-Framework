@@ -9,6 +9,8 @@ from utils.utils import list_to_text
 import spacy
 import asyncio
 import pytextrank
+from benchmark.Prober import Prober
+from prompt_client import PromptClient
 
 model = None
 tokenizer = None
@@ -147,3 +149,27 @@ def run_d1(reflections_logs, evaluator_fn):
         "average_scores": final_avg_scores,
         "overall_average_score": overall_average_score
     }
+
+def run_a1(client: PromptClient, prober: Prober, personality):
+    asyncio.create_task(client.start())
+    questions = prober.generate_sk_questions(personality, 10)
+    responses = [asyncio.run(client.prompt(question, '100', 'Admin', 2)) for question in questions]
+    asyncio.create_task(client.stop())
+    
+    return Prober.evaluate(questions, responses)
+
+def run_a2(client: PromptClient, prober: Prober, dialogues):
+    asyncio.create_task(client.start())
+    questions = prober.generate_content_questions("\n".join(dialogues), 25)
+    responses = [asyncio.run(client.prompt(question, '100', 'Admin', 2)) for question in questions]
+    asyncio.create_task(client.stop())
+    
+    return Prober.evaluate(questions, responses)
+
+def run_a3(client: PromptClient, prober: Prober, reflections):
+    asyncio.create_task(client.start())
+    questions = prober.generate_content_questions("\n".join(reflections), 25)
+    responses = [asyncio.run(client.prompt(question, '100', 'Admin', 2)) for question in questions]
+    asyncio.create_task(client.stop())
+    
+    return Prober.evaluate(questions, responses)
