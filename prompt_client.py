@@ -3,8 +3,10 @@ import random
 import time
 from models.Agent import Agent
 from models.DiscordServer import DiscordServer
-from dotenv import load_dotenv
 import logging
+from dotenv import load_dotenv
+
+load_dotenv('agent.env')
 
 logging.basicConfig(level=logging.WARNING)
 logging.getLogger("transformers").setLevel(logging.ERROR)

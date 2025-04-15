@@ -4,6 +4,8 @@ from datetime import datetime
 from collections import deque
 from utils.utils import *
 import modules.Memories as db
+import os
+import pickle
 import random
 from collections import defaultdict
 from modules.Contextualizer import Contextualizer
@@ -93,8 +95,17 @@ class Agent:
         }
 
     def stop(self):
-        """Cleanly stop all running routines."""
         self._running = False
+        
+    def save_logs(self):
+        os.makedirs("logs", exist_ok=True)
+
+        file_path = os.path.join("logs", f"{self.memory.collection_name}.pkl")
+
+        with open(file_path, "wb") as f:
+            pickle.dump(self.logs, f)
+
+        print(f"[LOG] Saved logs to {file_path}")    
 
     async def add_event(self, event):
         if self.is_online:
@@ -133,12 +144,18 @@ class Agent:
 
     async def get_search(self, plan, context, messages):
         queries = await QueryEngine(self.config.model).web_queries(plan, context, messages)
-        summury = WebBrowser().summarize_search(queries, 1024)
+        
+        summury = ""
+        try:
+            search = await WebBrowser(True).summarize_search(queries, 1024)
+            summury = search['summary']
+            if self.log:
+                self.logs['web_queries'].append({'input': (plan, context, messages), 'ouput': queries})
+                self.logs['summuries'].append({'input': queries, 'ouput': summury})
 
-        if self.log:
-            self.logs['web_queries'].append({'input': (plan, context, messages), 'ouput': queries})
-            self.logs['summuries'].append({'input': queries, 'ouput': summury})
-
+        except Exception as e:
+            pass
+    
         return summury
 
     async def get_response(self, plan, context, memories, messages, base_prompt):
@@ -187,7 +204,9 @@ class Agent:
                     await self.processed_messages.put(message)
 
                 memories = await self.get_memories(self.plan, context, messages)
-                response = await self.get_response(self.plan, context, memories, messages, self.personnality_prompt)
+                web_search = await self.get_search(self.plan, context, messages)
+                self.memory.add_document(web_search, 'KNOWLEDGE')
+                response = await self.get_response(self.plan, context, memories + [web_search], messages, self.personnality_prompt)
 
                 if response:
                     await self.responses.put((response, self.monitoring_channel))
@@ -206,7 +225,6 @@ class Agent:
             updated_plan = await self.get_plan(self.plan, context, memories, self.get_bot_context(), self.personnality_prompt)
 
             if updated_plan:
-                self.memory.add_document(self.plan, 'FORMER-PLAN')
                 self.plan = updated_plan
 
     async def memory_routine(self):
