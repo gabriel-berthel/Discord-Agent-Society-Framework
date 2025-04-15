@@ -87,26 +87,6 @@ def run_b2(logs, memory_module):
         'mean': {'baseline': np.mean(cos_baselines), 'agent': np.mean(cos_agents)}
     }
 
-import numpy as np
-from sentence_transformers import SentenceTransformer
-
-def extract_keywords(text, num_keywords=10):
-    doc = nlp(text)
-    keywords = set()
-    for phrase in doc._.phrases[:num_keywords]:
-        keywords.add(phrase.text.lower())
-    return keywords
-
-def compare_keywords(agent_keywords, baseline_keywords):
-    common_keywords = agent_keywords.intersection(baseline_keywords)
-    return len(common_keywords)
-
-def compute_cosine_distances(documents, model_name='all-MiniLM-L6-v2'):
-    model = SentenceTransformer(model_name)
-    embeddings = model.encode(documents, convert_to_numpy=True)
-    similarity_matrix = cosine_similarity(embeddings)
-    return similarity_matrix[0][1]
-
 def run_c1(neutral_ctxs, contextualizer):
     keyword_counts_baselines = []
     keyword_counts_agents = []
