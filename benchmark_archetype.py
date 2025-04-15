@@ -11,7 +11,7 @@ async def prompt_ollama(prompt):
     return ollama.generate("llama3.2", prompt)["response"]
 
 async def prompt_agent(prompt, client): 
-    
+
     return await client.prompt(prompt, 2, "moderateur")
 
 RESULTS = []
@@ -52,10 +52,10 @@ async def run_agents_benchmark():
         baseline_score = await run_task(prompts, dataset, architype, projection, prompt_ollama)
 
         RESULTS.append({
-        "dataset": dataset,
-        "scores": scores,
-        "task": task,
-        "baseline": baseline_score
+            "dataset": dataset,
+            "scores": scores,
+            "task": task,
+            "baseline": baseline_score
         })
 
     filename = f"archetypes_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"

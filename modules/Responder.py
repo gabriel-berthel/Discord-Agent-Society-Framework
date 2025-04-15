@@ -1,5 +1,5 @@
 import ollama
-from utils import *
+from utils.utils import *
 
 class Responder():
     def __init__(self, model):
@@ -9,9 +9,13 @@ class Responder():
 
         prompts = [
             ('system', argent_base_prompt),
+            ('system', f'Your plan:'),
             ('assistant', f'{plan}'),
+            ('system', f'Some context:'),
             ('assistant', f'{context}'),
+            ('system', f'Your memories:'),
             ('assistant', f'{memories}'),
+            ('system', f'Reply right away with the actual message. That’s it.')
         ]
         prompts += [('user', msg) for msg in messages]
 
@@ -34,6 +38,5 @@ class Responder():
             model=self.model, 
             messages=format_llm_prompts(prompts)
         )
-
 
         return response['message']['content']

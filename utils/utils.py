@@ -1,6 +1,10 @@
 import yaml
 import sys
+from types import SimpleNamespace
 
+class DictToAttribute(SimpleNamespace):
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
 def load_yaml(file_path):
     """Loads a YAML file and returns its contents as a dictionary."""

@@ -97,7 +97,7 @@ agent_archetypes:
         - institutional barriers
         - status quo
 
-  interviewer:
+  mediator:
     name: Quinn
     core_traits:
       - balanced

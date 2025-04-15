@@ -1,10 +1,11 @@
 import hikari
 import os
 import asyncio
-import agent as ag
-from modules.DiscordServer import DiscordServer
+import models.Agent as ag
+from models.DiscordServer import DiscordServer
 
 agent = None
+tasks = []
 
 def run(agent_conf, archetype):
     async def message_handler():
@@ -43,11 +44,19 @@ def run(agent_conf, archetype):
 
     @bot.listen(hikari.StoppingEvent)
     async def on_stopping(event: hikari.StoppingEvent) -> None:
-        pass
+        for task in tasks:
+            task.cancel()
+        for task in tasks:
+            try:
+                await task
+                agent.stop()
+            except asyncio.CancelledError:
+                pass
+    
     
     @bot.listen(hikari.StartedEvent)
     async def on_started(event):
-        global agent
+        global agent, tasks
 
         # Create server representation
         server_id = os.getenv("SERVER_ID")
@@ -67,10 +76,13 @@ def run(agent_conf, archetype):
         print(f"Users: {server.users}")
         print(f"Channels: {server.channels}")
 
-        asyncio.create_task(agent.respond_routine())
-        asyncio.create_task(agent.plan_routine())
-        asyncio.create_task(agent.memory_routine())
-        asyncio.create_task(message_handler())
+        tasks = [
+            asyncio.create_task(agent.respond_routine()),
+            asyncio.create_task(agent.memory_routine()),
+            asyncio.create_task(agent.plan_routine()),
+            asyncio.create_task(message_handler())
+        ]
+        
         print(f"Bot is ready")
 
     bot.run()
