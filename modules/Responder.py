@@ -1,5 +1,5 @@
 import ollama
-from utils import *
+from utils.utils import *
 
 class Responder():
     def __init__(self, model):

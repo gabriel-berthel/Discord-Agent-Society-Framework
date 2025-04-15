@@ -1,8 +1,8 @@
 import hikari
 import os
 import asyncio
-import agent as ag
-from modules.DiscordServer import DiscordServer
+import models.Agent as ag
+from models.DiscordServer import DiscordServer
 
 agent = None
 tasks = []

@@ -1,7 +1,7 @@
 import asyncio
 import json
 from prompt_client import PromptClient
-from modules.DiscordServer import DiscordServer
+from models.DiscordServer import DiscordServer
 from dotenv import load_dotenv
 
 # Liste des archétypes à tester

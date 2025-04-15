@@ -1,5 +1,5 @@
 import ollama
-from utils import *
+from utils.utils import *
 
 base = """
 Imagine you’re writing a forward-looking entry in your personal notebook, grounded in self-reflection and past experience. This is your space to explore your current goals, intentions, and desires based on what you've learned about yourself over time.

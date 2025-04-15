@@ -1,7 +1,7 @@
 import yaml 
 import os 
 from typing import Dict, Any
-from utils import load_yaml
+from utils.utils import load_yaml
 
 def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     """ Generate a personality prompt based on an archetype's data """

@@ -1,8 +1,8 @@
 import asyncio
 import random
 import time
-from agent import Agent
-from modules.DiscordServer import DiscordServer
+from models.Agent import Agent
+from models.DiscordServer import DiscordServer
 from dotenv import load_dotenv
 import logging
 

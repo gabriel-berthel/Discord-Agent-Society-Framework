@@ -1,6 +1,6 @@
 import ollama
 import re
-from utils import *
+from utils.utils import *
 
 base = """
 Imagine you are a Discord user who can query your personal notebook and diary to help respond to messages. 

@@ -1,5 +1,5 @@
 import ollama
-from utils import *
+from utils.utils import *
 
 neutral_base = """
 You are a journalism student assigned to summarize a Discord conversation in which you were an active participant. Your goal is to produce a clear, accurate, and impartial summary that demonstrates your ability to report professionally, paraphrase effectively, and preserve factual integrity.

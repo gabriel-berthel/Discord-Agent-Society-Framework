@@ -1,7 +1,7 @@
 import asyncio
 import os
-import discord_bot
-import utils
+import clients.discord_bot as discord_bot
+import utils.utils as utils
 import argparse
 from dotenv import load_dotenv
 import sys

@@ -2,7 +2,7 @@ import asyncio
 from contextlib import contextmanager
 from datetime import datetime
 from collections import deque
-from utils import *
+from utils.utils import *
 import modules.Memories as db
 import random
 from collections import defaultdict
@@ -11,8 +11,8 @@ from modules.QueryEngine import QueryEngine
 from modules.Planner import Planner
 from modules.Responder import Responder
 from modules.WebBrowser import WebBrowser
-import utils
-from prompt_generator import generate_agent_prompt
+import utils.utils as utils
+from utils.prompt_generator import generate_agent_prompt
 from types import SimpleNamespace
 
 class DictToAttribute(SimpleNamespace):
