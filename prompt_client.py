@@ -78,11 +78,11 @@ class PromptClient:
 
         roles = list(clients.keys())
         start_time = time.time()
-        historic = ['Hi']
+        historic = ['Hi! What\'s up gamers']
 
         current_archetype = random.choice(roles)
         current_client = clients[current_archetype]
-        message = "Hi"
+        message = "Hi! What\'s up gamers"
         
         msg = f"[{current_client.name}] said {message}"
         historic.append(msg)

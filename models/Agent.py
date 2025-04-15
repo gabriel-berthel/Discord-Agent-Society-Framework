@@ -32,7 +32,23 @@ heading_off_messages = [
     "I’m out, talk to you soon!",
     "Time for me to head off. Take care of yourself!",
     "I need to go, but let’s chat again soon!",
-    "I’m out the door, catch you on the flip side!"
+    "I’m out the door, catch you on the flip side!",
+        "What's up, gamers?",
+    "Yo yo yo, who's online?",
+    "Sup nerds 😎",
+    "Ayo, what’s the drama today?",
+    "Who woke up and chose chaos?",
+    "Good day to start some sh*t, huh?",
+    "Rise and grind, pixel warriors.",
+    "Reporting live from my bed.",
+    "What are we screaming about today?",
+    "Knock knock, it's me, your problem.",
+    "Hey losers (affectionate)",
+    "Let’s get this bread—or cry trying.",
+    "Just vibing. You?",
+    "Guess who just logged on with zero context?",
+    "Hey, any lore updates?",
+    "Back from the void. What did I miss?"
 ]
 
 greetings = [
@@ -51,7 +67,23 @@ greetings = [
     "Hi, hope you're doing well!",
     "Salutations!",
     "What’s up? How’s your day going?",
-    "Hey, long time no see!"
+    "Hey, long time no see!",
+        "Alright, I'm logging off before I say something cursed.",
+    "Peace out, I’ve caused enough chaos for one day.",
+    "Time to disappear like my responsibilities.",
+    "Vanishing like a bad WiFi signal. Bye!",
+    "Catch y’all on the flip flop.",
+    "I’m off to touch grass. Maybe.",
+    "Logging out before my brain fully melts.",
+    "That’s enough internet for today. Bye!",
+    "Alright, I’m ghosting the server now. Later!",
+    "Yeeting myself into the offline zone.",
+    "Time to clock out of existence. Peace!",
+    "I'm outtie like a 90s kid. Bye!",
+    "Later nerds, don't burn the place down.",
+    "Off to go scream into the void, brb never.",
+    "Catch me in the next episode of whatever this is.",
+    "Dipping like chips in salsa. See ya!"
 ]
 
 class Agent:

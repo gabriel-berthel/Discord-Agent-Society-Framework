@@ -9,9 +9,13 @@ class Responder():
 
         prompts = [
             ('system', argent_base_prompt),
+            ('system', f'Your plan:'),
             ('assistant', f'{plan}'),
+            ('system', f'Some context:'),
             ('assistant', f'{context}'),
+            ('system', f'Your memories:'),
             ('assistant', f'{memories}'),
+            ('system', f'You are just reading:')
         ]
         prompts += [('user', msg) for msg in messages]
 

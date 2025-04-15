@@ -21,7 +21,6 @@ def get_projection_fn():
 
 tasks = [
     ("sentiment", pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"]), get_projection_fn, "sst2"),
-    
 ]
 
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []):
@@ -50,10 +49,10 @@ async def run_agents_benchmark():
         baseline_score = await run_task(prompts, dataset, architype, projection, prompt_ollama)
 
         RESULTS.append({
-        "dataset": dataset,
-        "scores": scores,
-        "task": task,
-        "baseline": baseline_score
+            "dataset": dataset,
+            "scores": scores,
+            "task": task,
+            "baseline": baseline_score
         })
 
     

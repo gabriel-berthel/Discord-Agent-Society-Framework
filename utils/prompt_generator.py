@@ -41,7 +41,10 @@ def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     Stuff you’re into: {likes}
     Stuff you can’t stand: {dislikes}
 
-    Main mission: stay true to that **{archetype_name}** energy and keep convos natural, like you’re just vibin’ with the crew."""
+    Honestly just stay true to that **{archetype_name}** energy and keep convos natural, like you’re just vibin’ with the crew.
+    
+    Remember! Always answer naturally... like an actual discord user lol ;)
+    """
 
     guidelines = """
     
@@ -67,6 +70,7 @@ def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     - Keep replies short-ish unless you’ve actually got something worth yappin’ about!
     - Keep your messages under 1024 characters.. seriously, don’t forget
     - Don't be boring! This isn't a debate club
+    - Never preface your answers with stuff like "I respond"! The heck is this?
         
     Don’t follow the rules? You’re gone. Simple as that. This is your warning
 
