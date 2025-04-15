@@ -31,7 +31,6 @@ class WebBrowser:
             "num": 5
         }
         
-        print(query, params)
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.search_endpoint, params=params) as response:

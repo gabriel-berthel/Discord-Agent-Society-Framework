@@ -15,11 +15,6 @@ from modules.Responder import Responder
 from modules.WebBrowser import WebBrowser
 import utils.utils as utils
 from utils.prompt_generator import generate_agent_prompt
-from types import SimpleNamespace
-
-class DictToAttribute(SimpleNamespace):
-    def get(self, key, default=None):
-        return getattr(self, key, default)
 
 heading_off_messages = [
     "I'm heading off now, take care!",
@@ -61,8 +56,8 @@ greetings = [
 
 class Agent:
     def __init__(self, user_id, agent_conf, server, archetype):
-        archetype_conf = DictToAttribute(**utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
-        self.config = DictToAttribute(**utils.load_yaml(agent_conf)['config'])
+        archetype_conf = utils.DictToAttribute(**utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
+        self.config = utils.DictToAttribute(**utils.load_yaml(agent_conf)['config'])
 
         persitance_prefix = self.config.persitance_prefix if self.config.persitance_prefix else ""
         persistance_id = f"{persitance_prefix}_{archetype}_{user_id}"
@@ -81,7 +76,7 @@ class Agent:
         self.is_online = True
         self.impulses = self.config.impulses
         self.sequential = self.config.sequential_mode
-        self._running = True  # 🚨 Control flag for clean shutdown
+        self._running = True 
 
         self.logs = {
             'plans': [],

@@ -13,6 +13,7 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 logging.getLogger("tqdm").setLevel(logging.ERROR) 
 logging.getLogger("httpx").setLevel(logging.ERROR) 
+logging.getLogger("modules.WebBrowser").setLevel(logging.ERROR)
 
 # Linux optimisations for asyncio.
 if os.name != "nt":
