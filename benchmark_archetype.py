@@ -27,7 +27,7 @@ tasks = [
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []):
      for prompt in prompts:
         preds, labels = [], []
-        for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
+        for data in tqdm(dataset[:10], desc=f"{architype} - {dataset}"):
             input_text = pb.InputProcess.basic_format(prompt, data)
             label = data['label']
             raw_pred = await prompt_fn(input_text, *args)

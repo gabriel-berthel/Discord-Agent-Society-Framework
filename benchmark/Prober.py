@@ -3,36 +3,42 @@ from dotenv import load_dotenv
 import yaml
 import json
 import os
-
+import ollama
+import re
 
 
 load_dotenv()
 
 
 class Prober:
-    
-    def __init__(self):
-        self.questions = []
-        self.responses = [] 
-        self.num_questions = 10
-        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        self.yaml_path = "../archetypes.yaml"
-
-
-    def generate_model_response(self, prompt):
+    @staticmethod
+    def generate_model_response(prompt):
         """
         Generate the content based on the prompt
 
         Returns: json 
         """
-        response = self.client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5
-        )
-        answer = response.choices[0].message.content
+        
+        try:
+            client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.5
+            )
+            answer = response.choices[0].message.content
+        except Exception as e:
+            response = ollama.chat(
+                model="llama3.2",
+                messages=[
+                    {"role": "system", "content": "Do not make any comment. Make sure to follow the instructions."},
+                    {"role": "user", "content": prompt}
+                ],
+            )
+
+            answer = response['message']['content']
         
         try: 
             questions = json.loads(answer)
@@ -40,15 +46,15 @@ class Prober:
         except json.JSONDecodeError as e:
             raise ValueError(e)
 
-
-    def generate_content_questions(self, content:str):
+    @staticmethod
+    def generate_content_questions(content: str, num_questions=10):
         """"
         Generate questions from content (reflection, summary, conversation, history)
 
         Returns: json of questions (type, question, correct_answer, choices)
         """
         prompt = f"""
-        Generate {self.num_questions//2} binary (yes/no or true/false) questions and {self.num_questions - self.num_questions//2} multiple choice questions with exactly 4 options each.
+        Generate {num_questions//2} binary (yes/no or true/false) questions and {num_questions - num_questions//2} multiple choice questions with exactly 4 options each.
 
         Format your response as a valid JSON array of question objects with the following structure:
 
@@ -70,23 +76,19 @@ class Prober:
         {content}
         """
         # generate questions
-        questions = self.generate_model_response(prompt)
+        questions = Prober.generate_model_response(prompt)
         return questions
 
-
-    def generate_sk_questions(self):
+    @staticmethod
+    def generate_sk_questions(peronality_prompt, num_questions=10):
         """
         Generate self-knowledge questions evaluation for an archetype
 
         Returns: json of questions (type, question, correct_answer, choices)
         """
-        
-        # load the yaml for archetypes
-        with open(self.yaml_path, 'r', encoding='utf-8') as f:
-            content = yaml.safe_load(f)['agent_archetypes']
 
         prompt =  f"""
-        Generate {self.num_questions//2} binary (yes/no or true/false) questions and {self.num_questions - self.num_questions//2} multiple choice questions with exactly 4 options each.
+        Generate {num_questions//2} binary (yes/no or true/false) questions and {num_questions - num_questions//2} multiple choice questions with exactly 4 options each.
         The questions should help evaluate how well the archetype understands its own traits and characteristics.
 
         Format your response as a valid JSON array of question objects with the following structure:
@@ -106,32 +108,25 @@ class Prober:
             }}
         ]
         Content:
-        {content}
+        {peronality_prompt}
         """
         # generate questions
-        questions = self.generate_model_response(prompt)
+        questions = Prober.generate_model_response(prompt)
         return questions
 
-
-    def evaluate(self, type:str, content:str,  responses:list):
+    @staticmethod
+    def evaluate(questions:list,  responses:list):
         """ 
         Evaluate responses based on questions 
 
         Returns: dict of results and scor
         """
-
-        if type == "self_knowledge":
-            questions = self.generate_sk_questions()  
-        elif type == "general":
-            questions = self.generate_content_questions(content)
-        else: 
-            raise ValueError("Choose right evaluation type between self_knowledge and general(reflection, historic, summary)")
-
+        
         results = []
         score = 0
-
+        total_score = 0
         for i, q in enumerate(questions):
-            expected_answer = q.get("correct_answer", "")
+            expected_answer = q['correct_answer']
             system_answer = responses[i] if i < len(responses) else ""
             
             score = 1 if system_answer.strip().lower() == expected_answer.strip().lower() else 0
@@ -149,11 +144,51 @@ class Prober:
             "total_score": total_score,
             "max_score": len(questions)
         }
+        
+    @staticmethod
+    def classify_reflection_relevancy(transcript, reflection, personality):
+        prompt = f"""
+        You are a JSON-only evaluator. Rate how relevant the reflection is to the dialogue and personality.
 
+        Instructions:
+        - Score each axis (personality, dialogue) from 0 (irrelevant) to 3 (strongly relevant).
+        - Justify each score briefly.
 
-          
+        Input:
+        Reflection: "{reflection}"
 
+        Dialogue:
+        {transcript}
 
+        Personality:
+        {personality}
+
+        Respond ONLY with a JSON object in this format:
+        {{
+        "relevancy_scores": {{
+            "personality": <0-3>,
+            "dialogue": <0-3>
+        }},
+        "justification": {{
+            "personality": "<short explanation>",
+            "dialogue": "<short explanation>"
+        }}
+        }}
+        """
+
+        response = ollama.chat(
+            model="llama3.2",
+            messages=[
+                {'role': 'system', 'content': 'Do not make any comment. Make sure to follow the instructions and reply in json and json only.'},
+                {'role': 'user', 'content': prompt},
+            ],
+            format='json'
+        )
+
+        try:
+            return json.loads(response['message']['content'])
+        except json.JSONDecodeError as e:
+            raise ValueError(e)
 
 if __name__=='__main__':
 

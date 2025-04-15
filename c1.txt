@@ -1,0 +1,54 @@
+{
+    "b1": {
+        "description": "Context Queries Relevancy",
+        "archetypes": {}
+    },
+    "b2": {
+        "description": "Responder Queries Relevancy",
+        "archetypes": {}
+    },
+    "c1": {
+        "description": "Context Accuracy",
+        "archetypes": {
+            "activist": {
+                "shared_keyword_ratio": 0.13134328358208955,
+                "cosine_similarity": {
+                    "baseline": 0.14300419390201569,
+                    "agent": 0.17870503664016724
+                }
+            },
+            "baseline": {
+                "shared_keyword_ratio": 0.12359550561797754,
+                "cosine_similarity": {
+                    "baseline": 0.16496136784553528,
+                    "agent": 0.18935778737068176
+                }
+            },
+            "fact_checker": {
+                "shared_keyword_ratio": 0.13924050632911392,
+                "cosine_similarity": {
+                    "baseline": 0.15049555897712708,
+                    "agent": 0.18559908866882324
+                }
+            },
+            "mediator": {
+                "shared_keyword_ratio": 0.16666666666666669,
+                "cosine_similarity": {
+                    "baseline": 0.1451951116323471,
+                    "agent": 0.1777193248271942
+                }
+            },
+            "trouble_maker": {
+                "shared_keyword_ratio": 0.12735849056603774,
+                "cosine_similarity": {
+                    "baseline": 0.14230412244796753,
+                    "agent": 0.18890906870365143
+                }
+            }
+        }
+    },
+    "d1": {
+        "description": "Reflection Relevancy",
+        "archetypes": {}
+    }
+}
