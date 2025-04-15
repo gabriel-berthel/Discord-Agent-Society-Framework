@@ -58,7 +58,7 @@ class PromptClient:
         roles = [
             ('fact_checker', 'Caspian', 1),
             ('activist', 'Zora', 2),
-            ('interviewer', 'Quinn', 3),
+            ('mediator', 'Quinn', 3),
             ('baseline', 'Neutri', 4),
             ('trouble_maker', 'Rowan', 5)
         ]
@@ -110,17 +110,25 @@ class PromptClient:
 
 
 async def main():
+    import os
+    import pickle
+    
     print_replies = True
-    simulation_duration = 5 * 0
+    simulation_duration = 60 * 9 + 5
     clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies)
     print(clients, historic)
     for archetype, client in clients.items():
         await client.stop()
         client.agent.save_logs()
-        
-    print("\nSimulation Complete")
-    print(f"Historic conversation: {historic}")
 
+    file_path = os.path.join("logs", f"qa_bench_histo.pkl")
+
+    with open(file_path, "wb") as f:
+        pickle.dump(historic, f)
+
+    print(f"[LOG] Saved historic to {file_path}")   
+    
+    
 
 if __name__ == "__main__":
     asyncio.run(main())

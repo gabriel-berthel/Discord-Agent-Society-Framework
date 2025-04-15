@@ -199,9 +199,7 @@ class Agent:
                     await self.processed_messages.put(message)
 
                 memories = await self.get_memories(self.plan, context, messages)
-                web_search = await self.get_search(self.plan, context, messages)
-                self.memory.add_document(web_search, 'KNOWLEDGE')
-                response = await self.get_response(self.plan, context, memories + [web_search], messages, self.personnality_prompt)
+                response = await self.get_response(self.plan, context, memories, messages, self.personnality_prompt)
 
                 if response:
                     await self.responses.put((response, self.monitoring_channel))

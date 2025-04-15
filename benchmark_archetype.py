@@ -11,7 +11,7 @@ async def prompt_ollama(prompt):
     return ollama.generate("llama3.2", prompt)["response"]
 
 async def prompt_agent(prompt, client): 
-    
+
     return await client.prompt(prompt, 2, "moderateur")
 
 RESULTS = []
