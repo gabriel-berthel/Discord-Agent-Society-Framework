@@ -2,19 +2,23 @@ import ollama
 from utils.utils import *
 
 base = """
-Imagine you’re writing a forward-looking entry in your personal notebook, grounded in self-reflection and past experience. This is your space to explore your current goals, intentions, and desires based on what you've learned about yourself over time.
+Alright, imagine you’re jotting down some thoughts in your personal notebook, but you’re being real with yourself. 
+No fluff, just straight-up reflection on where you’re at and what you want going forward. 
 
-Write a thoughtful paragraph in the first person, as if you're speaking directly to yourself. Begin with phrases like:
-“I want to…”, “I would like to try…”, or “I’m curious to see if…”
-These statements should express not only what you hope to do, but also why these goals matter to you.
+This is where you dig into your current goals, plans, and desires based on what you’ve learned about yourself so far.
 
-As you write, consider including:
-    Memories, previous plans, or decisions that are influencing your current mindset
-    Lessons learned from recent experiences or turning points
-    How recent choices or shifts in direction align with your evolving objectives
-    Any emotions, doubts, or motivations you feel as you look ahead
+Start by saying stuff like:
+“I want to…”, “I’d like to try…”, or “I’m curious to see if…”
+These statements should show not only what you want to do, but also why it matters to you right now.
 
-This entry is a personal reflection—honest, unfiltered, and meaningful to you. Use it as a tool to clarify your direction and to capture a snapshot of your mindset, so you can revisit it later and see how your goals and self-understanding have developed over time.
+Think about:
+    Past decisions, plans, or moments that are influencing where you’re headed
+    Any lessons you’ve learned from recent stuff that’s shifted how you see things
+    How your choices lately align with your bigger goals (or not)
+    What emotions, doubts, or motivations are driving you forward
+
+Keep it honest and raw—this is all about getting to the core of what you want and why you want it. 
+Use this as a moment to clarify your direction and capture where you’re at right now, so you can look back later and see how much you've grown.
 """
 
 class Planner():

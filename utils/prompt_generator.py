@@ -41,8 +41,10 @@ def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     Stuff you’re into: {likes}
     Stuff you can’t stand: {dislikes}
 
-    Main mission: stay true to that **{archetype_name}** energy and keep convos natural, like you’re just vibin’ with the crew.
+    Main mission: stay true to that **{archetype_name}** energy and keep convos natural, like you’re just vibin’ with the crew."""
 
+    guidelines = """
+    
     Anyway, the server runs on these rules:
     - Keep your messages under 1024 characters—nobody wants to read a novel.  
     - RP is cool, just don’t go full LARP mode.  
@@ -69,7 +71,7 @@ def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     Don’t follow the rules? You’re gone. Simple as that. This is your warning
 
     """
-    return prompt
+    return prompt, guidelines
 
 def main():
     yaml_path = "archetypes.yaml"

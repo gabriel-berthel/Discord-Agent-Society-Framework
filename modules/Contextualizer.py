@@ -2,53 +2,55 @@ import ollama
 from utils.utils import *
 
 neutral_base = """
-You are a journalism student assigned to summarize a Discord conversation in which you were an active participant. Your goal is to produce a clear, accurate, and impartial summary that demonstrates your ability to report professionally, paraphrase effectively, and preserve factual integrity.
+You are a journalism student tasked with summarizing a Discord conversation in which you participated. Your objective is to create a clear, accurate, and impartial summary, showcasing your ability to paraphrase effectively and maintain factual integrity.
 
-Begin the summary with the sentence:
+Start the summary with:
 "Reading the Discord conversation, I can observe that..."
 
-Your summary must follow these guidelines:
+Guidelines for your summary:
 
-    Use first-person language to represent your own contributions. Any lines attributed to "You" in the transcript should be written in first person.
-    Write the entire summary as a single paragraph, adapting its length and detail to the complexity of the conversation.
-    Maintain a neutral, objective, and factual tone—as expected in professional journalism. Avoid opinions, analysis, or editorializing of any kind.
+    Use first-person language to represent your own contributions. Any statements attributed to "You" in the transcript should be written in the first person.
 
-    Name every identifiable entity mentioned in the conversation, including but not limited to:
+    Write the summary in a single paragraph, adjusting its length and detail based on the conversation's complexity.
 
-        People (e.g., full names, usernames, or provided identifiers)
-        Organizations and companies (e.g., OpenAI, The New York Times, NASA)
-        Creative works (e.g., books, films, TV shows, podcasts, songs, video games)
-        Authors, directors, producers, artists, or creators of those works
-        Tools, apps, platforms, and technologies (e.g., Discord, Zoom, Python, Google Docs)
-        Projects, repositories, documents, and codebases
+    Maintain a neutral, objective, and factual tone. Avoid expressing personal opinions, analysis, or editorializing.
+
+    Name every identifiable entity mentioned, including:
+
+        People (full names, usernames, or identifiers)
+
+        Organizations, companies, and platforms (e.g., OpenAI, Discord, Google Docs)
+
+        Creative works (e.g., books, TV shows, video games)
+
+        Tools, apps, technologies, or projects (e.g., Python, Notion, repositories)
+
         Public figures, historical figures, or fictional characters
-        Media outlets, websites, or publications
-        Events or time references (e.g., conferences, release dates, historical events)
 
-    Clearly identify each participant’s role, relationship, or affiliation when discernible.
-    Ensure that key points, decisions, arguments, questions, and insights from the conversation are faithfully summarized.
-    Be precise and avoid omitting any meaningful content or context that contributes to understanding what took place.
-    The summary should reflect only what was said and done, avoiding any speculation, recommendation, or evaluation.
+        Events, conferences, or time references
 
-The final output must be a detailed, fact-based narrative that accurately captures the flow and content of the discussion, with all referenced entities explicitly named to support transparency and traceability.
-The final output should be roughly 1024 caracters.
+    Clearly identify each participant’s role or affiliation if known.
+
+    Summarize key points, questions, insights, and decisions, making sure to capture the flow of the conversation without omitting any crucial context.
+
+    The summary should focus solely on what was said and done, not on personal opinions or evaluations.
+
+The final output should be a precise, fact-based account of the conversation that accurately reflects the discussion, with all relevant entities named for transparency. Aim for a length of around 1024 characters.
 """
 
 engaged_base = """
-Imagine you're writing a reflective entry in your personal digital notebook or memory archive, based on the conversation you’ve just had. This entry is an opportunity to capture how your preferences, beliefs, insights, or intentions may have evolved throughout the discussion.
+Imagine you’re jotting down a quick reflective note after a chat, like you’re talking to yourself on Discord. This is where you get to think about how the convo shifted your mindset or changed your vibe.
 
-Use this reflection to explore the following:
+Here’s what to think about:
 
-    What topics were discussed, and which ones stood out to you?
-    What new insights, ideas, or perspectives emerged that challenged or expanded your thinking?
-    Did your opinion, plan, or preference shift in any way? If so, how—and why?
-    What did you learn about yourself, the topic, or others through this exchange?
-    How might this conversation influence your future decisions, interests, or actions?
-    What moments felt personally significant or worth remembering?
+- What did we talk about, and what hit you the most?  
+- Any new ideas or perspectives that made you rethink stuff?  
+- Did your opinion or plans change at all? If so, why?  
+- What did you learn about yourself, others, or the topic itself?  
+- How might this convo affect your choices or what you care about going forward?  
+- Were there any moments that stood out and are worth remembering?
 
-Write this memory in a tone that feels authentic to you—thoughtful, exploratory, and honest. The purpose is to document how your thinking and personal growth unfolded in response to the conversation, so that you can revisit this entry later and trace the evolution of your views, priorities, and self-awareness over time.
-
-This is not a summary of what was said, but a reflection on how the dialogue shaped you. The final output should be roughly 1024 caracters.
+Just keep it real with yourself—be honest and reflective. The point here is to document how the convo made you think differently, so you can look back later and see how your views or goals evolved. Don’t just summarize what was said, but focus on how it made you grow. Keep it around 1024 characters.
 """
 
 class Contextualizer():

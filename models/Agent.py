@@ -71,7 +71,9 @@ class Agent:
         self.server = server
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
-        self.personnality_prompt = generate_agent_prompt(archetype, archetype_conf)
+        
+        self.personnality_prompt, self.guideline = generate_agent_prompt(archetype, archetype_conf)
+        
         self.log = self.config.save_logs
         self.is_online = True
         self.impulses = self.config.impulses
@@ -172,16 +174,16 @@ class Agent:
 
         return reflection
 
-    async def get_plan(self, former_plan, context, unique_memories, bot_context, personnality_prompt):
-        plan = await Planner(self.config.model).refine_plan(former_plan, context, unique_memories, bot_context, personnality_prompt)
+    async def get_plan(self, former_plan, context, unique_memories, bot_context, base_prompt):
+        plan = await Planner(self.config.model).refine_plan(former_plan, context, unique_memories, bot_context, base_prompt)
 
         if self.log:
-            self.logs['plans'].append({'input': (former_plan, context, unique_memories, bot_context, personnality_prompt), 'output': plan})
+            self.logs['plans'].append({'input': (former_plan, context, unique_memories, bot_context, base_prompt), 'output': plan})
 
         return plan
 
-    async def get_new_topic(self, plan, personnality_prompt):
-        return await Responder(self.config.model).new_discussion(plan, personnality_prompt)
+    async def get_new_topic(self, plan, base_prompt):
+        return await Responder(self.config.model).new_discussion(plan, base_prompt)
 
     async def respond_routine(self):
         while self._running:
@@ -199,7 +201,7 @@ class Agent:
                     await self.processed_messages.put(message)
 
                 memories = await self.get_memories(self.plan, context, messages)
-                response = await self.get_response(self.plan, context, memories, messages, self.personnality_prompt)
+                response = await self.get_response(self.plan, context, memories, messages, self.personnality_prompt + self.guideline)
 
                 if response:
                     await self.responses.put((response, self.monitoring_channel))
@@ -253,7 +255,7 @@ class Agent:
                 sleep_time = random.uniform(60, 60 * 60)
 
             else:
-                msg = await self.get_new_topic(self.plan, self.personnality_prompt)
+                msg = await self.get_new_topic(self.plan, self.personnality_prompt + self.guideline)
                 await self.responses.put((msg, self.monitoring_channel))
                 sleep_time = random.uniform(60, 60 * 5)
 
