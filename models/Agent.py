@@ -129,7 +129,7 @@ class Agent:
     def save_logs(self):
         os.makedirs("logs", exist_ok=True)
 
-        file_path = os.path.join("logs", f"{self.persistance_id}.pkl")
+        file_path = os.path.join("logs", f"{self.persistance_id}_log.pkl")
 
         with open(file_path, "wb") as f:
             pickle.dump(self.logs, f)
