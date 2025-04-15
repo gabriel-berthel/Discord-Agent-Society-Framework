@@ -7,6 +7,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import torch
 from utils.utils import list_to_text
 import spacy
+import asyncio
 import pytextrank
 
 model = None
@@ -16,10 +17,8 @@ nlp.add_pipe("textrank")
 
 def extract_keywords(text, num_keywords=10):
     doc = nlp(text)
-    keywords = set()
-    for phrase in doc._.phrases[:num_keywords]:
-        keywords.add(phrase.text.lower())
-    return keywords
+    keywords = [phrase.text.lower() for phrase in doc._.phrases[:num_keywords]]
+    return set(keywords)
 
 def compare_embeddings(agent_text, baseline_text):
     documents = [agent_text, baseline_text]
@@ -28,7 +27,7 @@ def compare_embeddings(agent_text, baseline_text):
 
 def compare_keywords(agent_keywords, baseline_keywords):
     common_keywords = agent_keywords.intersection(baseline_keywords)
-    return len(common_keywords)
+    return len(common_keywords), len(agent_keywords.union(baseline_keywords))
 
 def summarize_text(text):
     global model, tokenizer
@@ -88,36 +87,63 @@ def run_b2(logs, memory_module):
     }
 
 def run_c1(neutral_ctxs, contextualizer):
-    keyword_counts_baselines = []
-    keyword_counts_agents = []
+    shared_keywords, unique_keywords  = [], []
     cosine_similarities_baselines = []
     cosine_similarities_agents = []
     
+    print(len(neutral_ctxs))
     for arguments, _ in neutral_ctxs:
         msgs, bot_context = arguments
-        agent = contextualizer.neutral_context(msgs, bot_context)
-        baseline = summarize_text('\n'.join(msgs))
+        content = bot_context + '\n'.join(msgs)
+        
+        agent = asyncio.run(contextualizer.neutral_context(msgs, bot_context))
+        baseline = summarize_text(content)
         
         agent_keywords = extract_keywords(agent)
         baseline_keywords = extract_keywords(baseline)
         
-        keyword_count = compare_keywords(agent_keywords, baseline_keywords)
+        shared, unique = compare_keywords(agent_keywords, baseline_keywords)
         
-        cosine_similarity_baseline = compute_cosine_distances([baseline])
-        cosine_similarity_agent = compute_cosine_distances([agent])
+        shared_keywords.append(shared)
+        unique_keywords.append(unique)
         
-        keyword_counts_baselines.append(keyword_count)
-        keyword_counts_agents.append(keyword_count)
+        cosine_similarity_baseline = compute_cosine_distances([baseline, content])
+        cosine_similarity_agent = compute_cosine_distances([agent, content])
+
         cosine_similarities_baselines.append(cosine_similarity_baseline)
         cosine_similarities_agents.append(cosine_similarity_agent)
     
+    shared_mean = np.array(shared_keywords).mean()
+    unique_mean = np.array(unique_keywords).mean()
+    ratio = shared_mean / unique_mean if unique_mean != 0 else float('inf')
+    
     return {
-        'keyword_count': {
-            'baseline': keyword_counts_baselines,
-            'agent': keyword_counts_agents
-        },
+        'shared_keyword_ratio': ratio,
         'cosine_similarity': {
-            'baseline': cosine_similarities_baselines,
-            'agent': cosine_similarities_agents
+            'baseline': np.mean(cosine_similarities_baselines),
+            'agent': np.mean(cosine_similarities_agents)
         }
+    }
+
+def run_d1(reflections_logs, evaluator_fn):
+    total_scores = {"personality": 0, "dialogue": 0}
+    num_reflections = 0
+
+    for arguments, reflection in reflections_logs:
+        messages, _, personality_prompt = arguments
+        result = evaluator_fn('\n'.join(messages), reflection, personality_prompt)
+        scores = result["relevancy_scores"]
+
+        for key in total_scores:
+            total_scores[key] += scores.get(key, 0)
+
+        num_reflections += 1
+
+    final_avg_scores = {k: v / num_reflections for k, v in total_scores.items()}
+    overall_average_score = sum(final_avg_scores.values()) / len(final_avg_scores)
+
+    return {
+        "total_scores": total_scores,
+        "average_scores": final_avg_scores,
+        "overall_average_score": overall_average_score
     }

@@ -92,7 +92,7 @@ async def run_agents_benchmark(save_to="results.csv"):
 
     if save_to:
         df.to_csv(save_to, index=False)
-        print(f"\n✅ Résultats sauvegardés dans {save_to}")
+        print(f"\n Résultats sauvegardés dans {save_to}")
 
 
 if __name__ == '__main__':
