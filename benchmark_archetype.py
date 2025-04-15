@@ -20,7 +20,7 @@ def get_projection_fn():
     return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
 
 tasks = [
-    ("sentiment", pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"]), get_projection_fn, "sst2"),
+    ("sentiment", pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"]), get_projection_fn(), "sst2"),
     
 ]
 
@@ -32,7 +32,9 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []
             label = data['label']
             raw_pred = await prompt_fn(input_text, *args)
             pred = pb.OutputProcess.cls(raw_pred, projection)
-            preds.append(pred, label)
+            preds.append(pred)
+            labels.append(label)
+
         # evaluate
         return pb.Eval.compute_cls_accuracy(preds, labels) 
 
@@ -56,7 +58,11 @@ async def run_agents_benchmark():
         "baseline": baseline_score
         })
 
-    
+    filename = f"archetypes_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(RESULTS, f, indent=2, ensure_ascii=False)
+
+    print(f"✅ Résultats enregistrés dans {filename}")
 
 if __name__ == '__main__':
     asyncio.run(run_agents_benchmark())
