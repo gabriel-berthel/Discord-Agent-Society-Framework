@@ -68,7 +68,7 @@ greetings = [
     "Salutations!",
     "What’s up? How’s your day going?",
     "Hey, long time no see!",
-        "Alright, I'm logging off before I say something cursed.",
+    "Alright, I'm logging off before I say something cursed.",
     "Peace out, I’ve caused enough chaos for one day.",
     "Time to disappear like my responsibilities.",
     "Vanishing like a bad WiFi signal. Bye!",
@@ -92,13 +92,13 @@ class Agent:
         self.config = utils.DictToAttribute(**utils.load_yaml(agent_conf)['config'])
 
         persitance_prefix = self.config.persitance_prefix if self.config.persitance_prefix else ""
-        self.persistance_id = f"{persitance_prefix}_{archetype}_{user_id}"
+        self.persistance_id = f"{persitance_prefix}_{archetype}"
 
         self.user_id = int(user_id)
         self.name = archetype_conf.name
         self.monitoring_channel = self.config.channel_id
         self.plan = "No specific plan at the moment. I am simply responding."
-        self.memory = db.Memories(collection_name=self.persistance_id)
+        self.memory = db.Memories(collection_name=f'{self.persistance_id}_mem.pkl')
         self.responses: asyncio.Queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()

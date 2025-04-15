@@ -7,9 +7,9 @@ from sentence_transformers import SentenceTransformer
 import os
 
 class Memories:
-    def __init__(self, collection_name, model_name='all-MiniLM-L6-v2'):
-        os.makedirs('memories', exist_ok=True)
-        self.file_path = os.path.join('memories', collection_name)
+    def __init__(self, collection_name, base_folder='memories', model_name='all-MiniLM-L6-v2'):
+        os.makedirs(base_folder, exist_ok=True)
+        self.file_path = os.path.join(base_folder, collection_name)
         self.model = SentenceTransformer(model_name)
         self._load_memory()
 

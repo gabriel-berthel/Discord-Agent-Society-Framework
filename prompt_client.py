@@ -127,8 +127,6 @@ async def main():
         pickle.dump(historic, f)
 
     print(f"[LOG] Saved historic to {file_path}")   
-    
-    
 
 if __name__ == "__main__":
     asyncio.run(main())
