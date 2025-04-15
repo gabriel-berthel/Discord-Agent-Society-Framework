@@ -11,12 +11,12 @@ async def prompt_ollama(prompt):
     return ollama.generate("llama3.2", prompt)["response"]
 
 async def prompt_agent(prompt, client): 
-    
+
     return await client.prompt(prompt, 2, "moderateur")
 
 RESULTS = []
 clients = prompt_client.PromptClient.build_clients()
-def get_projection_fn():
+def get_projection_fn(pred):
     return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
 
 tasks = [
@@ -32,7 +32,8 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []
             label = data['label']
             raw_pred = await prompt_fn(input_text, *args)
             pred = pb.OutputProcess.cls(raw_pred, projection)
-            preds.append(pred, label)
+            preds.append(pred)
+            labels.append(label)
         # evaluate
         return pb.Eval.compute_cls_accuracy(preds, labels) 
 
@@ -50,13 +51,12 @@ async def run_agents_benchmark():
         baseline_score = await run_task(prompts, dataset, architype, projection, prompt_ollama)
 
         RESULTS.append({
-        "dataset": dataset,
-        "scores": scores,
-        "task": task,
-        "baseline": baseline_score
+            "dataset": dataset,
+            "scores": scores,
+            "task": task,
+            "baseline": baseline_score
         })
 
-    
 
 if __name__ == '__main__':
     asyncio.run(run_agents_benchmark())

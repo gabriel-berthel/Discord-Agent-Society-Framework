@@ -1,23 +1,26 @@
 import asyncio
 import random
 import time
-from agent import Agent
-from modules.DiscordServer import DiscordServer
-from dotenv import load_dotenv
+from models.Agent import Agent
+from models.DiscordServer import DiscordServer
 import logging
+from dotenv import load_dotenv
+
+load_dotenv('agent.env')
 
 logging.basicConfig(level=logging.WARNING)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 logging.getLogger("tqdm").setLevel(logging.ERROR) 
 logging.getLogger("httpx").setLevel(logging.ERROR) 
+logging.getLogger("modules.WebBrowser").setLevel(logging.ERROR) 
 
 class PromptClient:
-    def __init__(self, agent_conf, archetype, name, id, server, persitance_prefix=""):
+    def __init__(self, agent_conf, archetype, name, id, server):
         self.name = name
         self.id = id
         self.server = server
-        self.agent = Agent(id, agent_conf, server, archetype, persitance_prefix=persitance_prefix)
+        self.agent = Agent(id, agent_conf, server, archetype)
         self.tasks = []
         self.server.update_user(id, self.agent.name)
         
@@ -34,6 +37,7 @@ class PromptClient:
         for task in self.tasks:
             try:
                 await task
+                self.agent.stop()
             except asyncio.CancelledError:
                 pass
     
@@ -47,38 +51,38 @@ class PromptClient:
         return message
     
     @staticmethod
-    def build_clients(config_file='benchmark_config.yaml', persitance_prefix=""):
+    def build_clients(config_file='benchmark_config.yaml'):
         server = DiscordServer(1, 'Benchmarking')
         server.add_channel(1, 'General')
         
         roles = [
             ('fact_checker', 'Caspian', 1),
             ('activist', 'Zora', 2),
-            ('interviewer', 'Quinn', 3),
+            ('mediator', 'Quinn', 3),
             ('baseline', 'Neutri', 4),
             ('trouble_maker', 'Rowan', 5)
         ]
         
         clients = {
-            role: PromptClient(config_file, role, name, client_id, server, persitance_prefix=persitance_prefix)
+            role: PromptClient(config_file, role, name, client_id, server)
             for role, name, client_id in roles
         }
 
-        return clients
+        return clients # dict -> archetype: client
 
     @staticmethod
     async def run_simulation(duration: float, print_replies, clients=None):
-        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml', persitance_prefix="benchmark")
+        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml')
         
         await asyncio.gather(*(client.start() for client in clients.values()))
 
         roles = list(clients.keys())
         start_time = time.time()
-        historic = ['Hi']
+        historic = ['Hi! What\'s up gamers']
 
         current_archetype = random.choice(roles)
         current_client = clients[current_archetype]
-        message = "Hi"
+        message = "Hi! What\'s up gamers"
         
         msg = f"[{current_client.name}] said {message}"
         historic.append(msg)
@@ -106,13 +110,23 @@ class PromptClient:
 
 
 async def main():
+    import os
+    import pickle
+    
     print_replies = True
-    simulation_duration = 30
+    simulation_duration = 60 * 9 + 5
     clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies)
+    print(clients, historic)
+    for archetype, client in clients.items():
+        await client.stop()
+        client.agent.save_logs()
 
-    print("\nSimulation Complete")
-    print(f"Historic conversation: {historic}")
+    file_path = os.path.join("logs", f"qa_bench_histo.pkl")
 
+    with open(file_path, "wb") as f:
+        pickle.dump(historic, f)
+
+    print(f"[LOG] Saved historic to {file_path}")   
 
 if __name__ == "__main__":
     asyncio.run(main())

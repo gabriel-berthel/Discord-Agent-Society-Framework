@@ -1,7 +1,7 @@
 import asyncio
 import os
-import discord_bot
-import utils
+import clients.discord_bot as discord_bot
+import utils.utils as utils
 import argparse
 from dotenv import load_dotenv
 import sys
@@ -13,6 +13,7 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 logging.getLogger("tqdm").setLevel(logging.ERROR) 
 logging.getLogger("httpx").setLevel(logging.ERROR) 
+logging.getLogger("modules.WebBrowser").setLevel(logging.ERROR)
 
 # Linux optimisations for asyncio.
 if os.name != "nt":

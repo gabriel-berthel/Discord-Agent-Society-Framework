@@ -4,14 +4,9 @@ import aiohttp
 import json 
 import logging
 import ollama
-from dotenv import load_dotenv
-
-
-load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
 
 class WebBrowser:
     """
@@ -216,7 +211,7 @@ class WebBrowser:
         try:
             if self.use_ollama:
                 response = ollama.chat(
-                    model="llama3",
+                    model="llama3.2",
                     messages=[
                         {"role": "system", "content": "You are an assistant specialized in creating concise summaries of multiple research findings."},
                         {"role": "user", "content": summarize_prompt}
