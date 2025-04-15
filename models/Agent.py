@@ -60,13 +60,13 @@ class Agent:
         self.config = utils.DictToAttribute(**utils.load_yaml(agent_conf)['config'])
 
         persitance_prefix = self.config.persitance_prefix if self.config.persitance_prefix else ""
-        persistance_id = f"{persitance_prefix}_{archetype}_{user_id}"
+        self.persistance_id = f"{persitance_prefix}_{archetype}_{user_id}"
 
         self.user_id = int(user_id)
         self.name = archetype_conf.name
         self.monitoring_channel = self.config.channel_id
         self.plan = "No specific plan at the moment. I am simply responding."
-        self.memory = db.Memories(collection_name=persistance_id)
+        self.memory = db.Memories(collection_name=self.persistance_id)
         self.responses: asyncio.Queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()
@@ -95,7 +95,7 @@ class Agent:
     def save_logs(self):
         os.makedirs("logs", exist_ok=True)
 
-        file_path = os.path.join("logs", f"{self.memory.collection_name}.pkl")
+        file_path = os.path.join("logs", f"{self.persistance_id}.pkl")
 
         with open(file_path, "wb") as f:
             pickle.dump(self.logs, f)

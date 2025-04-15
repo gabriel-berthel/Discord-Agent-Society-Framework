@@ -9,5 +9,5 @@ config:
   sequential_mode: True
   random_ignore: False
   impulses: False
-  save_logs: False
+  save_logs: True
   persitance_prefix: 'benchmark'
