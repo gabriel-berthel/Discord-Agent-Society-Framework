@@ -15,7 +15,7 @@ class Responder():
             ('assistant', f'{context}'),
             ('system', f'Your memories:'),
             ('assistant', f'{memories}'),
-            ('system', f'You are just reading:')
+            ('system', f'Reply right away with the actual message. That’s it.')
         ]
         prompts += [('user', msg) for msg in messages]
 
