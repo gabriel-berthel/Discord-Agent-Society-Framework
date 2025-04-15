@@ -125,7 +125,7 @@ class WebBrowser:
         Answer concisely but completely. Cite your sources when relevant.
         """
         payload = {
-            "model": "llama3", # or another ollama model
+            "model": "llama3.2", # or another ollama model
             "prompt": prompt,
             "stream": False,
             "options": {
@@ -239,12 +239,10 @@ class WebBrowser:
 
 
 async def main():
-    search_api_key=os.getenv("GOOGLE_API_KEY")
-    search_engine_id=os.getenv("GOOGLE_CSE_ID")
     llm_api_key=os.getenv("LLM_API_KEY")
 
 
-    browser = WebBrowser(search_api_key, search_engine_id, llm_api_key)
+    browser = WebBrowser(llm_api_key, use_ollama=False)
 
     # Test with multiple queries
     queries = [
