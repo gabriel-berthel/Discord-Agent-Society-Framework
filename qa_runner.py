@@ -2,14 +2,14 @@
 
 import warnings
 from types import SimpleNamespace
-from qa_tasks import run_b1, run_b2, run_c1, run_d1
+from qa_tasks import run_b1, run_b2, run_c1, run_d1, run_a1, run_a2, run_a3
 from modules.Memories import Memories
 from modules.Contextualizer import Contextualizer
 import pickle
-from benchmark.Prober import Prober
-from prompt_client import PromptClient
 from utils.utils import *
 from utils.prompt_generator import generate_agent_prompt
+from benchmark.Prober import Prober
+from prompt_client import PromptClient
 
 warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hub.file_download")
 
@@ -46,27 +46,6 @@ def load_qa_bench_data():
         ))
     return logs
 
-async def run_a1(client: PromptClient, prober: Prober, personality):
-    await client.start() 
-    questions = prober.generate_sk_questions(personality, 10)
-    responses = [await client.prompt(question, '100', 'Admin', 2) for question in questions]
-    await client.stop()
-    
-    return Prober.evaluate(questions, responses)
-
-async def run_a2(client: PromptClient, prober: Prober, dialogues):
-    await client.start() 
-    questions = prober.generate_content_questions("\n".join(dialogues), 25)
-    responses = [await client.prompt(question, '100', 'Admin', 2) for question in questions]
-    await client.stop()
-    
-    return Prober.evaluate(questions, responses)
-
-async def run_a3(client: PromptClient, prober: Prober, reflections):
-    await client.start() 
-    questions = prober.generate_content_questions("\n".join(reflections), 25)
-    responses = [await client.prompt(question, '100', 'Admin', 2) for question in questions]
-    await client.stop()
     
     return Prober.evaluate(questions, responses)
 import asyncio
@@ -87,10 +66,9 @@ def run_benchmarks(archetype_logs):
 
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
 
-        results['a1']['archetypes'][archetype] = asyncio.run(run_a1(logs.client, Prober, logs.personality))
-        results['a2']['archetypes'][archetype] = asyncio.run(run_a2(logs.client, Prober, logs.historic))
-        results['a3']['archetypes'][archetype] = asyncio.run(run_a3(logs.client, Prober, logs.agent_memories))
-        
+        results['a1']['archetypes'][archetype] = run_a1(logs.client, Prober, logs.personality)
+        results['a2']['archetypes'][archetype] = run_a2(logs.client, Prober, logs.historic)
+        results['a3']['archetypes'][archetype] = run_a3(logs.client, Prober, logs.agent_memories)
         
         # results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)
         # results['b2']['archetypes'][archetype] = run_b2(logs.response_queries, memory)
