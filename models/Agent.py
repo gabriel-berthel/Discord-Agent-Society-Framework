@@ -148,7 +148,7 @@ class Agent:
         neutral_ctx = await Contextualizer(self.config.model).neutral_context(msgs, bot_context)
 
         if self.log:
-            self.logs['neutral_ctxs'].append({'input': (msgs, bot_context), 'ouput': neutral_ctx})
+            self.logs['neutral_ctxs'].append({'input': (msgs, bot_context), 'output': neutral_ctx})
 
         return neutral_ctx
 
@@ -157,7 +157,7 @@ class Agent:
         context_queries = await QueryEngine(self.config.model).context_query(msgs)
 
         if self.log:
-            self.logs['context_queries'].append({'input': msgs, 'ouput': context_queries})
+            self.logs['context_queries'].append({'input': msgs, 'output': context_queries})
 
         return context_queries
 
@@ -166,8 +166,8 @@ class Agent:
         memories = self.memory.query_multiple(queries)
 
         if self.log:
-            self.logs['response_queries'].append({'input': (plan, context, messages), 'ouput': queries})
-            self.logs['memories'].append({'input': queries, 'ouput': memories})
+            self.logs['response_queries'].append({'input': (plan, context, messages), 'output': queries})
+            self.logs['memories'].append({'input': queries, 'output': memories})
 
         return memories
 
@@ -179,8 +179,8 @@ class Agent:
             search = await WebBrowser(True).summarize_search(queries, 1024)
             summury = search['summary']
             if self.log:
-                self.logs['web_queries'].append({'input': (plan, context, messages), 'ouput': queries})
-                self.logs['summuries'].append({'input': queries, 'ouput': summury})
+                self.logs['web_queries'].append({'input': (plan, context, messages), 'output': queries})
+                self.logs['summuries'].append({'input': queries, 'output': summury})
 
         except Exception as e:
             pass
@@ -193,7 +193,7 @@ class Agent:
         if self.log:
             self.logs.setdefault('responses', []).append({
                 'input': (plan, context, memories, messages, base_prompt),
-                'ouput': response
+                'output': response
             })
 
         return response
