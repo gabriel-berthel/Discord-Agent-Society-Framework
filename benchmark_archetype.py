@@ -20,7 +20,8 @@ def get_projection_fn(pred):
     return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
 
 tasks = [
-    ("sentiment", pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"]), get_projection_fn, "sst2"),
+    ("sentiment", pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"]), get_projection_fn(), "sst2"),
+    
 ]
 
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []):
