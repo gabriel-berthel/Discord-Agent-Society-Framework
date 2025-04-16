@@ -102,7 +102,7 @@ class Agent:
         self.responses: asyncio.Queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()
-        self.event_queue = asyncio.Queue(maxsize=3)
+        self.event_queue = asyncio.Queue()
         
         self.personnality_prompt, self.guideline = generate_agent_prompt(archetype, archetype_conf)
         
@@ -138,6 +138,11 @@ class Agent:
 
     async def add_event(self, event):
         if self.is_online:
+            while self.event_queue.qsize() >= 5:
+                try:
+                    self.event_queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    break
             await self.event_queue.put(event)
 
     def get_bot_context(self):
