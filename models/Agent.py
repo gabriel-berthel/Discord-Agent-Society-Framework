@@ -189,7 +189,7 @@ class Agent:
 
     async def get_response(self, plan, context, memories, messages, base_prompt):
         response = await Responder(self.config.model).respond(plan, context, memories, messages, base_prompt)
-        response = response.strip('"').strip("'").replace('\n', ' ').replace('[', '').replace(']', '') # TODO: something more durable
+        response = response.replace('[', '').replace(']', '').strip('"').strip("'").replace('\n', ' ') # TODO: something more durable
         
         if self.log:
             self.logs.setdefault('responses', []).append({
@@ -223,17 +223,11 @@ class Agent:
             if self.event_queue.qsize() > 0 and self.is_online:
                 context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
 
-                """"""
-                if not self.sequential:
-                    
-                    messages = []
-                    for _ in range(self.event_queue.qsize()):
-                        _, author_id, global_name, content = await self.event_queue.get()
-                        fixed = self.server.format_message(author_id, global_name, content, self.user_id)
-                        messages.append(fixed)
-                else:
+                messages = []
+                for _ in range(self.event_queue.qsize()):
                     _, author_id, global_name, content = await self.event_queue.get()
-                    messages = [self.server.format_message(author_id, global_name, content, self.user_id)]
+                    fixed = self.server.format_message(author_id, global_name, content, self.user_id)
+                    messages.append(fixed)
 
                 for message in messages:
                     await self.processed_messages.put(message)
@@ -268,29 +262,41 @@ class Agent:
                 reflection = await self.get_reflection(messages, self.get_bot_context(), self.personnality_prompt)
                 self.memory.add_document(reflection, 'MEMORY')
 
+    async def make_response(self, plan):
+        ctx = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
+        msgs = [msg for msg in self.server.get_messages(self.monitoring_channel).copy()]
+        memories = await self.get_memories(plan, ctx, msgs)
+        response = await self.get_response(plan, ctx, memories, msgs, self.personnality_prompt + self.guideline)
+        return response
+    
     async def impulse_routine(self):
         while self._running and self.impulses:
             
-            online_state = random.choices(['log_off', 'log_on'], weights=[25, 75])[0]
+            online_state = random.choices(['log_off', 'log_on'], weights=[20, 80])[0]
     
             if not self.is_online:
                 if online_state == 'log_on':
+                    response = await self.make_response("I want to greet people as I just joined! I may as well respond right away or bring something new.")
+                    if response:
+                        await self.responses.put((response, self.monitoring_channel))
                     self.is_online = True
+                else:
+                    await asyncio.sleep(180)
             else:
                 if online_state == 'log_off':
                     self.is_online = False
                 else:
-                    action_choice = random.choices(['nothing', 'switch_channel', 'new_topic'], weights=[80, 10, 10])[0]
+                    action_choice = random.choices(['nothing', 'switch_channel'], weights=[80, 20])[0]
 
                     if action_choice == 'switch_channel':
                         self.is_online = False
                         self.monitoring_channel = random.choice(list(self.server.channels.keys()))
+        
+                        response = await self.make_response("I just switched channel! I may as well respond to the previous messages or bring something new.")
+                        if response:
+                            await self.responses.put((response, self.monitoring_channel))
+                            
                         self.is_online = True 
-                    elif action_choice == 'new_topic':
-                        try:
-                            msg = await self.get_new_topic(self.plan, self.personnality_prompt + self.guideline)
-                            await self.responses.put((msg, self.monitoring_channel))
-                        except Exception as e:
-                            pass
+    
                         
-            await asyncio.sleep(30)
+            await asyncio.sleep(60)
