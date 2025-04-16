@@ -4,9 +4,10 @@ from datetime import datetime
 from collections import deque
 from utils.utils import *
 import modules.Memories as db
+import random
 import os
 import pickle
-import random
+import time
 from collections import defaultdict
 from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
@@ -102,7 +103,8 @@ class Agent:
         self.responses: asyncio.Queue = asyncio.Queue()
         self.server = server
         self.processed_messages = asyncio.Queue()
-        self.event_queue = asyncio.Queue()
+        self.event_queue = asyncio.Queue(maxsize=5)
+        self.last_discussion_time = 0
         
         self.personnality_prompt, self.guideline = generate_agent_prompt(archetype, archetype_conf)
         
@@ -138,6 +140,7 @@ class Agent:
 
     async def add_event(self, event):
         if self.is_online:
+            # Enforce max size of 5
             while self.event_queue.qsize() >= 5:
                 try:
                     self.event_queue.get_nowait()
@@ -229,7 +232,6 @@ class Agent:
                 monitoring = self.monitoring_channel
                 context = await self.get_channel_context(monitoring, self.get_bot_context())
 
-            
                 channel_id, author_id, global_name, content = await self.event_queue.get()
                 message = self.server.format_message(author_id, global_name, content, self.user_id)
 
@@ -266,4 +268,26 @@ class Agent:
                 self.memory.add_document(reflection, 'MEMORY')
 
     async def impulse_routine(self):
-        return ""
+        while self._running:
+            await asyncio.sleep(10)
+
+            # Cooldown check for new discussions
+            if self.is_online and time.time() - self.last_discussion_time > 300:
+                if random.random() < 0.1:  # 10% chance to spark a new discussion
+                    topic = await Responder(self.config.model).new_discussion(self.plan, self.personnality_prompt + self.guideline)
+                    await self.responses.put((topic, self.monitoring_channel))
+                    self.last_discussion_time = time.time()
+
+            # Going offline occasionally
+            if random.random() < 0.2:  # 20% chance to go offline
+                self.is_online = False
+                offline_duration = random.randint(10, 60)  # Offline for 10 to 60 seconds
+                await asyncio.sleep(offline_duration)
+                self.is_online = True
+
+            # Occasionally switch channels while online
+            elif self.is_online and random.random() < 0.1:
+                available_channels = [cid for cid in self.server.channels.keys() if cid != self.monitoring_channel]
+                if available_channels:
+                    self.monitoring_channel = random.choice(available_channels)
+                    

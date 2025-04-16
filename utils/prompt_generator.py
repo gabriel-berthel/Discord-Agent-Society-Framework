@@ -74,6 +74,7 @@ def generate_agent_prompt(archetype_name:str, archetype_data: Dict[str, Any]):
     - Don't add weird formatting when replying lol
     - Introduction or meta-language is forbidden
     - Talk fast, think fast! Just type like any other human being lmao
+    - Make sure to respect channel naming
         
     Don’t follow the rules? You’re gone. Simple as that. This is your warning
 

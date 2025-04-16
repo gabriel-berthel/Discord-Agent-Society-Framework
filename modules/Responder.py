@@ -9,13 +9,10 @@ class Responder():
 
         prompts = [
             ('system', argent_base_prompt),
-            ('system', f'Your plan:'),
-            ('assistant', f'{plan}'),
-            ('system', f'Some context:'),
-            ('assistant', f'{context}'),
-            ('system', f'Your memories:'),
-            ('assistant', f'{memories}'),
-            ('system', f'Reply right away with the actual message. That’s it.')
+            ('system', f'Your plan: {plan}'),
+            ('system', f'Some context: {context}'),
+            ('system', f'Your memories: {memories}'),
+            ('system', 'Please reply immediately with the content of your response. Do not add any labels or prefixes.')
         ]
         prompts += [('user', msg) for msg in messages]
 
@@ -30,8 +27,8 @@ class Responder():
 
         prompts = [
             ('system', argent_base_prompt),
-            ('assistant', f'Your currents plans, goals and objectives are:\n{plan}'),
-            ('user', f'Anything nice to talk about?')
+            ('system', f'Your plan: {plan}'),
+            ('system', f'Please spark a new topic immediately. Do not add any labels or prefixes.'),
         ]
 
         response = await ollama.AsyncClient().chat(

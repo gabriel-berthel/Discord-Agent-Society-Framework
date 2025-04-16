@@ -1,11 +1,11 @@
 config:
   message_throttle: 5
-  max_random_msg_sleep: 60
+  max_random_msg_sleep: 30
   plan_interval: 360
   memory_interval: 120
   model: "llama3.2"
   base-plan: ""
-  channel_id: 1361995495765049354
+  channel_id: 1362027895194910792
   sequential_mode: False
   random_ignore: False
   impulses: True
