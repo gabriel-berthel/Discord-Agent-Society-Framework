@@ -30,8 +30,8 @@ class Responder():
 
         prompts = [
             ('system', argent_base_prompt),
-            ('system', f'Your currents plans, goals and objectives are:\n{plan}'),
-            ('system', f'You decided to randomly spark a new discussion, sharing personal thoughts and reflections. Let your thoughts unfold freely—this is a moment to explore whatever feels present, meaningful, or unresolved. Speak in the first person, as if writing in your personal notebook or beginning a thoughtful conversation with yourself.')
+            ('assistant', f'Your currents plans, goals and objectives are:\n{plan}'),
+            ('user', f'Anything nice to talk about?')
         ]
 
         response = await ollama.AsyncClient().chat(
