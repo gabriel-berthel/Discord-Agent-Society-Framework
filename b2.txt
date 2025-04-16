@@ -1,8 +1,4 @@
 {
-    "b1": {
-        "description": "Context Queries Relevancy",
-        "archetypes": {}
-    },
     "b2": {
         "description": "Responder Queries Relevancy",
         "archetypes": {
@@ -60,6 +56,10 @@
     },
     "c1": {
         "description": "Context Accuracy",
+        "archetypes": {}
+    },
+    "d1": {
+        "description": "Reflection Relevancy",
         "archetypes": {}
     }
 }

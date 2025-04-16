@@ -7,6 +7,7 @@ from tqdm import tqdm
 import prompt_client
 import asyncio
 import ollama
+import random
 from promptbench.prompts import task_oriented, method_oriented, role_oriented
 
 
@@ -81,7 +82,7 @@ def get_projection_fn(task_name: str) -> Callable[[str], object]:
 
     return lambda pred: pred.strip()
 
-def build_tasks_from_prompts(source_dict, source_name, task_name_map):
+def build_tasks_from_prompts(source_dict, source_name, task_name_map, max_no_prompt=1):
     tasks = []
     for task, prompts in source_dict.items():
         if task in task_name_map:
@@ -91,6 +92,6 @@ def build_tasks_from_prompts(source_dict, source_name, task_name_map):
             if isinstance(prompts, str):
                 prompts = [prompts]
             elif isinstance(prompts, dict):  # cas des few-shot blocks (ex: gsm8k)
-                prompts = list(prompts.values())
+                prompts = random.choice(prompts.values())
             tasks.append((task, pb.Prompt(prompts), projection_fn, dataset_name))
     return tasks

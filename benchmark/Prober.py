@@ -77,7 +77,7 @@ class Prober:
         """
         # generate questions
         questions = Prober.generate_model_response(prompt)
-        return questions
+        return questions[0]
 
     @staticmethod
     def generate_sk_questions(peronality_prompt, num_questions=10):
@@ -112,7 +112,7 @@ class Prober:
         """
         # generate questions
         questions = Prober.generate_model_response(prompt)
-        return questions
+        return questions[0]
 
     @staticmethod
     def evaluate(questions:list,  responses:list):
@@ -126,7 +126,7 @@ class Prober:
         score = 0
         total_score = 0
         for i, q in enumerate(questions):
-            expected_answer = q['correct_answer']
+            expected_answer = q[0]
             system_answer = responses[i] if i < len(responses) else ""
             
             score = 1 if system_answer.strip().lower() == expected_answer.strip().lower() else 0

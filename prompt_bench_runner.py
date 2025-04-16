@@ -12,21 +12,21 @@ import pandas as pd
 # Prompt name
 task_name_map = {
     "sst2": "sst2",
-    "cola": "cola",
-    "qqp": "qqp",
-    "gsm8k": "gsm8k",
-    "bool_logic": "bool_logic",
-    "valid_parentheses": "valid_parentheses",
-    "csqa": "csqa",
-    "math": "math",
-    "expert_prompting": "expert_prompting",
+    # "cola": "cola",
+    #"qqp": "qqp",
+    #"gsm8k": "gsm8k",
+    #"bool_logic": "bool_logic",
+    # "valid_parentheses": "valid_parentheses",
+    # "csqa": "csqa",
+    # "math": "math",
+    # "expert_prompting": "expert_prompting",
 }
 
 
 tasks = []
 tasks += build_tasks_from_prompts(task_oriented.TASK_ORIENTED_PROMPTS, "task_oriented", task_name_map)
-tasks += build_tasks_from_prompts(method_oriented.METHOD_ORIENTED_PROMPTS, "method_oriented", task_name_map)
-tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_oriented", task_name_map)
+# tasks += build_tasks_from_prompts(method_oriented.METHOD_ORIENTED_PROMPTS, "method_oriented", task_name_map)
+#tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_oriented", task_name_map)
 
 
 async def prompt_ollama(prompt):
@@ -42,10 +42,24 @@ clients = prompt_client.PromptClient.build_clients()
 def get_projection_fn(pred):
     return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
 
+<<<<<<< HEAD:benchmark_archetype.py
+# tasks = [
+#     ("sentiment", pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"]), get_projection_fn, "sst2"),
+    
+# 
+
+
+async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []):
+     for prompt in prompts:
+        preds, labels = [], []
+        #for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
+        for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
+=======
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []):
      for prompt in prompts:
         preds, labels = [], []
         for data in tqdm(dataset[:5], desc=f"{architype} - {dataset}"):
+>>>>>>> b585fafb9a3cccd041400db692403094f39d08b7:prompt_bench_runner.py
 
             input_text = pb.InputProcess.basic_format(prompt, data)
             label = data['label']
@@ -60,7 +74,7 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
 
     for task, prompts, projection, dataset in tasks :
 
-        dataset = pb.DatasetLoader.load_dataset(dataset)[:2]
+        dataset = pb.DatasetLoader.load_dataset(dataset)[:100]
         scores = []
         for architype, client in clients.items():
             
