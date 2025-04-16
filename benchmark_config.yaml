@@ -1,13 +1,13 @@
 config:
   message_throttle: 1
   max_random_msg_sleep: 0
-  plan_interval: 60 # -1 = deactivated
-  memory_interval: 30 # -1 = deactivated
+  plan_interval: -1 # -1 = deactivated
+  memory_interval: -1 # -1 = deactivated
   model: "llama3.2"
   base-plan: ""
   channel_id: 1
   sequential_mode: True
   random_ignore: False
   impulses: False
-  save_logs: True
+  save_logs: False
   persitance_prefix: 'qa_bench'
