@@ -189,7 +189,8 @@ class Agent:
 
     async def get_response(self, plan, context, memories, messages, base_prompt):
         response = await Responder(self.config.model).respond(plan, context, memories, messages, base_prompt)
-
+        response = response.strip('"').strip("'").replace('\n', ' ').replace('[', '').replace(']', '') # TODO: something more durable
+        
         if self.log:
             self.logs.setdefault('responses', []).append({
                 'input': (plan, context, memories, messages, base_prompt),
@@ -228,7 +229,8 @@ class Agent:
                     messages = []
                     for _ in range(self.event_queue.qsize()):
                         _, author_id, global_name, content = await self.event_queue.get()
-                        message.append(self.server.format_message(author_id, global_name, content, self.user_id))
+                        fixed = self.server.format_message(author_id, global_name, content, self.user_id)
+                        messages.append(fixed)
                 else:
                     _, author_id, global_name, content = await self.event_queue.get()
                     messages = [self.server.format_message(author_id, global_name, content, self.user_id)]
@@ -269,24 +271,19 @@ class Agent:
     async def impulse_routine(self):
         while self._running and self.impulses:
             
-            online_state = random.choices(['log_off', 'log_on'], weights=[15, 85])
-
+            online_state = random.choices(['log_off', 'log_on'], weights=[25, 75])[0]
+    
             if not self.is_online:
                 if online_state == 'log_on':
-                    self.event_queue.empty()
-                    await self.responses.put((random.choice(greetings), self.monitoring_channel))
                     self.is_online = True
             else:
                 if online_state == 'log_off':
-                    await self.responses.put((random.choice(heading_off_messages), self.monitoring_channel))
                     self.is_online = False
                 else:
-                    action_choice = random.choices(['nothing', 'switch_channel', 'new_topic'], weights=[85, 10, 5])
+                    action_choice = random.choices(['nothing', 'switch_channel', 'new_topic'], weights=[80, 10, 10])[0]
 
                     if action_choice == 'switch_channel':
                         self.is_online = False
-                        await asyncio.sleep(self.config.message_throttle)
-                        self.event_queue.empty()
                         self.monitoring_channel = random.choice(list(self.server.channels.keys()))
                         self.is_online = True 
                     elif action_choice == 'new_topic':
@@ -295,5 +292,5 @@ class Agent:
                             await self.responses.put((msg, self.monitoring_channel))
                         except Exception as e:
                             pass
-    
-            await asyncio.sleep(60)
+                        
+            await asyncio.sleep(30)

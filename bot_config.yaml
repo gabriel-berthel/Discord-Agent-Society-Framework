@@ -1,6 +1,6 @@
 config:
   message_throttle: 5
-  max_random_msg_sleep: 10
+  max_random_msg_sleep: 60
   plan_interval: 360
   memory_interval: 120
   model: "llama3.2"
