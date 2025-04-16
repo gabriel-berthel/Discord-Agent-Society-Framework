@@ -10,4 +10,5 @@ config:
   random_ignore: False
   impulses: False
   save_logs: False
+  save_logs: False
   persitance_prefix: 'qa_bench'
