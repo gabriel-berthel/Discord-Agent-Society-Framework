@@ -6,7 +6,7 @@ import prompt_client
 import asyncio
 import ollama
 from promptbench.prompts import task_oriented, method_oriented, role_oriented
-from fonction_utils import *
+from utils.promptbench_utils import *
 import pandas as pd
 
 # Prompt name
@@ -42,6 +42,7 @@ clients = prompt_client.PromptClient.build_clients()
 def get_projection_fn(pred):
     return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
 
+<<<<<<< HEAD:benchmark_archetype.py
 # tasks = [
 #     ("sentiment", pb.Prompt([f"Classify the sentence as positive or negative: {{content}}"]), get_projection_fn, "sst2"),
     
@@ -53,6 +54,12 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []
         preds, labels = [], []
         #for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
         for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
+=======
+async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []):
+     for prompt in prompts:
+        preds, labels = [], []
+        for data in tqdm(dataset[:5], desc=f"{architype} - {dataset}"):
+>>>>>>> b585fafb9a3cccd041400db692403094f39d08b7:prompt_bench_runner.py
 
             input_text = pb.InputProcess.basic_format(prompt, data)
             label = data['label']
@@ -63,7 +70,7 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []
         # evaluate
         return pb.Eval.compute_cls_accuracy(preds, labels) 
 
-async def run_agents_benchmark(save_to="results.csv"):
+async def run_agents_benchmark(save_to="prompt_bench.csv"):
 
     for task, prompts, projection, dataset in tasks :
 
@@ -86,7 +93,7 @@ async def run_agents_benchmark(save_to="results.csv"):
         })
 
     df = pd.DataFrame(RESULTS)
-    print("\n📊 Résumé des performances :")
+    print("\n Résumé des performances :")
     print(df)
 
     if save_to:
