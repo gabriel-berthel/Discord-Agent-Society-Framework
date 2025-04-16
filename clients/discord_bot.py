@@ -33,8 +33,7 @@ def run(agent_conf, archetype):
         """Append messages to the respestive queues allowing the agent to operate on its own."""
 
         if event.author.id != agent.user_id: 
-            if agent.monitoring_channel == event.channel_id:
-                await agent.add_event((event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content))
+            await agent.add_event((event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content))
         
         agent.server.add_message(event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content)
                 

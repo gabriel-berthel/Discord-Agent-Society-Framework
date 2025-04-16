@@ -5,7 +5,7 @@ config:
   memory_interval: 120
   model: "llama3.2"
   base-plan: ""
-  channel_id: 1361868909959184548
+  channel_id: 1361995495765049354
   sequential_mode: False
   random_ignore: False
   impulses: True
