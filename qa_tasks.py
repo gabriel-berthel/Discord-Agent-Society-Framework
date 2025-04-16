@@ -150,26 +150,19 @@ def run_d1(reflections_logs, evaluator_fn):
         "overall_average_score": overall_average_score
     }
 
-def run_a1(client: PromptClient, prober: Prober, personality):
-    asyncio.run(client.start())
+async def run_a1(client: PromptClient, prober: Prober, personality):
     questions = prober.generate_sk_questions(personality, 10)
-    responses = [asyncio.run(client.prompt(question, '100', 'Admin', 2)) for question in questions]
-    asyncio.run(client.stop())
-    
+    responses = [await client.prompt(question, 100, 'Admin', 1) for question in questions.values()]
     return Prober.evaluate(questions, responses)
 
-def run_a2(client: PromptClient, prober: Prober, dialogues):
-    asyncio.run(client.start())
+async def run_a2(client: PromptClient, prober: Prober, dialogues):
     questions = prober.generate_content_questions("\n".join(dialogues), 25)
-    responses = [asyncio.run(client.prompt(question, '100', 'Admin', 2)) for question in questions]
-    asyncio.run(client.stop())
+    responses = [await client.prompt(question, 100, 'Admin', 1) for question in questions]
     
     return Prober.evaluate(questions, responses)
 
-def run_a3(client: PromptClient, prober: Prober, reflections):
-    asyncio.run(client.start())
+async def run_a3(client: PromptClient, prober: Prober, reflections):
     questions = prober.generate_content_questions("\n".join(reflections), 25)
-    responses = [asyncio.run(client.prompt(question, '100', 'Admin', 2)) for question in questions]
-    asyncio.run(client.stop())
+    responses = [await client.prompt(question, 100, 'Admin', 1) for question in questions]
     
     return Prober.evaluate(questions, responses)
