@@ -162,11 +162,11 @@ class Agent:
         return context_queries
 
     async def get_memories(self, plan, context, messages):
-        queries = await QueryEngine(self.config.model).response_queries(plan, context, messages)
+        queries = await QueryEngine(self.config.model).response_queries(plan, context, self.personnality_prompt, messages)
         memories = self.memory.query_multiple(queries)
 
         if self.log:
-            self.logs['response_queries'].append({'input': (plan, context, messages), 'output': queries})
+            self.logs['response_queries'].append({'input': (plan, context,self.personnality_prompt, messages), 'output': queries})
             self.logs['memories'].append({'input': queries, 'output': memories})
 
         return memories

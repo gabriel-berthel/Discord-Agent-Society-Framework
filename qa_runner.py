@@ -46,10 +46,8 @@ def load_qa_bench_data():
         ))
     return logs
 
-    
-    return Prober.evaluate(questions, responses)
 import asyncio
-def run_benchmarks(archetype_logs):
+async def run_benchmarks(archetype_logs):
 
     
     results = {
@@ -65,15 +63,17 @@ def run_benchmarks(archetype_logs):
     for archetype, logs in archetype_logs:
 
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
-
-        results['a1']['archetypes'][archetype] = run_a1(logs.client, Prober, logs.personality)
-        results['a2']['archetypes'][archetype] = run_a2(logs.client, Prober, logs.historic)
-        results['a3']['archetypes'][archetype] = run_a3(logs.client, Prober, logs.agent_memories)
+        print(archetype)
+        await logs.client.start()
+        results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
+        # results['a2']['archetypes'][archetype] = run_a2(logs.client, Prober, logs.historic)
+        # results['a3']['archetypes'][archetype] = run_a3(logs.client, Prober, logs.agent_memories)
         
         # results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)
         # results['b2']['archetypes'][archetype] = run_b2(logs.response_queries, memory)
         # results['c1']['archetypes'][archetype] = run_c1(logs.neutral_ctxs, Contextualizer('llama3.2'))
         # results['d1']['archetypes'][archetype] = run_d1(logs.reflections, Prober.classify_reflection_relevancy)
+        await logs.client.stop()
     return results
 
 if __name__ == "__main__":
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     import json
     logs = load_qa_bench_data()
     archetype_logs = [(role, getattr(logs, role)) for role in vars(logs)]
-    results = run_benchmarks(archetype_logs)
+    results = asyncio.run(run_benchmarks(archetype_logs))
     with open("a.txt", "w") as f:
         json.dump(results, f, indent=4, cls=NumpyEncoder)  
     print(results)

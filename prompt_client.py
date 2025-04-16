@@ -43,9 +43,10 @@ class PromptClient:
                 pass
     
     async def prompt(self, message, user_id, username, channel_id=1):
+        print(f"Prompt: ", message)
         self.server.update_user(user_id, username)
         event = (channel_id, user_id, username, message)
-        self.agent.server.add_message(*event) 
+        self.agent.server.add_message(*event)
         await self.agent.add_event(event)  
         message, _ = await self.agent.responses.get() 
         self.server.add_message(channel_id, user_id, username, message)

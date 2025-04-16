@@ -54,8 +54,9 @@ class QueryEngine():
         
         return []
 
-    async def response_queries(self, plan, context, messages=['No message at the moment.']):
+    async def response_queries(self, plan, context,personality, messages=['No message at the moment.']):
         prompts = [
+            ('system', f'{personality}'),
             ('assistant', f'{plan}'),
             ('assistant', f'{context}'),
             ('system', base),
