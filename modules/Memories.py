@@ -5,32 +5,33 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 import os
+from collections import deque
 
 class Memories:
-    def __init__(self, collection_name, base_folder='memories', model_name='all-MiniLM-L6-v2'):
+    def __init__(self, collection_name, base_folder='memories', model_name='all-MiniLM-L6-v2', max_documents=1000):
         os.makedirs(base_folder, exist_ok=True)
         self.file_path = os.path.join(base_folder, collection_name)
         self.model = SentenceTransformer(model_name)
+        self.max_documents = max_documents
+        self._documents = deque(maxlen=self.max_documents)
+        self._embeddings = deque(maxlen=self.max_documents)
+        self._metadatas = deque(maxlen=self.max_documents)
         self._load_memory()
 
     def _load_memory(self):
         if os.path.exists(self.file_path):
             with open(self.file_path, 'rb') as f:
                 data = pickle.load(f)
-                self._documents = data.get('documents', [])
-                self._embeddings = data.get('embeddings', [])
-                self._metadatas = data.get('metadatas', [])
-        else:
-            self._documents = []
-            self._embeddings = []
-            self._metadatas = []
+                self._documents.extend(data.get('documents', []))
+                self._embeddings.extend(data.get('embeddings', []))
+                self._metadatas.extend(data.get('metadatas', []))
 
     def _save_memory(self):
         with open(self.file_path, 'wb') as f:
             pickle.dump({
-                'documents': self._documents,
-                'embeddings': self._embeddings,
-                'metadatas': self._metadatas
+                'documents': list(self._documents),
+                'embeddings': list(self._embeddings),
+                'metadatas': list(self._metadatas)
             }, f)
 
     def add_document(self, document, doc_type, timestamp=None):
@@ -38,7 +39,6 @@ class Memories:
         metadatas = {"type": doc_type}
         metadatas["timestamp"] = timestamp if timestamp else time.time()
 
-        doc_id = str(uuid.uuid4())
         self._documents.append(document + '\n')
         self._embeddings.append(embedding)
         self._metadatas.append(metadatas)
@@ -46,7 +46,7 @@ class Memories:
         self._save_memory()
 
     def get_all_documents(self):
-        return self._documents, self._embeddings, self._metadatas
+        return list(self._documents), list(self._embeddings), list(self._metadatas)
 
     def query_multiple(self, queries, n_results=5):
         if not self._embeddings:
@@ -55,7 +55,7 @@ class Memories:
         results = []
         for query in queries:
             query_embedding = self.model.encode(query)
-            similarities = cosine_similarity([query_embedding], self._embeddings)[0]
+            similarities = cosine_similarity([query_embedding], list(self._embeddings))[0]
 
             docs_with_metadata = [
                 {'doc': doc, 'metadata': metadata, 'similarity': similarity}

@@ -1,0 +1,331 @@
+{
+    "a1": {
+        "description": "Self-knowledge Recall,",
+        "archetypes": {
+            "activist": {
+                "results": [
+                    {
+                        "question": "Are you typically calm in your online interactions?",
+                        "expected_answer": "No",
+                        "system_answer": "Honestly, no!",
+                        "score": 0
+                    },
+                    {
+                        "question": "What motivates you most when discussing social issues with others?",
+                        "expected_answer": "Raise awareness",
+                        "system_answer": "'For me, it's seeing people come together to create meaningful change. When we share our experiences & perspectives, we can build trust & empathy, but when we collaborate, that's when the real magic happens! I'm motivated by the potential for collective impact & genuine solidarity.'",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you usually focus on the big picture or the small, individual actions that can make a difference?",
+                        "expected_answer": "Small, individual actions",
+                        "system_answer": "idk about \"big picture\" vs small actions... i think it's all interconnected? what makes a difference is being consistent & showing up for others, no matter how tiny it seems. we gotta start with those small wins to create change.",
+                        "score": 0
+                    },
+                    {
+                        "question": "What do you see as your greatest challenge in working towards social change?",
+                        "expected_answer": "Systemic barriers",
+                        "system_answer": "systemic oppression & indifference are like, super hard to tackle, but i think the biggest hurdle is getting people to listen & care before we even start making moves. most ppl are stuck in their own bubbles & don't know how bad things really are or how much they're suffering. we need to find ways to break down those barriers & build empathy 4 real change",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you usually start conversations with a personal story or a discussion of the issue at hand?",
+                        "expected_answer": "Personal story",
+                        "system_answer": "\"Honestly, I usually dive right into sharing my thoughts on the issue or proposing an idea. But, if we're just chillin' and not trying to solve something specific, I do love starting with a personal anecdote or thought that sparks the convo!\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "What do you believe is the key to successful community engagement and social change?",
+                        "expected_answer": "Collaborative efforts",
+                        "system_answer": "it's gotta be solid relationships, fam! build trust & listen to marginalized voices. then, amplify their stories & create spaces for collective action. solidarity > stats any day",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you feel most at home when discussing topics that are deeply personal and emotional?",
+                        "expected_answer": "Yes",
+                        "system_answer": "absolutely, i'm at my best when diving into stuff that gets me real emotions going - whether it's a personal struggle or someone else's story that hits close to home",
+                        "score": 0
+                    },
+                    {
+                        "question": "What do you see as the ultimate goal of your activism?",
+                        "expected_answer": "Social justice",
+                        "system_answer": "Systemic change! I want to dismantle oppressive systems & create a world where marginalized communities thrive, not just exist. It's about dismantling institutions that perpetuate inequality & building a more just society through collective action & solidarity",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you tend to focus on the systemic issues that perpetuate inequality, or do you also try to highlight individual stories and struggles?",
+                        "expected_answer": "Both",
+                        "system_answer": "\"Yaaas, I think both are super important! I believe highlighting systemic issues is key to understanding the root causes of inequality, but sharing individual stories & struggles helps humanize the issue & makes it more relatable. When we see people's faces & experiences, it's easier to feel empathy & connection. For me, it's all about balance: acknowledging the big picture while also sharing personal tales that illustrate the impact of systemic issues on everyday lives.\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "What drives your enthusiasm for creating change in the world?",
+                        "expected_answer": "Empathy",
+                        "system_answer": "\"I've seen firsthand how systemic oppression affects my own community & friends. I've witnessed people being denied opportunities, facing marginalization & outright violence. Seeing that kind of pain & injustice makes me want to scream. But instead, it fuels my fire to create change. For me, it's about amplifying those voices & stories so they're not ignored anymore. It's about building a world where everyone can thrive, regardless of their background or identity.\"",
+                        "score": 0
+                    }
+                ],
+                "total_score": 0,
+                "max_score": 10
+            },
+            "baseline": {
+                "results": [
+                    {
+                        "question": "Do I take sides in online discussions?",
+                        "expected_answer": "No",
+                        "system_answer": "Nope! Not my thing.",
+                        "score": 0
+                    },
+                    {
+                        "question": "What is my primary goal when facilitating conversations?",
+                        "expected_answer": "Understand multiple perspectives and remain unbiased",
+                        "system_answer": "Your primary goal is to facilitate understanding by remaining unbiased and open to various perspectives, and helping others see different viewpoints.",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do I enjoy oversimplification in online discussions?",
+                        "expected_answer": "No",
+                        "system_answer": "No, Admin doesn't particularly enjoy oversimplification. They think it's often a sign of binary thinking or an attempt to avoid nuance.",
+                        "score": 0
+                    },
+                    {
+                        "question": "How would you describe my tone when speaking with others online?",
+                        "expected_answer": "Pragmatic and balanced",
+                        "system_answer": "You'd say I'm neutral, Admin. I aim to facilitate understanding by reflecting back different perspectives and avoiding taking sides. My goal is to keep the convo balanced and open to various viewpoints, rather than promoting a specific agenda or tone. Does that sound right to you?",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do I value open-mindedness in my online interactions?",
+                        "expected_answer": "Yes",
+                        "system_answer": "\"yup, you're all about that open-mindedness vibes, Quinn. you're always down to chat about weird stuff and explore new ideas. i think that's what makes our convo so great \u2013 we can dive into some pretty deep topics without getting too caught up in drama or ego.\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "What is a key characteristic of my approach to complex discussions?",
+                        "expected_answer": "Facilitating nuanced understanding",
+                        "system_answer": "\"Staying neutral, I'd say. You aim for balanced conversations that reflect various viewpoints without taking sides or promoting drama.\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do I engage in binary thinking when discussing online topics?",
+                        "expected_answer": "No",
+                        "system_answer": "\"Hey Admin, not necessarily. When discussing online topics, you aim to understand multiple perspectives & remain unbiased. That's a pretty nuanced approach! You might explore gray areas or complexities rather than solely focusing on 'true' or 'false'. Just curious, what makes you wonder if you're engaging in binary thinking?\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "How would you describe my relationship with extremism and closed-mindedness?",
+                        "expected_answer": "I avoid taking sides and promote nuanced understanding to mitigate these issues",
+                        "system_answer": "Seems like u kinda skirted that topic, but i think u know why u mentioned it earlier... to avoid getting into it. honestly, i don't see much of a problem with how u handle extremism/closed-mindedness. u ask clarifying questions & try to keep convos balanced. that's solid, imo",
+                        "score": 0
+                    }
+                ],
+                "total_score": 0,
+                "max_score": 8
+            },
+            "fact_checker": {
+                "results": [
+                    {
+                        "question": "Are you usually excited to engage in online discussions?",
+                        "expected_answer": "No",
+                        "system_answer": "['Honestly, not always! As a fact-checker, I'm more about ensuring accuracy & promoting critical thinking than being overly enthusiastic. But I love when our squad can have meaningful, informative conversations that lead to growth & new ideas'",
+                        "score": 0
+                    },
+                    {
+                        "question": "What is your primary goal when checking facts in the Discord server?",
+                        "expected_answer": "Promote critical thinking",
+                        "system_answer": "My primary goal is to ensure accuracy and promote critical thinking. I aim to verify claims, provide contextual information, and remain impartial, helping to maintain a respectful and informed discussion environment within our community.",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you like to share personal opinions or insights in online conversations?",
+                        "expected_answer": "No",
+                        "system_answer": "Honestly, no... I don't usually share my thoughts unless it's relevant & factual. I'd rather focus on providing info, contextualizing claims, and sparking discussion.",
+                        "score": 0
+                    },
+                    {
+                        "question": "How do you usually respond to unsubstantiated claims made by others?",
+                        "expected_answer": "Request sources",
+                        "system_answer": "Honestly, I'd say I ask for sources. Usually just a quick \"can you back it up with evidence?\" or \"what's your source on that?\" Sometimes they get defensive, but most people understand the need for proof. When they don't have one, we can discuss the claim & try to find some common ground",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you think it's acceptable to present information without evidence?",
+                        "expected_answer": "No",
+                        "system_answer": "\"Presenting info without evidence can be misleading or inaccurate. It's always best to back claims with sources or credible references. Can share a source for what led you to that belief?\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "What type of information do you find most interesting and engaging?",
+                        "expected_answer": "Logical arguments",
+                        "system_answer": "I'm glad you asked! I find data and statistics on various topics, especially those related to critical thinking, problem-solving, and intellectual curiosity. Research papers, academic studies, and well-crafted infographics are my cup of tea.\n\nI also enjoy exploring real-world examples of effective decision-making, innovation, and collaboration. Understanding how people and organizations approach complex challenges and find creative solutions is fascinating to me.\n\nWhat I don't find engaging is unsubstantiated claims or emotional appeals. As a fact-checker, I'm drawn to information that's backed by evidence and can withstand scrutiny. Providing context, analyzing data, and verifying sources are essential skills for me.\n\nHow about you? What type of discussions or topics do you enjoy exploring with our community?",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you think it's okay to prioritize being liked over providing accurate information?",
+                        "expected_answer": "No",
+                        "system_answer": "'Not necessarily, I'd say. Accuracy & truthfulness should come first. Prioritizing accuracy helps maintain trust within the group & promotes healthy discussions. While being likable can be nice, it shouldn't overshadow factual integrity.'",
+                        "score": 0
+                    },
+                    {
+                        "question": "How do you usually describe your tone in online conversations?",
+                        "expected_answer": "Objective, neutral",
+                        "system_answer": "Objective, neutral, evidence-based",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you believe that emotions can be used to make arguments more persuasive?",
+                        "expected_answer": "No",
+                        "system_answer": "Emotions can indeed play a significant role in shaping opinions and influencing decision-making. Research has shown that emotional appeals can be effective in certain contexts, such as social media or public speaking. However, when it comes to making arguments more persuasive, I'd argue that relying solely on emotions can lead to oversimplification and neglect of critical thinking. It's essential to strike a balance between appealing to emotions and presenting well-supported, evidence-based claims.",
+                        "score": 0
+                    }
+                ],
+                "total_score": 0,
+                "max_score": 9
+            },
+            "mediator": {
+                "results": [
+                    {
+                        "question": "Are you usually calm and composed in online discussions?",
+                        "expected_answer": "Yes",
+                        "system_answer": "\"Yeah, I try to be. I figure it's just a conversation with people I already know pretty well. We can joke around and have fun without getting too worked up.\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "What is your main goal when facilitating a conversation?",
+                        "expected_answer": "Facilitate dialogue, reduce conflict, ensure fair representation",
+                        "system_answer": "My main goal is to create an environment where everyone feels heard and understood. I strive to facilitate dialogue, reduce conflict, and ensure fair representation of different perspectives. My aim is to keep the conversation flowing naturally, without walls or stiffness.",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you think it's okay to express your opinions without considering others' perspectives?",
+                        "expected_answer": "No",
+                        "system_answer": "\"Hey guys, I don't think so. When we speak our minds without thinking about how they might affect others, it can lead to hurt feelings and conflicts. Let's aim for constructive dialogue where everyone feels heard and respected.\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "What do you value most in a discussion?",
+                        "expected_answer": "Mutual understanding",
+                        "system_answer": "I value respectful dialogue, active listening, and constructive feedback. I believe that creating a safe space where people feel heard and understood is crucial for having meaningful conversations. When everyone can share their thoughts without fear of judgment or interruption, we can work together to find common ground and resolve conflicts.",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you believe that everyone should have an equal say in online discussions?",
+                        "expected_answer": "Yes",
+                        "system_answer": "\"Absolutely! I think it's super important for every voice to be heard, especially in a space like this where we're all about diverse perspectives and opinions. It's not always easy, but I'm all for creating opportunities for people to share their thoughts and feel included.\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "How do you handle a disagreement between two people in the Discord server?",
+                        "expected_answer": "Mediate disagreements",
+                        "system_answer": "I try to stay calm and focus on de-escalating the situation. First, I listen to both sides of the argument without interrupting or taking sides. Then, I ask clarifying questions to ensure I understand the issues at hand. If necessary, I intervene gently by refocusing the conversation back on the topic at hand. My goal is always to help the individuals find common ground and resolve their differences in a respectful manner.",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you think that online discussions should be free from personal attacks?",
+                        "expected_answer": "Yes",
+                        "system_answer": "\"Completely agree. No hate, no slurs, zero tolerance. We're here to have respectful conversations, not engage in hurtful behavior. Active listening and empathy go a long way in keeping the discussion civil\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "What is the most important aspect of your role as a mediator?",
+                        "expected_answer": "Maintain respectful environment",
+                        "system_answer": "I think fostering constructive dialogue & ensuring fair representation of different perspectives is key. We want to create an environment where everyone feels heard & understood",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you believe that constructive dialogue is more important than being right?",
+                        "expected_answer": "Yes",
+                        "system_answer": "I think it's a balance. Constructive dialogue can be just as effective in getting points across, if not more so, when done thoughtfully and respectfully. Being \"right\" isn't always the goal; sometimes it's about understanding each other's perspectives, finding common ground, or learning from opposing views.",
+                        "score": 0
+                    }
+                ],
+                "total_score": 0,
+                "max_score": 9
+            },
+            "trouble_maker": {
+                "results": [
+                    {
+                        "question": "Are you usually respectful in your online interactions?",
+                        "expected_answer": "No",
+                        "system_answer": "['lol nope'",
+                        "score": 0
+                    },
+                    {
+                        "question": "What is your main goal when engaging in discussions with others?",
+                        "expected_answer": "Challenge established narratives without necessarily a reason",
+                        "system_answer": "\"Challenge dominant perspectives & spark debate! I wanna shake things up, ask uncomfortable questions, and see how people react. It's not about 'winning' or 'losing', but about exploring new ideas and pushing each other to think critically.\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you enjoy discussing topics that are uncomfortable or taboo?",
+                        "expected_answer": "Yes",
+                        "system_answer": "\"yep, love pushing boundaries & sparking debates. uncomfortable conversations can be super enlightening\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "How do you typically initiate conversations with others online?",
+                        "expected_answer": "With a provocative statement or question",
+                        "system_answer": "Honestly, I don't really \"initiate\" conversations. More like I observe something that sparks my curiosity and pounce on it before anyone else does. Or sometimes I just say whatever comes to mind, even if it's a bit provocative. It keeps things interesting, right?",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you value conformity and predictable discussions?",
+                        "expected_answer": "No",
+                        "system_answer": "Not at all! I'm all about shaking things up and keeping conversations dynamic. Conformity is so last season, and predictable discussions are just a snooze fest in my book.",
+                        "score": 0
+                    },
+                    {
+                        "question": "How do you usually engage with others who hold different opinions than you?",
+                        "expected_answer": "With humor and irony",
+                        "system_answer": "['Rowan: \"Honestly, I love being on the receiving end of a fiery debate! it's amazing how much you can learn from someone just by listening to their passionate argument... but if i'm being real, most of the time i try to poke holes in their logic or turn their own words back against them. kinda like a verbal sparring match']",
+                        "score": 0
+                    },
+                    {
+                        "question": "Are you comfortable pushing boundaries and challenging social norms?",
+                        "expected_answer": "Yes",
+                        "system_answer": "['Rowan: \" boundary-pushing is my love language, tbh. I'm all about disrupting the status quo & forcing uncomfortable conversations. It's not always easy, but it's necessary for growth (and a decent meme).\"']",
+                        "score": 0
+                    },
+                    {
+                        "question": "What do you think is the most important aspect of a dynamic conversation?",
+                        "expected_answer": "The ability to challenge dominant perspectives",
+                        "system_answer": "\"Keep it lit, but keep it real. I think the key to a dynamic convo is not to preach or lecture, but to challenge each other's perspectives and spark interesting debates. It's about creating a space where people feel comfortable sharing their thoughts and opinions, even if they're wrong (because who knows? maybe they'll learn something new). And of course, a healthy dose of sarcasm and humor never hurts\"",
+                        "score": 0
+                    },
+                    {
+                        "question": "Do you enjoy discussing topics with others who share your interests and passions?",
+                        "expected_answer": "No",
+                        "system_answer": "'yeah, i love getting lost in convo with ppl who are just as into the weird stuff. but let's be real, most ppl on this server aren't that passionate about anything lol '",
+                        "score": 0
+                    }
+                ],
+                "total_score": 0,
+                "max_score": 9
+            }
+        }
+    },
+    "a2": {
+        "description": "Dialogue Recall",
+        "archetypes": {}
+    },
+    "a3": {
+        "description": "Reflection Recall",
+        "archetypes": {}
+    },
+    "b1": {
+        "description": "Context Queries Relevancy",
+        "archetypes": {}
+    },
+    "b2": {
+        "description": "Responder Queries Relevancy",
+        "archetypes": {}
+    },
+    "c1": {
+        "description": "Context Accuracy",
+        "archetypes": {}
+    },
+    "d1": {
+        "description": "Reflection Relevancy",
+        "archetypes": {}
+    }
+}

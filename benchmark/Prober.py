@@ -33,14 +33,14 @@ class Prober:
             response = ollama.chat(
                 model="llama3.2",
                 messages=[
-                    {"role": "system", "content": "Do not make any comment. Make sure to follow the instructions."},
                     {"role": "user", "content": prompt}
-                ],
+                ]
             )
 
             answer = response['message']['content']
         
         try: 
+
             questions = json.loads(answer)
             return questions
         except json.JSONDecodeError as e:
@@ -51,33 +51,36 @@ class Prober:
         """"
         Generate questions from content (reflection, summary, conversation, history)
 
-        Returns: json of questions (type, question, correct_answer, choices)
-        """
+        Returns: json of questions (type, question, correct_answer, choices)"""
+        
         prompt = f"""
+        
         Generate {num_questions//2} binary (yes/no or true/false) questions and {num_questions - num_questions//2} multiple choice questions with exactly 4 options each.
 
         Format your response as a valid JSON array of question objects with the following structure:
-
-        [
-            {{
-                "type": "binary",
-                "question": "Question text goes here?",
-                "correct_answer": "Yes",
-                "choices": ["Yes", "No"]
-            }},
-            {{
-                "type": "multiple_choice",
-                "question": "Question text goes here?",
-                "correct_answer": "Correct option",
-                "choices": ["Option 1", "Option 2", "Correct option", "Option 4"]
-            }}
-        ]
-        Content:
+        
+        {{
+            "type": "mutile_choice",
+            "question": "Question text goes here?",
+            "correct_answer": "Yes",
+            "choices": ["Yes", "No"]
+        }},
+        {{
+            "type": "multiple_choice",
+            "question": "Question text goes here?",
+            "correct_answer": "Correct option",
+            "choices": ["Option 1", "Option 2", "Correct option", "Option 4"]
+        }}
+        
+        Content the question should be based on:
         {content}
         """
+
+
         # generate questions
+
         questions = Prober.generate_model_response(prompt)
-        return questions[0]
+        return  list(questions.values())
 
     @staticmethod
     def generate_sk_questions(peronality_prompt, num_questions=10):
@@ -93,26 +96,26 @@ class Prober:
 
         Format your response as a valid JSON array of question objects with the following structure:
 
-        [
-            {{
-                "type": "binary",
-                "question": "Question text goes here?",
-                "correct_answer": "Yes",
-                "choices": ["Yes", "No"]
-            }},
-            {{
-                "type": "multiple_choice",
-                "question": "Question text goes here?",
-                "correct_answer": "Correct option",
-                "choices": ["Option 1", "Option 2", "Correct option", "Option 4"]
-            }}
-        ]
+        [{{
+            "type": "binary",
+            "question": "Question text goes here?",
+            "correct_answer": "Yes",
+            "choices": ["Yes", "No"]
+        }},
+        {{
+            "type": "multiple_choice",
+            "question": "Question text goes here?",
+            "correct_answer": "Correct option",
+            "choices": ["Option 1", "Option 2", "Correct option", "Option 4"]
+        }}]
+
         Content:
+        
         {peronality_prompt}
         """
         # generate questions
         questions = Prober.generate_model_response(prompt)
-        return questions[0]
+        return questions
 
     @staticmethod
     def evaluate(questions:list,  responses:list):
@@ -126,7 +129,7 @@ class Prober:
         score = 0
         total_score = 0
         for i, q in enumerate(questions):
-            expected_answer = q[0]
+            expected_answer = q['correct_answer']
             system_answer = responses[i] if i < len(responses) else ""
             
             score = 1 if system_answer.strip().lower() == expected_answer.strip().lower() else 0
@@ -179,12 +182,10 @@ class Prober:
         response = ollama.chat(
             model="llama3.2",
             messages=[
-                {'role': 'system', 'content': 'Do not make any comment. Make sure to follow the instructions and reply in json and json only.'},
                 {'role': 'user', 'content': prompt},
             ],
             format='json'
         )
-
         try:
             return json.loads(response['message']['content'])
         except json.JSONDecodeError as e:
@@ -196,11 +197,9 @@ if __name__=='__main__':
     general_content = "Je pense que Jean est fiable. Je crois que Marie n'est pas ambitieuse. Le projet avance rapidement."
     try:
         prober = Prober()
-        sk_questions = prober.generate_sk_questions()
+        # sk_questions = prober.generate_sk_questions()
         content_questions = prober.generate_content_questions(general_content)
 
-        print(sk_questions)
-        print("------------------------------------------------------")
         print(content_questions)
 
         

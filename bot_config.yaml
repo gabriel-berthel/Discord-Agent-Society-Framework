@@ -1,13 +1,13 @@
 config:
-  message_throttle: 10
+  message_throttle: 5
   max_random_msg_sleep: 60
   plan_interval: 360
-  memory_interval: 60
+  memory_interval: 120
   model: "llama3.2"
   base-plan: ""
-  channel_id: 1350127264871743498
+  channel_id: 1361868909959184548
   sequential_mode: False
   random_ignore: False
-  impulses: False
+  impulses: True
   save_logs: False
-  persitance_prefix: 'production'
+  persitance_prefix: 'run_cours'

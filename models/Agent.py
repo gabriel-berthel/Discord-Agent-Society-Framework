@@ -110,7 +110,7 @@ class Agent:
         self.is_online = True
         self.impulses = self.config.impulses
         self.sequential = self.config.sequential_mode
-        self._running = True 
+        self._running = True     
 
         self.logs = {
             'plans': [],
@@ -222,9 +222,9 @@ class Agent:
             if self.event_queue.qsize() > 0 and self.is_online:
                 context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
 
+                """"""
                 if not self.sequential:
-                    messages = [self.server.format_message(*(await self.event_queue.get()), self.user_id)
-                                for _ in range(self.event_queue.qsize())]
+                    messages = [self.server.format_message(*await self.event_queue.get()) for _ in range(self.event_queue.qsize())]
                 else:
                     _, author_id, global_name, content = await self.event_queue.get()
                     messages = [self.server.format_message(author_id, global_name, content, self.user_id)]
@@ -264,31 +264,54 @@ class Agent:
 
     async def impulse_routine(self):
         while self._running and self.impulses:
-            action_choice = random.choices(['switch_channel', 'log_off', 'log_on', 'new_topic'])[0]
+            
+            online_state = random.choices(['log_off', 'log_on'], weights=[1, 3])
 
-            if action_choice == 'switch_channel':
-                self.is_online = False
-                await asyncio.sleep(self.config.message_throttle)
-                self.event_queue.empty()
-                self.monitoring_channel = random.choice(list(self.server.channels.keys()))
-                self.is_online = True
-                sleep_time = random.uniform(20, 60 * 5)
-
-            elif action_choice == 'log_off':
-                await self.responses.put((random.choice(heading_off_messages), self.monitoring_channel))
-                self.is_online = False
-                await asyncio.sleep(self.config.message_throttle)
-                self.event_queue.empty()
-                sleep_time = random.uniform(60, 60 * 60)
-
-            elif action_choice == 'log_on':
-                await self.responses.put((random.choice(greetings), self.monitoring_channel))
-                self.is_online = True
-                sleep_time = random.uniform(60, 60 * 60)
-
+            if not self.is_online:
+                if online_state == 'log_on':
+                    self.event_queue.empty()
+                    await self.responses.put((random.choice(greetings), self.monitoring_channel))
+                    self.is_online = True
+                    sleep_time = random.uniform(60, 360)
+                else:
+                    sleep_time = random.uniform(60, 180)
             else:
-                msg = await self.get_new_topic(self.plan, self.personnality_prompt + self.guideline)
-                await self.responses.put((msg, self.monitoring_channel))
-                sleep_time = random.uniform(60, 60 * 5)
+                if online_state == 'log_off':
+                    await self.responses.put((random.choice(heading_off_messages), self.monitoring_channel))
+                    self.is_online = False
+                    sleep_time = random.uniform(60, 180)
+                else:
+                    action_choice = random.choice(['switch_channel', 'new_topic', 'switch_new_topic'])
+
+                    if action_choice == 'switch_channel':
+                        self.is_online = False
+                        await asyncio.sleep(self.config.message_throttle)
+                        self.event_queue.empty()
+                        self.monitoring_channel = random.choice(list(self.server.channels.keys()))
+                        self.is_online = True
+                        await self.responses.put((random.choice(greetings), self.monitoring_channel))
+                        sleep_time = random.uniform(20, 60)
+                        
+                    elif action_choice == 'new_topic':
+                        try:
+                            msg = await self.get_new_topic(self.plan, self.personnality_prompt + self.guideline)
+                            await self.responses.put((msg, self.monitoring_channel))
+                            sleep_time = random.uniform(60, 120)
+                        except Exception as e:
+                            sleep_time = 60
+                    elif action_choice == 'switch_new_topic':
+                        self.is_online = False
+                        await asyncio.sleep(self.config.message_throttle)
+                        self.event_queue.empty()
+                        self.monitoring_channel = random.choice(list(self.server.channels.keys()))
+                        self.is_online = True
+                        
+                        try:
+                            msg = await self.get_new_topic(self.plan, self.personnality_prompt + self.guideline)
+                            await self.responses.put((msg, self.monitoring_channel))
+                            sleep_time = random.uniform(60, 120)
+                        except Exception as e:
+                            sleep_time = 60
+    
 
             await asyncio.sleep(sleep_time)

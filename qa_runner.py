@@ -66,8 +66,8 @@ async def run_benchmarks(archetype_logs):
         print(archetype)
         await logs.client.start()
         results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
-        results['a2']['archetypes'][archetype] = await run_a2(logs.client, Prober, logs.historic)
-        results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
+        #results['a2']['archetypes'][archetype] = await run_a2(logs.client, Prober, logs.historic)
+        # results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
         
         # results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)
         # results['b2']['archetypes'][archetype] = run_b2(logs.response_queries, memory)

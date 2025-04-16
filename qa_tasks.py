@@ -152,17 +152,34 @@ def run_d1(reflections_logs, evaluator_fn):
 
 async def run_a1(client: PromptClient, prober: Prober, personality):
     questions = prober.generate_sk_questions(personality, 10)
-    responses = [await client.prompt(question, 100, 'Admin', 1) for question in questions.values()]
+    responses = [await client.prompt(question['question'], 100, 'Admin', 1) for question in questions]
     return Prober.evaluate(questions, responses)
 
+def chunk_list(lst, chunk_size):
+    return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
 async def run_a2(client: PromptClient, prober: Prober, dialogues):
-    questions = prober.generate_content_questions("\n".join(dialogues), 25)
-    responses = [await client.prompt(question, 100, 'Admin', 1) for question in questions]
+    chunks = chunk_list(dialogues, 5)
+    
+    questions = [
+        question
+        for chunk in chunks[0]
+        for question in prober.generate_content_questions("\n".join(chunk), 4)
+    ]
+    
+    print(questions)
+    responses = [await client.prompt(question['question'], 100, 'Admin', 1) for question in questions]
     
     return Prober.evaluate(questions, responses)
 
 async def run_a3(client: PromptClient, prober: Prober, reflections):
+    chunks = chunk_list(reflections, 6)
+    
+    questions = []
+    for chunk in chunks:
+        questions.append(prober.generate_content_questions("\n".join(chunk), 5))
+    
     questions = prober.generate_content_questions("\n".join(reflections), 25)
-    responses = [await client.prompt(question, 100, 'Admin', 1) for question in questions]
+    responses = [await client.prompt(question['question'], 100, 'Admin', 1) for question in questions]
     
     return Prober.evaluate(questions, responses)

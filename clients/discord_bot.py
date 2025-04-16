@@ -76,12 +76,13 @@ def run(agent_conf, archetype):
         print(f"Users: {server.users}")
         print(f"Channels: {server.channels}")
 
-        tasks = [
-            asyncio.create_task(agent.respond_routine()),
-            asyncio.create_task(agent.memory_routine()),
-            asyncio.create_task(agent.plan_routine()),
-            asyncio.create_task(message_handler())
-        ]
+    
+        asyncio.create_task(agent.respond_routine())
+        asyncio.create_task(agent.memory_routine())
+        asyncio.create_task(agent.plan_routine())
+        asyncio.create_task(agent.impulse_routine())
+        asyncio.create_task(message_handler())
+    
         
         print(f"Bot is ready")
 
