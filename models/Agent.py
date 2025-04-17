@@ -33,7 +33,7 @@ class Logger:
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             handlers=[
                 logging.StreamHandler(),
-                logging.FileHandler(f"logs/{persistance_id}_agent.log")
+                logging.FileHandler(f"{log_path}/{persistance_id}_agent.log")
             ]
         )
         self.logger = logging.getLogger(persistance_id)
@@ -50,7 +50,7 @@ class Logger:
 
     def save_logs(self, persistance_id):
         os.makedirs(self.log_path, exist_ok=True)
-        file_path = os.path.join(self., f"{persistance_id}_log.pkl")
+        file_path = os.path.join(self.log_path, f"{persistance_id}_log.pkl")
         with open(file_path, "wb") as f:
             pickle.dump(self.logs, f)
         self.logger.info(f"Saved logs to {file_path}")

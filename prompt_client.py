@@ -74,7 +74,7 @@ class PromptClient:
 
     @staticmethod
     async def run_simulation(duration: float, print_replies, clients=None):
-        clients = clients if clients else PromptClient.build_clients('benchmark_config.yaml')
+        clients = clients if clients else PromptClient.build_clients('configs/benchmark_config.yaml')
         
         await asyncio.gather(*(client.start() for client in clients.values()))
 
@@ -120,8 +120,9 @@ async def main():
     
     for archetype, client in clients.items():
         await client.stop()
+        client.agent.save_logs()
 
-    file_path = os.path.join("logs", f"qa_bench_histo.pkl")
+    file_path = os.path.join("logs", f"qa_bench/qa_bench_histo.pkl")
 
     with open(file_path, "wb") as f:
         pickle.dump(historic, f)

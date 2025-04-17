@@ -9,11 +9,10 @@ config:
   sequential_mode: True
   random_ignore: False
   impulses: False
-  save_logs: True
-  persitance_prefix: 'qa_bench'
-  persistance_path: 'qa_bench/memories'
-  log_path: 'qa_bench/logs'
-
+  save_logs: False
+  persitance_prefix: 'promptbench'
+  persistance_path: 'memories'
+  log_path: 'logs'
 
 # 3.2 okay
 # Gemma 7 b: okay! better than llama for sure!

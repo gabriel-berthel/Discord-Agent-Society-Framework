@@ -12,7 +12,7 @@ config:
   save_logs: False
   persitance_prefix: 'run_cours'
   persistance_path: 'memories'
-  log_path: 'qa_bench/logs'
+  log_path: 'logs'
 
   # DeepSeek-R1-Distill-Llama-8B
   # Gemma 2

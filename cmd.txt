@@ -1,5 +1,0 @@
-python server.py 1.env bot_config.yaml fact_checker
-python server.py 2.env bot_config.yaml baseline
-python server.py 3.env bot_config.yaml activist
-python server.py 4.env bot_config.yaml trouble_maker
-python server.py 5.env bot_config.yaml mediator
