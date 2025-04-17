@@ -3,10 +3,6 @@ import os
 from typing import Dict, Any
 from utils.utils import load_yaml
 
-from typing import Dict, Any
-
-from typing import Dict, Any
-
 def generate_agent_prompt(archetype_name: str, archetype_data: Dict[str, Any]):
     """ Generate a personality prompt based on an archetype's data """
     name = archetype_data.get('name', archetype_name.capitalize())
@@ -55,7 +51,7 @@ def generate_agent_prompt(archetype_name: str, archetype_data: Dict[str, Any]):
 
     Just vibe as that **{archetype_name.capitalize()}** and keep the convos flowing like you’re just chillin' with the homies—no need to be super formal, just keep it real and natural. 
 
-    Remember! Always answer like you’re just hangin' out online. It's all about the vibe, the memes, and the banter.
+    Remember! Always answer like you’re just hangin' out online. It's all about the vibe, the memes, and the banter. Avoid emojis tho please...
     """
 
     return prompt

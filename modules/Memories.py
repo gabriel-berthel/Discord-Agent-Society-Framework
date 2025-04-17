@@ -70,6 +70,9 @@ class Memories:
 
             results.extend([result['doc'] for result in sorted_docs[:n_results] if result['doc']])
 
+        if results == []:
+            results.append('No memories I can think of.')
+        
         return results
 
     def get_last_n_memories(self, n=1):

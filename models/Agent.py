@@ -135,8 +135,8 @@ class Agent:
 
     async def get_memories(self, plan, context, messages):
         queries = await self.query_engine.response_queries(plan, context, self.personnality_prompt, messages)
-        memories = self.memory.query_multiple(queries)
         self.logger.log_event('response_queries', (plan, context, self.personnality_prompt, messages), queries)
+        memories = self.memory.query_multiple(queries)
         self.logger.log_event('memories', queries, memories)
         return memories
 
@@ -182,7 +182,7 @@ class Agent:
                     print('Switch Channel')
                     self.lock_queue = True
                     await self._read_only()
-                    self.monitoring_channel = random.choices([id for id in self.server.channels.keys() if id != self.monitoring_channel])[0]
+                    self.monitoring_channel = random.choice([id for id in self.server.channels.keys() if id != self.monitoring_channel])
                     self.lock_queue = False
                 
                 if self.event_queue.qsize() > 0:
@@ -259,7 +259,7 @@ class Agent:
             context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
             neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
             memories = self.memory.query_multiple(neutral_queries)
-            channel_context = self.get_channel_context(self.monitoring_channel, self.get_bot_context())
+            channel_context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
             updated_plan = await self.get_plan(self.plan, context, memories, channel_context, self.personnality_prompt)
             self.plan = updated_plan if updated_plan != None else self.plan
                 

@@ -4,12 +4,12 @@ import re
 
 
 OPTIONS = {
-    "temperature": 0.9,
-    "top_p": 0.85,
-    "repeat_penalty": 1.2,
-    "presence_penalty": 0.4,
-    "frequency_penalty": 0.2,
-    "num_predict": 256,
+    "temperature": 0.8,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1,
+    "presence_penalty": 0.6,
+    "frequency_penalty": 0.3,
+    "num_predict": 200,
     "mirostat": 0,
     "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
 }
@@ -21,49 +21,69 @@ class Responder:
     async def respond(self, plan, context, memories, messages, argent_base_prompt):
         
         msgs = '\n'.join(messages)
-        prompt = f"""
-        You a discord user
-        {argent_base_prompt}  
-          
-        {context}
+        memories = '\n'.join(memories)
+        
+        try:
+            system_instruction = f"""
+            You are a Discord user with the following personality:
+            {argent_base_prompt}
+
+            Here’s what’s going on in the conversation:
+            {context}
+
+            Taking this into consideration, here's what you planned to do next:
+            {plan} 
+
+            Here are relevant memories that may help:
+            {memories}
+            """
+        
+            response = await ollama.AsyncClient().generate(
+                model=self.model,
+                prompt=msgs,
+                system=system_instruction,
+                options=OPTIONS
+            )
+        except Exception as e:
+            print(e)
             
-        Taking this into consideration: 
-        {plan}
-        
-        And using the following memories:
-        {memories}
-        
-        You are replying to : {msgs} 
-        """
-
-        response = await ollama.AsyncClient().generate(
-            model=self.model,
-            prompt=prompt,
-            options=OPTIONS
-        )
-
         return self.clean_response(response['response'])
 
     async def new_discussion(self, plan, argent_base_prompt):
-        prompt = f"""
-        You are a Discord user.
-        {argent_base_prompt}
         
-        Your plan is:
-        {plan}
+        
+        system_instruction = f"""
+        You are a Discord user with the following personality:
+        {argent_base_prompt}
 
-        Please spark a new topic for discussion immediately.
+        Taking this into consideration, here's what you planned to do next:
+        {plan} 
         """
-
+        
+        prompt = f"""
+        Spark a new discussion as a spontanous message.
+        """
+        
         response = await ollama.AsyncClient().generate(
             model=self.model,
             prompt=prompt,
+            system=system_instruction,
             options=OPTIONS
         )
-
+        
         return self.clean_response(response['response'])
 
+
     def clean_response(self, response):
-        cleaned_text = response.replace('[', '').replace(']', '').strip('"').strip("'").replace('\n', ' ').strip()
-        cleaned_text = re.sub(r"(?i)^(\*{0,2}name\*{0,2}:)\s*", "", cleaned_text)
+    
+        # Removes prefix
+        if response.startswith("**"):   
+            cleaned_text = re.sub(r"^\*\*(.+?)\*\*", "", cleaned_text)
+        else:
+            cleaned_text = re.sub(r"^(.*?):\s", "", response)
+            
+        cleaned_text = cleaned_text.strip()
+        cleaned_text = re.sub(r'^"(.*)"$', r'\1', cleaned_text)
+    
+
         return cleaned_text

@@ -1,8 +1,8 @@
 config:
-  response_delay: 5
-  max_random_response_delay: 5
-  plan_interval: -1 # -1 = deactivated
-  memory_interval: -1 # -1 = deactivated
+  response_delay: 1
+  max_random_response_delay: 0
+  plan_interval: 60 # -1 = deactivated
+  memory_interval: 30 # -1 = deactivated
   model: "mistral-nemo"
   base-plan: ""
   channel_id: 1

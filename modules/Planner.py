@@ -34,18 +34,23 @@ class Planner:
         self.model = model
 
     async def refine_plan(self, plan, context, memories, channel_context, argent_base_prompt):
-        prompt = f"""
+        system_instruction = f"""
         {argent_base_prompt}
-        {planner_base}
         
+        {planner_base}
+        """
+        
+        memories = '\n'.join(memories)
+        
+        prompt = f"""
         Channel context:
         {channel_context}
-
+        
         My previous plan:
         {plan}
-
+        
         Memories:
-        {list_to_text(memories)}
+        {memories}
 
         Current context:
         {context}
@@ -54,6 +59,7 @@ class Planner:
         response = await ollama.AsyncClient().generate(
             model=self.model,
             prompt=prompt,
+            system=system_instruction,
             options=PLANNER_OPTIONS
         )
 

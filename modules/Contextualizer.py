@@ -59,17 +59,22 @@ class Contextualizer():
 
     async def neutral_context(self, messages, bot_context):
         msgs = '\n'.join([f"{msg}" for msg in messages])
-        prompt = f"""
-        {bot_context}
-        {neutral_base}
         
-        The transcript to write about:
+        system = f"""
+        {bot_context}
+        
+        {neutral_base}
+        """
+        
+        prompt = f"""
+        The transcript to write about immediately:
         {msgs}
         """
         
         if messages:
             response = await ollama.AsyncClient().generate(
                 model=self.model,
+                system=system,
                 prompt=prompt,
                 options=NEUTRAL_OPTIONS
             )
@@ -79,16 +84,21 @@ class Contextualizer():
         
     async def reflection(self, messages, agent_base_prompt):
         msgs = '\n'.join([f"{msg}" for msg in messages])
-        prompt = f"""
+        
+        system = f"""
         {agent_base_prompt}
         {engaged_base}
+        """
         
+        prompt = f"""
+        The transcript to write about:
         {msgs}
         """
 
         response = await ollama.AsyncClient().generate(
             model=self.model,
             prompt=prompt,
+            system=system,
             options=REFLECTIVE_OPTIONS
         )
         
