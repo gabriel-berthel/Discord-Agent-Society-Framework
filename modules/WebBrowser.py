@@ -13,13 +13,14 @@ class WebBrowser:
     Class for online research 
     """
 
-    def __init__(self, use_ollama=True):
+    def __init__(self, use_ollama=True, model='llama3.2'):
         self.search_api_key = os.getenv("GOOGLE_API_KEY") 
         self.search_engine_id = os.getenv("GOOGLE_CSE_ID")
         self.llm_api_key = os.getenv("LLM_API_KEY")
         self.use_ollama=use_ollama
         self.search_endpoint = "https://www.googleapis.com/customsearch/v1"
         self.llm_endpoint = "https://api.openai.com/v1/chat/completions"
+        self.model = model
 
 
     # fetch the web browser search results
@@ -120,7 +121,7 @@ class WebBrowser:
         Answer concisely but completely. Cite your sources when relevant.
         """
         payload = {
-            "model": "llama3.2", # or another ollama model
+            "model": self.model,
             "prompt": prompt,
             "stream": False,
             "options": {
@@ -211,7 +212,7 @@ class WebBrowser:
         try:
             if self.use_ollama:
                 response = ollama.chat(
-                    model="llama3.2",
+                    model=self.model,
                     messages=[
                         {"role": "system", "content": "You are an assistant specialized in creating concise summaries of multiple research findings."},
                         {"role": "user", "content": summarize_prompt}

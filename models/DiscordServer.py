@@ -14,11 +14,12 @@ class DiscordServer:
 
     def add_channel(self, channel_id, channel_name):
         if channel_id not in self.channels:
-            self.channels[channel_id] = {"name": channel_name, "messages": deque(maxlen=15)}
+            self.channels[channel_id] = {"name": channel_name, "messages": deque(maxlen=15), "last_id": None}
 
     def add_message(self, channel_id, author_id, global_name, content):
         if channel_id in self.channels:
             self.channels[channel_id]["messages"].append(self.format_message(author_id, global_name, content))
+            self.channels[channel_id]["last_id"] = author_id
 
     def get_channel(self, channel_id):
         return self.channels.get(channel_id, None)
@@ -36,8 +37,6 @@ class DiscordServer:
 
         return message
     
-    def format_message(self, author_id, global_name, content, as_user=None):
-        name = "Me" if author_id == as_user else global_name
+    def format_message(self, author_id, global_name, content):
         content = self.fix_message(content)
-
-        return f"{name}: {content}"
+        return f"[{global_name}] {content}"

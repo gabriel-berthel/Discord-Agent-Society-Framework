@@ -1,14 +1,23 @@
 config:
-  message_throttle: 1
-  max_random_msg_sleep: 0
+  response_delay: 5
+  max_random_response_delay: 5
   plan_interval: -1 # -1 = deactivated
   memory_interval: -1 # -1 = deactivated
-  model: "llama3.2"
+  model: "mistral-nemo"
   base-plan: ""
   channel_id: 1
   sequential_mode: True
   random_ignore: False
   impulses: False
   save_logs: False
-  save_logs: False
   persitance_prefix: 'qa_bench'
+
+
+# 3.2 okay
+# Gemma 7 b: okay! better than llama for sure!
+# Mistral 7b: Looks more natural! Require some parsing (slow)
+# gemma3:4b probablu require to tweak base prompts but agents are behaving within their role boundaries!!!
+# llama3:8b more creative than 3.2 but same tendencu to be linkedinish! less than before. Good for benchmarks maybe.
+# hermes3: tourne pas
+
+# mistral-nemo: pas trop mal! avec des tweak sur les prompts je pense ... 

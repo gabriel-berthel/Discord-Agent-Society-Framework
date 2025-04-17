@@ -1,41 +1,41 @@
 import ollama
 from utils.utils import *
 
-neutral_base = """
-You are a journalism student tasked with summarizing a Discord conversation in which you participated. Your objective is to create a clear, accurate, and impartial summary, showcasing your ability to paraphrase effectively and maintain factual integrity.
+NEUTRAL_OPTIONS = {
+    "temperature": 0.7,
+    "top_p": 0.85,
+    "repeat_penalty": 1.2,
+    "presence_penalty": 0.4,
+    "frequency_penalty": 0.4,
+    "num_predict": 512,
+    "mirostat": 0,
+    "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
+}
 
-Start the summary with:
+REFLECTIVE_OPTIONS = {
+    "temperature": 1.1,
+    "top_p": 0.9,
+    "repeat_penalty": 1.1,
+    "presence_penalty": 0.7,
+    "frequency_penalty": 0.3,
+    "num_predict": 512,
+    "mirostat": 0,
+    "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
+}
+
+neutral_base = """
+You are a student summarizing a Discord conversation. 
+Your goal is to create a clear and neutral summary, using first-person language for your contributions (when your name appear).
+
+Focus on:
+- Key points and decisions made in the conversation.
+- Names of people, companies, events, or any identifiable entities.
+- Keep the tone objective and factual—avoid opinions or analysis.
+
+Start with:
 "Reading the Discord conversation, I can observe that..."
 
-Guidelines for your summary:
-
-    Use first-person language to represent your own contributions. Any statements attributed to "Me" in the transcript should be written in the first person.
-
-    Write the summary in a single paragraph, adjusting its length and detail based on the conversation's complexity.
-
-    Maintain a neutral, objective, and factual tone. Avoid expressing personal opinions, analysis, or editorializing.
-
-    Name every identifiable entity mentioned, including:
-
-        People (full names, usernames, or identifiers)
-
-        Organizations, companies, and platforms (e.g., OpenAI, Discord, Google Docs)
-
-        Creative works (e.g., books, TV shows, video games)
-
-        Tools, apps, technologies, or projects (e.g., Python, Notion, repositories)
-
-        Public figures, historical figures, or fictional characters
-
-        Events, conferences, or time references
-
-    Clearly identify each participant’s role or affiliation if known.
-
-    Summarize key points, questions, insights, and decisions, making sure to capture the flow of the conversation without omitting any crucial context.
-
-    The summary should focus solely on what was said and done, not on personal opinions or evaluations.
-
-The final output should be a precise, fact-based account of the conversation that accurately reflects the discussion, with all relevant entities named for transparency. Aim for a length of around 1024 characters.
+Keep the summary concise and fact-based, ideally around 1024 characters.
 """
 
 engaged_base = """
@@ -58,29 +58,38 @@ class Contextualizer():
         self.model = model
 
     async def neutral_context(self, messages, bot_context):
-      prompts = [('system', neutral_base)] 
-      prompts += [('user', msg) for msg in messages]
-      
-      if messages:
-        msg_txt = "- " + messages[0] + "\n- ".join(messages[1:])
-        response = await ollama.AsyncClient().chat(
-            model=self.model, 
-            messages=format_llm_prompts(prompts)
-        )
-         
-        return response['message']['content']
-      
-      return "Reading the discord conversation, I can observe that there is no messages at the moment. I should consider sparking a new topic."
+        msgs = '\n'.join([f"{msg}" for msg in messages])
+        prompt = f"""
+        {bot_context}
+        {neutral_base}
         
-    async def reflection(self, messages, bot_context, agent_base_prompt):
-        prompts = [
-            ('system', agent_base_prompt),
-            ('system', engaged_base),
-        ] + [('user', msg) for msg in messages]
+        The transcript to write about:
+        {msgs}
+        """
         
-        response = await ollama.AsyncClient().chat(
-            model=self.model, 
-            messages=format_llm_prompts(prompts)
+        if messages:
+            response = await ollama.AsyncClient().generate(
+                model=self.model,
+                prompt=prompt,
+                options=NEUTRAL_OPTIONS
+            )
+            return response['response']
+        
+        return "Reading the discord conversation, I can observe that there is no messages at the moment. I should consider sparking a new topic."
+        
+    async def reflection(self, messages, agent_base_prompt):
+        msgs = '\n'.join([f"{msg}" for msg in messages])
+        prompt = f"""
+        {agent_base_prompt}
+        {engaged_base}
+        
+        {msgs}
+        """
+
+        response = await ollama.AsyncClient().generate(
+            model=self.model,
+            prompt=prompt,
+            options=REFLECTIVE_OPTIONS
         )
-            
-        return response['message']['content']
+        
+        return response['response']

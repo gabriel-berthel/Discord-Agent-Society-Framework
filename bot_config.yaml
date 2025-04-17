@@ -1,13 +1,24 @@
 config:
-  message_throttle: 5
-  max_random_msg_sleep: 30
+  response_delay: 0
+  max_random_response_delay: 5
   plan_interval: 360
   memory_interval: 120
-  model: "llama3.2"
+  model: "mistral-nemo"
   base-plan: ""
-  channel_id: 1362027895194910792
+  channel_id: 1362178271323623697
   sequential_mode: False
   random_ignore: False
   impulses: True
   save_logs: False
   persitance_prefix: 'run_cours'
+
+  # DeepSeek-R1-Distill-Llama-8B
+  # Gemma 2
+  #LLMA 7B
+  # Mistral 7B
+
+  # Deepseek 7B: ✅ Runs with quantized versions (Q4_0, Q4_K_M).
+  # Gemma 7B: Runs with 8-bit quantization (e.g., Q4_0).
+
+  # LLaMA 2 7B: ✅ Runs well with Q4_0 or Q5_1.
+  # Mistral 7B: ✅ Runs fine on 4060 with Q4_0 or Q5_1.

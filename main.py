@@ -9,6 +9,7 @@ import logging
 from sentence_transformers import SentenceTransformer
 
 logging.basicConfig(level=logging.WARNING)
+logging.disable(logging.WARNING)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 logging.getLogger("tqdm").setLevel(logging.ERROR) 

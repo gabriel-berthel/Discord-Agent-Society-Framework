@@ -9,17 +9,13 @@ from dotenv import load_dotenv
 load_dotenv('agent.env')
 
 logging.basicConfig(level=logging.WARNING)
-logging.getLogger("transformers").setLevel(logging.ERROR)
-logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
-logging.getLogger("tqdm").setLevel(logging.ERROR) 
-logging.getLogger("httpx").setLevel(logging.ERROR) 
-logging.getLogger("modules.WebBrowser").setLevel(logging.ERROR) 
+logging.disable(logging.WARNING)
 
 class PromptClient:
     def __init__(self, agent_conf, archetype, name, id, server):
         self.name = name
         self.id = id
-        self.server = server
+        self.server: DiscordServer = server
         self.agent = Agent(id, agent_conf, server, archetype)
         self.tasks = []
         self.server.update_user(id, self.agent.name)
@@ -43,11 +39,10 @@ class PromptClient:
                 pass
     
     async def prompt(self, message, user_id, username, channel_id=1):
-        print(f"Prompt: ", message)
         self.server.update_user(user_id, username)
         event = (channel_id, user_id, username, message)
-        self.agent.server.add_message(*event)
-        await self.agent.add_event(event)  
+        self.server.add_message(channel_id, user_id, username, message)
+        await self.agent.add_event(event)
         message, _ = await self.agent.responses.get() 
         self.server.add_message(channel_id, user_id, username, message)
         return message
@@ -58,11 +53,11 @@ class PromptClient:
         server.add_channel(1, 'General')
         
         roles = [
-            ('fact_checker', 'Caspian', 1),
-            ('activist', 'Zora', 2),
-            ('mediator', 'Quinn', 3),
-            ('baseline', 'Neutri', 4),
-            ('trouble_maker', 'Rowan', 5)
+            ('debunker', 'Caspian', 1),
+            ('nerd', 'Zora', 2),
+            ('peacekeeper', 'Quinn', 3),
+            ('chameleon', 'Neutri', 4),
+            ('troll', 'Rowan', 5)
         ]
         
         clients = {
@@ -86,7 +81,7 @@ class PromptClient:
         current_client = clients[current_archetype]
         message = "Hi! What\'s up gamers"
         
-        msg = f"[{current_client.name}] said {message}"
+        msg = f"[{current_client.name}] {message}"
         historic.append(msg)
         
         if print_replies:
@@ -96,9 +91,9 @@ class PromptClient:
             archetype = [r for r in roles if r != current_archetype]
             next_archetype = random.choice(archetype)
             next_client = clients[next_archetype]
-
+            
             response = await next_client.prompt(message, user_id=current_client.id, username=current_client.name)
-            msg = f"[{next_client.name}] said {response}"
+            msg = f"[{next_client.name}] {response}"
             historic.append(msg)
             
             if print_replies:
@@ -110,7 +105,6 @@ class PromptClient:
 
         return clients, historic
 
-
 async def main():
     import os
     import pickle
@@ -118,7 +112,7 @@ async def main():
     print_replies = True
     simulation_duration = 60 * 9 + 5
     clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies)
-    print(clients, historic)
+    
     for archetype, client in clients.items():
         await client.stop()
         client.agent.save_logs()

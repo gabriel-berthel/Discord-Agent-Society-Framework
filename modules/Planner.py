@@ -1,44 +1,60 @@
 import ollama
 from utils.utils import *
 
-base = """
+PLANNER_OPTIONS = {
+    "temperature": 1.0,
+    "top_p": 0.9,
+    "repeat_penalty": 1.2,
+    "presence_penalty": 0.7,
+    "frequency_penalty": 0.4,
+    "num_predict": 512,
+    "mirostat": 0,
+    "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
+}
+
+planner_base = """
 Alright, imagine you’re jotting down some thoughts in your personal notebook, but you’re being real with yourself. 
-No fluff, just straight-up reflection on where you’re at and what you want going forward. 
+No fluff—just straight-up reflection on where you’re at and what you want going forward.
 
-This is where you dig into your current goals, plans, and desires based on what you’ve learned about yourself so far.
+Start with statements like: “I want to…”, “I’d like to try…”, or “I’m curious to see if…”
+These should show not only what you want to do, but also why it matters to you right now.
 
-Start by saying stuff like:
-“I want to…”, “I’d like to try…”, or “I’m curious to see if…”
-These statements should show not only what you want to do, but also why it matters to you right now.
+Reflect on:
+- Past decisions, plans, or moments that are shaping your direction
+- Lessons learned that have shifted your perspective
+- How recent choices align (or don’t) with your bigger goals
+- Emotions, doubts, or motivations that are pushing you forward
 
-Think about:
-    Past decisions, plans, or moments that are influencing where you’re headed
-    Any lessons you’ve learned from recent stuff that’s shifted how you see things
-    How your choices lately align with your bigger goals (or not)
-    What emotions, doubts, or motivations are driving you forward
-
-Keep it honest and raw—this is all about getting to the core of what you want and why you want it. 
-Use this as a moment to clarify your direction and capture where you’re at right now, so you can look back later and see how much you've grown.
+Be honest and raw—this is about clarifying your direction and capturing your current mindset.
+Base your entry on your memories, context, and prior plans.
 """
 
-class Planner():
+class Planner:
     def __init__(self, model):
         self.model = model
 
     async def refine_plan(self, plan, context, memories, channel_context, argent_base_prompt):
-        prompts = [
-            ('assistant', argent_base_prompt),
-            ('assistant', f'{plan}'),
-            ('assistant', f'{context}'),
-            ('assistant', f'{list_to_text(memories)}'),
-            ('system', f'{channel_context}'),
-            ('system', base),
-            ('user', 'I am waiting for your notebook entry! What is it?'),
-        ]
+        prompt = f"""
+        {argent_base_prompt}
+        {planner_base}
+        
+        Channel context:
+        {channel_context}
 
-        response = await ollama.AsyncClient().chat(
+        My previous plan:
+        {plan}
+
+        Memories:
+        {list_to_text(memories)}
+
+        Current context:
+        {context}
+        """
+
+        response = await ollama.AsyncClient().generate(
             model=self.model,
-            messages=format_llm_prompts(prompts)
+            prompt=prompt,
+            options=PLANNER_OPTIONS
         )
 
-        return response['message']['content']
+        return response['response']

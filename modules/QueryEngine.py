@@ -2,6 +2,17 @@ import ollama
 import re
 from utils.utils import *
 
+QUERY_ENGINE_OPTIONS = {
+    "temperature": 1.0,
+    "top_p": 0.85,
+    "repeat_penalty": 1.1,
+    "presence_penalty": 0.6,
+    "frequency_penalty": 0.3,
+    "num_predict": 512,
+    "mirostat": 0,
+    "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
+}
+
 base = """
 Imagine you are a Discord user who can query your personal notebook and diary to help respond to messages. 
 It’s important to ask relevant queries that will assist in crafting appropriate responses. 
@@ -10,8 +21,8 @@ You should ask your queries in natural human language like you are browsing the 
 
 Please format your queries as follows:
 
-Query: Your first query here
-Query: Your second query here
+Query: Your first query here  
+Query: Your second query here  
 Query: Your third query here
 
 These queries will help ensure your responses are informed, relevant, and consistent with the context of your conversations. 
@@ -26,8 +37,8 @@ You should ask your queries in natural human language like you are browsing the 
 
 Please format your queries as follows:
 
-Query: Your first query here
-Query: Your second query here
+Query: Your first query here  
+Query: Your second query here  
 Query: Your third query here
 
 These queries will help ensure your responses are informed, relevant, and consistent with the context of your conversations. 
@@ -40,56 +51,71 @@ class QueryEngine():
 
     async def context_query(self, messages):
         if messages:
-            prompts = [
-                ('system', base),
-                ('system', 'Here is the discord conversation to write query about:'),
-            ] + [('user', msg) for msg in messages]
+            msgs = '\n'.join([f"{msg}" for msg in messages])
+            prompt = f"""
+            {base}
+            Here is the Discord conversation you need to write queries about:
+            {msgs}
+            """
 
-            response = await ollama.AsyncClient().chat(
+            response = await ollama.AsyncClient().generate(
                 model=self.model,
-                messages=format_llm_prompts(prompts)
+                prompt=prompt,
+                options=QUERY_ENGINE_OPTIONS
             )
-            
-            return self.split_queries(response['message']['content'])
-        
+            return self.split_queries(response['response'])
+
         return []
 
-    async def response_queries(self, plan, context,personality, messages=['No message at the moment.']):
-        prompts = [
-            ('system', f'{personality}'),
-            ('assistant', f'{plan}'),
-            ('assistant', f'{context}'),
-            ('system', base),
-            ('system', f'Now write queries for the following messages:'),
-        ] + [('user', msg) for msg in messages]
+    async def response_queries(self, plan, context, personality, messages=['No message at the moment.']):
+        msgs = '\n'.join([f"{msg}" for msg in messages])
+        prompt = f"""
+        {base}
+        Your personality is as follows:
+        {personality}
+        
+        Your current plan is:
+        {plan}
+        
+        Here is the context from your notebook or diary:
+        {context}
+        
+        Now, write queries for the following messages:
+        {msgs}
+        """
 
-        response = await ollama.AsyncClient().chat(
+        response = await ollama.AsyncClient().generate(
             model=self.model,
-            messages=format_llm_prompts(prompts)
+            prompt=prompt,
+            options=QUERY_ENGINE_OPTIONS
         )
-            
-        return self.split_queries(response['message']['content'])
+        return self.split_queries(response['response'])
 
     async def web_queries(self, plan, context, messages=['No message at the moment.']):
-        prompts = [
-            ('system', f'Your current plan is:\n{plan}'),
-            ('system', f'From the conversation, you made the following observations:\n{context}'),
-            ('system', web_base),
-            ('system', f'Now write queries for the following messages:'),
-        ] + [('user', msg) for msg in messages]
+        
+        msgs = '\n'.join([f"{msg}" for msg in messages])
+        prompt = f"""
+        {web_base}
+        Your current plan is:
+        {plan}
+        
+        From the conversation, you made the following observations:
+        {context}
+        
+        Now, write queries for the following messages:
+        {msgs}
+        """
 
-        response = await ollama.AsyncClient().chat(
+        response = await ollama.AsyncClient().generate(
             model=self.model,
-            messages=format_llm_prompts(prompts)
+            prompt=prompt,
+            options=QUERY_ENGINE_OPTIONS
         )
-            
-        return self.split_queries(response['message']['content'])
+        return self.split_queries(response['response'])
 
     def split_queries(self, txt):
-        queries = re.findall(r'Query:\s*(.*?)\s*(?=\n|$)', txt)
-        cleaned_queries = [
-            re.sub(r'\s+', ' ', re.sub(r'[^\w\s?]', '', query.strip())).strip()
-            for query in queries if query.strip() != ""
+        queries = re.findall(r'Query:\s*(.+?)(?=\nQuery:|\Z)', txt, flags=re.DOTALL)
+        return [
+            re.sub(r'\s+', ' ', re.sub(r'[^\w\s?]', '', q.strip()))
+            for q in queries if q.strip()
         ]
-
-        return cleaned_queries

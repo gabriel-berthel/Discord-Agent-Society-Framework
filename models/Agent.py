@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import contextmanager
 from datetime import datetime
 from collections import deque
@@ -9,6 +10,7 @@ import os
 import pickle
 import time
 from collections import defaultdict
+from enum import Enum, auto
 from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
 from modules.Planner import Planner
@@ -17,277 +19,256 @@ from modules.WebBrowser import WebBrowser
 import utils.utils as utils
 from utils.prompt_generator import generate_agent_prompt
 
-heading_off_messages = [
-    "I'm heading off now, take care!",
-    "Alright, I'm off. See you later!",
-    "Time to go! Catch you soon.",
-    "I need to head out, see you later!",
-    "I'm about to leave, talk soon!",
-    "Gotta run! Take care!",
-    "Off I go, bye for now!",
-    "I’m off, stay safe!",
-    "It's time for me to go. Bye for now!",
-    "I'm heading out, have a good one!",
-    "Alright, that's my cue to leave. Catch you later!",
-    "I’ve got to take off, see you later!",
-    "I’m out, talk to you soon!",
-    "Time for me to head off. Take care of yourself!",
-    "I need to go, but let’s chat again soon!",
-    "I’m out the door, catch you on the flip side!",
-        "What's up, gamers?",
-    "Yo yo yo, who's online?",
-    "Sup nerds 😎",
-    "Ayo, what’s the drama today?",
-    "Who woke up and chose chaos?",
-    "Good day to start some sh*t, huh?",
-    "Rise and grind, pixel warriors.",
-    "Reporting live from my bed.",
-    "What are we screaming about today?",
-    "Knock knock, it's me, your problem.",
-    "Hey losers (affectionate)",
-    "Let’s get this bread—or cry trying.",
-    "Just vibing. You?",
-    "Guess who just logged on with zero context?",
-    "Hey, any lore updates?",
-    "Back from the void. What did I miss?"
-]
+class AgentState(Enum):
+    IDLE = auto()
+    PROCESSING = auto()
+    READ_ONLY = auto()
+    INITIATING_TOPIC = auto()
+    
+class Logger:
+    def __init__(self, persistance_id, save_logs=False):
+        log_level = logging.INFO if save_logs else logging.WARNING
+        logging.basicConfig(
+            level=log_level,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.StreamHandler(),
+                logging.FileHandler(f"logs/{persistance_id}_agent.log")
+            ]
+        )
+        self.logger = logging.getLogger(persistance_id)
+        self.logs = defaultdict(list)
 
-greetings = [
-    "Hi there!",
-    "Hello!",
-    "Hey!",
-    "What's up?",
-    "Howdy!",
-    "Hey there, how’s it going?",
-    "Hi! How are you?",
-    "Greetings!",
-    "Hey, what's going on?",
-    "Hello, how's everything?",
-    "Yo!",
-    "Hey, how's it going?",
-    "Hi, hope you're doing well!",
-    "Salutations!",
-    "What’s up? How’s your day going?",
-    "Hey, long time no see!",
-    "Alright, I'm logging off before I say something cursed.",
-    "Peace out, I’ve caused enough chaos for one day.",
-    "Time to disappear like my responsibilities.",
-    "Vanishing like a bad WiFi signal. Bye!",
-    "Catch y’all on the flip flop.",
-    "I’m off to touch grass. Maybe.",
-    "Logging out before my brain fully melts.",
-    "That’s enough internet for today. Bye!",
-    "Alright, I’m ghosting the server now. Later!",
-    "Yeeting myself into the offline zone.",
-    "Time to clock out of existence. Peace!",
-    "I'm outtie like a 90s kid. Bye!",
-    "Later nerds, don't burn the place down.",
-    "Off to go scream into the void, brb never.",
-    "Catch me in the next episode of whatever this is.",
-    "Dipping like chips in salsa. See ya!"
-]
+    def log_event(self, key, input_data, output_data):
+        self.logs[key].append({'input': input_data, 'output': output_data})
+        self.logger.info(f"Log Key: {key} | Input: {input_data} | Output: {output_data}")
+
+    def save_logs(self, persistance_id):
+        os.makedirs("logs", exist_ok=True)
+        file_path = os.path.join("logs", f"{persistance_id}_log.pkl")
+        with open(file_path, "wb") as f:
+            pickle.dump(self.logs, f)
+        self.logger.info(f"Saved logs to {file_path}")
 
 class Agent:
     def __init__(self, user_id, agent_conf, server, archetype):
-        archetype_conf = utils.DictToAttribute(**utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
-        self.config = utils.DictToAttribute(**utils.load_yaml(agent_conf)['config'])
-
-        persitance_prefix = self.config.persitance_prefix if self.config.persitance_prefix else ""
-        self.persistance_id = f"{persitance_prefix}_{archetype}"
-
         self.user_id = int(user_id)
+        self.archetype = archetype
+        self.agent_conf = agent_conf
+        self.server = server
+
+        self._initialize_components()
+
+    # INIT
+    
+    def _initialize_components(self):
+        archetype_conf = self._load_archetype_config(self.archetype)
+        self.config = self._load_agent_config(self.agent_conf)
+        
+        self.persistance_id = self._get_persistence_id(self.archetype)
         self.name = archetype_conf.name
         self.monitoring_channel = self.config.channel_id
         self.plan = "No specific plan at the moment. I am simply responding."
-        self.memory = db.Memories(collection_name=f'{self.persistance_id}_mem.pkl')
-        self.responses: asyncio.Queue = asyncio.Queue()
-        self.server = server
+        self.memory = self._initialize_memory()
+
+        self.responses = asyncio.Queue()
         self.processed_messages = asyncio.Queue()
-        self.event_queue = asyncio.Queue(maxsize=5)
+        self.event_queue = asyncio.Queue()
         self.last_discussion_time = 0
-        
-        self.personnality_prompt, self.guideline = generate_agent_prompt(archetype, archetype_conf)
-        
-        self.log = self.config.save_logs
-        self.is_online = True
-        self.impulses = self.config.impulses
+        self.read_only = False
         self.sequential = self.config.sequential_mode
-        self._running = True     
+        self._running = True
+        self.state = AgentState.IDLE
+        self.lock_queue = False
 
-        self.logs = {
-            'plans': [],
-            'reflections': [],
-            'context_queries': [],
-            'neutral_ctxs': [],
-            'response_queries': [],
-            'memories': [],
-            'summuries': [],
-            'web_queries': []
-        }
+        self.responder = Responder(self.config.model)
+        self.query_engine = QueryEngine(self.config.model)
+        self.planner = Planner(self.config.model)
+        self.contextualizer = Contextualizer(self.config.model)
+        self.web_browser = WebBrowser(use_ollama=True, model=self.config.model)
 
+        self.logger = Logger(self.persistance_id, self.config.save_logs)
+        self.personnality_prompt = generate_agent_prompt(self.archetype, archetype_conf)
+
+    def _load_archetype_config(self, archetype):
+        return utils.DictToAttribute(**utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
+
+    def _load_agent_config(self, agent_conf):
+        return utils.DictToAttribute(**utils.load_yaml(agent_conf)['config'])
+
+    def _get_persistence_id(self, archetype):
+        persistence_prefix = self.config.persitance_prefix or ""
+        return f"{persistence_prefix}_{archetype}"
+
+    def _initialize_memory(self):
+        return db.Memories(collection_name=f'{self.persistance_id}_mem.pkl')
+
+    # INIT
+    
     def stop(self):
         self._running = False
-        
-    def save_logs(self):
-        os.makedirs("logs", exist_ok=True)
-
-        file_path = os.path.join("logs", f"{self.persistance_id}_log.pkl")
-
-        with open(file_path, "wb") as f:
-            pickle.dump(self.logs, f)
-
-        print(f"[LOG] Saved logs to {file_path}")    
 
     async def add_event(self, event):
-        if self.is_online:
-            # Enforce max size of 5
-            while self.event_queue.qsize() >= 5:
-                try:
-                    self.event_queue.get_nowait()
-                except asyncio.QueueEmpty:
-                    break
+        channel_id, author_id, _, _ = event
+        # event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content
+        
+        if author_id != self.user_id and self.monitoring_channel == channel_id and not self.lock_queue:
             await self.event_queue.put(event)
 
+    
+    # --- Agent to modules helpers
+    
     def get_bot_context(self):
-        return f"It is {datetime.now():%Y-%m-%d %H:%M:%S}"
-
+        return f"Your name is {self.name}. It is {datetime.now():%Y-%m-%d %H:%M:%S}. You are currently on discord reading the channel {self.server.get_channel(self.monitoring_channel)['name']}"
+    
     async def get_channel_context(self, channel_id, bot_context):
         msgs = [msg for msg in self.server.get_messages(channel_id).copy()]
-        neutral_ctx = await Contextualizer(self.config.model).neutral_context(msgs, bot_context)
-
-        if self.log:
-            self.logs['neutral_ctxs'].append({'input': (msgs, bot_context), 'output': neutral_ctx})
-
+        neutral_ctx = await self.contextualizer.neutral_context(msgs, bot_context)
+        self.logger.log_event('neutral_ctxs', (msgs, bot_context), neutral_ctx)
         return neutral_ctx
 
     async def get_neutral_queries(self, channel_id):
         msgs = [msg for msg in self.server.get_messages(channel_id).copy()]
-        context_queries = await QueryEngine(self.config.model).context_query(msgs)
-
-        if self.log:
-            self.logs['context_queries'].append({'input': msgs, 'output': context_queries})
-
+        context_queries = await self.query_engine.context_query(msgs)
+        self.logger.log_event('context_queries', msgs, context_queries)
         return context_queries
 
     async def get_memories(self, plan, context, messages):
-        queries = await QueryEngine(self.config.model).response_queries(plan, context, self.personnality_prompt, messages)
+        queries = await self.query_engine.response_queries(plan, context, self.personnality_prompt, messages)
         memories = self.memory.query_multiple(queries)
-
-        if self.log:
-            self.logs['response_queries'].append({'input': (plan, context,self.personnality_prompt, messages), 'output': queries})
-            self.logs['memories'].append({'input': queries, 'output': memories})
-
+        self.logger.log_event('response_queries', (plan, context, self.personnality_prompt, messages), queries)
+        self.logger.log_event('memories', queries, memories)
         return memories
 
-    async def get_search(self, plan, context, messages):
-        queries = await QueryEngine(self.config.model).web_queries(plan, context, messages)
-        
-        summury = ""
-        try:
-            search = await WebBrowser(True).summarize_search(queries, 1024)
-            summury = search['summary']
-            if self.log:
-                self.logs['web_queries'].append({'input': (plan, context, messages), 'output': queries})
-                self.logs['summuries'].append({'input': queries, 'output': summury})
-
-        except Exception as e:
-            pass
-    
-        return summury
-
     async def get_response(self, plan, context, memories, messages, base_prompt):
-        response = await Responder(self.config.model).respond(plan, context, memories, messages, base_prompt)
-        response = response.replace('[', '').replace(']', '').strip('"').strip("'").replace('\n', ' ') # TODO: something more durable
-        
-        if self.log:
-            self.logs.setdefault('responses', []).append({
-                'input': (plan, context, memories, messages, base_prompt),
-                'output': response
-            })
-
+        response = await self.responder.respond(plan, context, memories, messages, base_prompt)
+        self.logger.log_event('response', (plan, context, memories, messages, base_prompt), response)
         return response
 
-    async def get_reflection(self, messages, bot_context, personality_prompt):
-        reflection = await Contextualizer(self.config.model).reflection(messages, bot_context, personality_prompt)
-
-        if self.log:
-            self.logs['reflections'].append({'input': (messages, bot_context, personality_prompt), 'output': reflection})
-
+    async def get_reflection(self, messages, personality_prompt):
+        reflection = await self.contextualizer.reflection(messages, personality_prompt)
+        self.logger.log_event('reflections', (messages, personality_prompt), reflection)
         return reflection
 
-    async def get_plan(self, former_plan, context, unique_memories, bot_context, base_prompt):
-        plan = await Planner(self.config.model).refine_plan(former_plan, context, unique_memories, bot_context, base_prompt)
-
-        if self.log:
-            self.logs['plans'].append({'input': (former_plan, context, unique_memories, bot_context, base_prompt), 'output': plan})
-
-        return plan
+    async def get_plan(self, former_plan, context, unique_memories,channel_context, base_prompt):
+        plan = await self.planner.refine_plan(former_plan, context, unique_memories,channel_context, base_prompt)
+        self.logger.log_event('plans', (former_plan, context, unique_memories, base_prompt), plan)
+        return plan,
 
     async def get_new_topic(self, plan, base_prompt):
-        return await Responder(self.config.model).new_discussion(plan, base_prompt)
+        return await self.responder.new_discussion(plan, base_prompt)
 
+    
+    # --- Routines
+    
+    # ------- Response Routine
+    
     async def respond_routine(self):
+        idle_threshold = 180
+        last_active = time.time()
+
         while self._running:
-            if self.event_queue.qsize() > 0 and self.is_online:
-                monitoring = self.monitoring_channel
-                context = await self.get_channel_context(monitoring, self.get_bot_context())
+            now = time.time()
 
-                channel_id, author_id, global_name, content = await self.event_queue.get()
-                message = self.server.format_message(author_id, global_name, content, self.user_id)
+            if self.sequential:
+                if self.event_queue.qsize() > 0:
+                    self.state == AgentState.PROCESSING
+                    await self._process_sequentially()
+                else:
+                    self.state = AgentState.IDLE
+            else: 
+                
+                if random.random() < 0.05:
+                    print('Switch Channel')
+                    self.lock_queue = True
+                    await self._read_only()
+                    self.monitoring_channel = random.choices([id for id in self.server.channels.keys() if id != self.monitoring_channel])[0]
+                    self.lock_queue = False
+                
+                if self.event_queue.qsize() > 0:
+                    self.state = AgentState.READ_ONLY if self.read_only else AgentState.PROCESSING
+                elif now - last_active > idle_threshold:
+                    self.state = AgentState.INITIATING_TOPIC
+                else:
+                    self.state = AgentState.IDLE
 
-                await self.processed_messages.put(message)
+                if self.state == AgentState.PROCESSING:
+                    substate = random.choices(['SEQUENTIAL', 'BATCH', 'IGNORE'],weights=[0.3, 0.3, 0.4],k=1)[0]
 
-                memories = await self.get_memories(self.plan, context, [message])
-                response = await self.get_response(self.plan, context, memories, [message], self.personnality_prompt + self.guideline)
+                    if substate == 'SEQUENTIAL':
+                        await self._process_sequentially()
+                    elif substate == 'BATCH':
+                        await self._process_batch()
+                    elif substate == 'IGNORE':
+                        await asyncio.sleep(1)
 
-                if response:
-                    await self.responses.put((response, channel_id))
+                    last_active = time.time()
 
-            await asyncio.sleep(self.config.message_throttle)
-            await asyncio.sleep(random.uniform(0, self.config.max_random_msg_sleep))
+                elif self.state == AgentState.READ_ONLY:
+                    await self._read_only()
 
+                elif self.state == AgentState.INITIATING_TOPIC and not self.read_only:
+                    last_message_is_me = self.server.channels[self.monitoring_channel]['last_id'] != self.user_id
+                    if last_message_is_me:
+                        continue
+
+                    last_active = time.time()
+                    topic = await self.get_new_topic(self.plan, self.personnality_prompt)
+                    if topic:
+                        await self.responses.put((topic, self.monitoring_channel))
+
+            await asyncio.sleep(random.uniform(0, self.config.max_random_response_delay))
+            await asyncio.sleep(self.config.response_delay)
+            
+    async def _process_messages(self, messages):
+        formatted_messages = [self.server.format_message(author_id, global_name, content) for _, author_id, global_name, content in messages]
+        for message in formatted_messages:
+            await self.processed_messages.put(message)
+
+        context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
+        memories = await self.get_memories(self.plan, context, formatted_messages)
+        response = await self.get_response(self.plan, context, memories, formatted_messages, self.personnality_prompt)
+        
+        if response:
+            await self.responses.put((response, messages[0][0]))
+
+    async def _process_sequentially(self):
+        channel_id, author_id, global_name, content = await self.event_queue.get()
+        await self._process_messages([(channel_id, author_id, global_name, content)])
+
+    async def _process_batch(self):
+        batch = []
+        while not self.event_queue.empty():
+            channel_id, author_id, global_name, content = await self.event_queue.get()
+            batch.append((channel_id, author_id, global_name, content))
+        
+        if batch:
+            await self._process_messages(batch)
+
+    async def _read_only(self):
+        if not self.event_queue.empty():
+            channel_id, author_id, global_name, content = await self.event_queue.get()
+            message = self.server.format_message(author_id, global_name, content)
+            await self.processed_messages.put(message)
+
+    # ------- Plan Routine
+    
     async def plan_routine(self):
         while self._running and self.config.plan_interval != -1:
             await asyncio.sleep(self.config.plan_interval)
-
             context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
             neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
             memories = self.memory.query_multiple(neutral_queries)
-
-            updated_plan = await self.get_plan(self.plan, context, memories, self.get_bot_context(), self.personnality_prompt)
-
-            if updated_plan:
-                self.plan = updated_plan
+            channel_context = self.get_channel_context(self.monitoring_channel, self.get_bot_context())
+            updated_plan = await self.get_plan(self.plan, context, memories, channel_context, self.personnality_prompt)
+            self.plan = updated_plan if updated_plan != None else self.plan
+                
+    # ------- Memory Routine
 
     async def memory_routine(self):
         while self._running and self.config.memory_interval != -1:
             await asyncio.sleep(self.config.memory_interval)
             messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
             if messages:
-                reflection = await self.get_reflection(messages, self.get_bot_context(), self.personnality_prompt)
+                reflection = await self.get_reflection(messages, self.personnality_prompt)
                 self.memory.add_document(reflection, 'MEMORY')
-
-    async def impulse_routine(self):
-        while self._running:
-            await asyncio.sleep(10)
-
-            # Cooldown check for new discussions
-            if self.is_online and time.time() - self.last_discussion_time > 300:
-                if random.random() < 0.1:  # 10% chance to spark a new discussion
-                    topic = await Responder(self.config.model).new_discussion(self.plan, self.personnality_prompt + self.guideline)
-                    await self.responses.put((topic, self.monitoring_channel))
-                    self.last_discussion_time = time.time()
-
-            # Going offline occasionally
-            if random.random() < 0.2:  # 20% chance to go offline
-                self.is_online = False
-                offline_duration = random.randint(10, 60)  # Offline for 10 to 60 seconds
-                await asyncio.sleep(offline_duration)
-                self.is_online = True
-
-            # Occasionally switch channels while online
-            elif self.is_online and random.random() < 0.1:
-                available_channels = [cid for cid in self.server.channels.keys() if cid != self.monitoring_channel]
-                if available_channels:
-                    self.monitoring_channel = random.choice(available_channels)
-                    
