@@ -85,7 +85,7 @@ class Responder:
     
         if response.startswith("**"):   
             cleaned_text = re.sub(r"^\*\*(.+?)\*\*", "", response)
-        elif response.startwith('['):
+        elif response.startswith('['):
             cleaned_text = re.sub(r"^[(.*?)\s", "", response)
         else:
             cleaned_text = re.sub(r"^(.*?):\s", "", response)
