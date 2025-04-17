@@ -142,6 +142,7 @@ class Agent:
 
     async def get_response(self, plan, context, memories, messages, base_prompt):
         response = await self.responder.respond(plan, context, memories, messages, base_prompt)
+        print('hi')
         self.logger.log_event('response', (plan, context, memories, messages, base_prompt), response)
         return response
 
@@ -221,16 +222,20 @@ class Agent:
             await asyncio.sleep(self.config.response_delay)
             
     async def _process_messages(self, messages):
+        
         formatted_messages = [self.server.format_message(author_id, global_name, content) for _, author_id, global_name, content in messages]
-        for message in formatted_messages:
-            await self.processed_messages.put(message)
 
         context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
         memories = await self.get_memories(self.plan, context, formatted_messages)
         response = await self.get_response(self.plan, context, memories, formatted_messages, self.personnality_prompt)
         
+        print('response')
         if response:
             await self.responses.put((response, messages[0][0]))
+            
+        for message in formatted_messages:
+            await self.processed_messages.put(message)
+        
 
     async def _process_sequentially(self):
         channel_id, author_id, global_name, content = await self.event_queue.get()

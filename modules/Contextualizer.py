@@ -87,11 +87,13 @@ class Contextualizer():
         
         system = f"""
         {agent_base_prompt}
+        
+        Instructions for: 
         {engaged_base}
         """
         
         prompt = f"""
-        The transcript to write about:
+        The transcript to reflection about write about:
         {msgs}
         """
 

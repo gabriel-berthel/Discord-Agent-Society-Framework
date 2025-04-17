@@ -20,8 +20,14 @@ class Responder:
 
     async def respond(self, plan, context, memories, messages, argent_base_prompt):
         
+        
         msgs = '\n'.join(messages)
-        memories = '\n'.join(memories)
+        # memories = '\n'.join(memories)
+        
+        if memories:
+            memories = '\n'.join(memories)
+        else:
+            memories = "No memories"
         
         try:
             system_instruction = f"""
@@ -31,19 +37,20 @@ class Responder:
             Here’s what’s going on in the conversation:
             {context}
 
-            Taking this into consideration, here's what you planned to do next:
+            Here's what you planned to do next:
             {plan} 
 
             Here are relevant memories that may help:
             {memories}
             """
-        
+            
             response = await ollama.AsyncClient().generate(
                 model=self.model,
-                prompt=msgs,
                 system=system_instruction,
+                prompt=f"Reply immediately to:\n{msgs}",
                 options=OPTIONS
             )
+
         except Exception as e:
             print(e)
             
@@ -78,12 +85,12 @@ class Responder:
     
         # Removes prefix
         if response.startswith("**"):   
-            cleaned_text = re.sub(r"^\*\*(.+?)\*\*", "", cleaned_text)
+            cleaned_text = re.sub(r"^\*\*(.+?)\*\*", "", response)
         else:
             cleaned_text = re.sub(r"^(.*?):\s", "", response)
             
         cleaned_text = cleaned_text.strip()
         cleaned_text = re.sub(r'^"(.*)"$', r'\1', cleaned_text)
-    
+
 
         return cleaned_text
