@@ -73,8 +73,8 @@ class PromptClient:
         return clients # dict -> archetype: client
 
     @staticmethod
-    async def run_simulation(duration: float, print_replies, clients=None):
-        clients = clients if clients else PromptClient.build_clients('configs/benchmark_config.yaml')
+    async def run_simulation(duration: float, print_replies, config_file, clients=None):
+        clients = clients if clients else PromptClient.build_clients(config_file)
         
         await asyncio.gather(*(client.start() for client in clients.values()))
 
@@ -116,7 +116,7 @@ async def main():
     
     print_replies = True
     simulation_duration = 30*10 + 10
-    clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies)
+    clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies, config_file='configs/qa_bench_prepare.yaml')
     
     for archetype, client in clients.items():
         await client.stop()
