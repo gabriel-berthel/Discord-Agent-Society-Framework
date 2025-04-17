@@ -115,12 +115,11 @@ async def main():
     import pickle
     
     print_replies = True
-    simulation_duration = 60 * 9 + 5
+    simulation_duration = 30*10 + 10
     clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies)
     
     for archetype, client in clients.items():
         await client.stop()
-        client.agent.save_logs()
 
     file_path = os.path.join("logs", f"qa_bench_histo.pkl")
 

@@ -15,10 +15,11 @@ warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hu
 
 def load_logs(path):
     with open(path, "rb") as f:
+        print(pickle.load(f))
         return SimpleNamespace(**pickle.load(f))
 
 def load_qa_bench_data():
-    archetypes = ["activist", "baseline", "fact_checker", "mediator", "trouble_maker"]
+    archetypes = ["debunker", "nerd", "peacekeeper", "chameleon", "troll"]
     logs = SimpleNamespace()
 
     with open('./qa_bench/qa_bench_histo.pkl', 'rb') as f:
@@ -26,9 +27,9 @@ def load_qa_bench_data():
         
     clients = PromptClient.build_clients('qa_config.yaml')
     for archetype in archetypes:
-        personnality_prompt, _ = generate_agent_prompt(archetype, load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
+        personnality_prompt = generate_agent_prompt(archetype, load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
         agent_memories = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories').get_all_documents()[0]
-        data = load_logs(f"qa_bench/logs/qa_bench_{archetype}_log.pkl")
+        data = load_logs(f"qa_bench/logs/qa_bench_{archetype}_agent.log")
         
         setattr(logs, archetype, SimpleNamespace(
             client=clients[archetype],
@@ -63,10 +64,9 @@ async def run_benchmarks(archetype_logs):
     for archetype, logs in archetype_logs:
 
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
-        print(archetype)
         await logs.client.start()
-        results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
-        #results['a2']['archetypes'][archetype] = await run_a2(logs.client, Prober, logs.historic)
+        # results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
+        results['a2']['archetypes'][archetype] = await run_a2(logs.client, Prober, logs.historic)
         # results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
         
         # results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)

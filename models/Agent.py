@@ -26,7 +26,7 @@ class AgentState(Enum):
     INITIATING_TOPIC = auto()
     
 class Logger:
-    def __init__(self, persistance_id, save_logs=False):
+    def __init__(self, persistance_id, log_path, save_logs=False):
         log_level = logging.INFO if save_logs else logging.WARNING
         logging.basicConfig(
             level=log_level,
@@ -38,14 +38,19 @@ class Logger:
         )
         self.logger = logging.getLogger(persistance_id)
         self.logs = defaultdict(list)
+        self.log_path = log_path
 
     def log_event(self, key, input_data, output_data):
+        
+        if key not in self.logs.keys():
+            self.logs[key] = []
+        
         self.logs[key].append({'input': input_data, 'output': output_data})
         self.logger.info(f"Log Key: {key} | Input: {input_data} | Output: {output_data}")
 
     def save_logs(self, persistance_id):
-        os.makedirs("logs", exist_ok=True)
-        file_path = os.path.join("logs", f"{persistance_id}_log.pkl")
+        os.makedirs(self.log_path, exist_ok=True)
+        file_path = os.path.join(self., f"{persistance_id}_log.pkl")
         with open(file_path, "wb") as f:
             pickle.dump(self.logs, f)
         self.logger.info(f"Saved logs to {file_path}")
@@ -87,7 +92,7 @@ class Agent:
         self.contextualizer = Contextualizer(self.config.model)
         self.web_browser = WebBrowser(use_ollama=True, model=self.config.model)
 
-        self.logger = Logger(self.persistance_id, self.config.save_logs)
+        self.logger = Logger(self.persistance_id, self.config.log_path, self.config.save_logs)
         self.personnality_prompt = generate_agent_prompt(self.archetype, archetype_conf)
 
     def _load_archetype_config(self, archetype):
@@ -101,7 +106,12 @@ class Agent:
         return f"{persistence_prefix}_{archetype}"
 
     def _initialize_memory(self):
-        return db.Memories(collection_name=f'{self.persistance_id}_mem.pkl')
+        
+        folder = ""
+        if self.config.persistance_path:
+            folder = self.config.persistance_path
+            
+        return db.Memories(collection_name=f'{self.persistance_id}_mem.pkl', base_folder=folder)
 
     # INIT
     

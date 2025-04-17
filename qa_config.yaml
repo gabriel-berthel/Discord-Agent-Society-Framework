@@ -1,9 +1,9 @@
 config:
-  message_throttle: 1
-  max_random_msg_sleep: 0
-  plan_interval: -1 # -1 = deactivated
+  response_delay: 1
+  max_random_response_delay: 0
+  plan_interval: -1 # -1 = deactivated1
   memory_interval: -1 # -1 = deactivated
-  model: "llama3.2"
+  model: "llama3:8b"
   base-plan: ""
   channel_id: 1
   sequential_mode: True
@@ -11,3 +11,5 @@ config:
   impulses: False
   save_logs: False
   persitance_prefix: 'qa_bench'
+  persistance_path: 'qa_bench/memories'
+  log_path: 'qa_bench/logs'

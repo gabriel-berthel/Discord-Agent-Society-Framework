@@ -31,7 +31,7 @@ class Prober:
             answer = response.choices[0].message.content
         except Exception as e:
             response = ollama.chat(
-                model=os.getenv('MODEL'),
+                model='llama3:8b',
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
@@ -115,6 +115,7 @@ class Prober:
         """
         # generate questions
         questions = Prober.generate_model_response(prompt)
+        print(questions)
         return questions
 
     @staticmethod
@@ -180,7 +181,7 @@ class Prober:
         """
 
         response = ollama.chat(
-            model=os.getenv('MODEL'),
+            model='llama3:8b',
             messages=[
                 {'role': 'user', 'content': prompt},
             ],

@@ -62,6 +62,7 @@ class QueryEngine():
         
         Imagine you are a Discord user who can query your personal notebook and diary to help respond to messages. 
         It’s important to ask relevant queries that will assist in crafting appropriate responses. 
+        
         When you query, make sure to identify important entities (such as names, dates, or topics) and align your responses with the plan or context you are working with. 
         You should ask your queries in natural human language like you are browsing the web, and I will provide relevant information from your notebook and diary.
 
