@@ -113,10 +113,14 @@ class PromptClient:
 async def main():
     import os
     import pickle
+    import shutil
     
     print_replies = True
-    simulation_duration = 30*10 + 10
+    simulation_duration = 60 * 12 + 30
     clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies, config_file='configs/qa_bench_prepare.yaml')
+    
+    shutil.rmtree('qa_bench/logs')
+    shutil.rmtree('qa_bench/memories')
     
     for archetype, client in clients.items():
         await client.stop()
