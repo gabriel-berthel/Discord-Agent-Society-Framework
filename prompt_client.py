@@ -9,7 +9,12 @@ from dotenv import load_dotenv
 load_dotenv('agent.env')
 
 logging.basicConfig(level=logging.WARNING)
-logging.disable(logging.WARNING)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+logging.getLogger("tqdm").setLevel(logging.ERROR) 
+logging.getLogger("httpx").setLevel(logging.ERROR) 
+logging.getLogger("modules.WebBrowser").setLevel(logging.ERROR) 
+logging.disable(logging.ERROR)
 
 class PromptClient:
     def __init__(self, agent_conf, archetype, name, id, server):
