@@ -142,7 +142,6 @@ class Agent:
 
     async def get_response(self, plan, context, memories, messages, base_prompt):
         response = await self.responder.respond(plan, context, memories, messages, base_prompt)
-        print('hi')
         self.logger.log_event('response', (plan, context, memories, messages, base_prompt), response)
         return response
 
@@ -180,7 +179,6 @@ class Agent:
             else: 
                 
                 if random.random() < 0.05:
-                    print('Switch Channel')
                     self.lock_queue = True
                     await self._read_only()
                     self.monitoring_channel = random.choice([id for id in self.server.channels.keys() if id != self.monitoring_channel])
@@ -229,7 +227,6 @@ class Agent:
         memories = await self.get_memories(self.plan, context, formatted_messages)
         response = await self.get_response(self.plan, context, memories, formatted_messages, self.personnality_prompt)
         
-        print('response')
         if response:
             await self.responses.put((response, messages[0][0]))
             

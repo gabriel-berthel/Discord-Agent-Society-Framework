@@ -3,7 +3,7 @@ config:
   max_random_response_delay: 0
   plan_interval: 5 # -1 = deactivated
   memory_interval: 5 # -1 = deactivated
-  model: "mistral-nemo"
+  model: "llama3.2"
   base-plan: ""
   channel_id: 1
   sequential_mode: True

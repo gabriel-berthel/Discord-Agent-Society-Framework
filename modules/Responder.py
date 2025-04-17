@@ -83,14 +83,14 @@ class Responder:
 
     def clean_response(self, response):
     
-        # Removes prefix
         if response.startswith("**"):   
             cleaned_text = re.sub(r"^\*\*(.+?)\*\*", "", response)
+        elif response.startwith('['):
+            cleaned_text = re.sub(r"^[(.*?)\s", "", response)
         else:
             cleaned_text = re.sub(r"^(.*?):\s", "", response)
             
         cleaned_text = cleaned_text.strip()
         cleaned_text = re.sub(r'^"(.*)"$', r'\1', cleaned_text)
-
 
         return cleaned_text
