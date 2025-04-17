@@ -166,56 +166,59 @@ class Agent:
     async def respond_routine(self):
         idle_threshold = 180
         last_active = time.time()
-
+        
         while self._running:
-            now = time.time()
+            try:
+                now = time.time()
 
-            if self.sequential:
-                if self.event_queue.qsize() > 0:
-                    self.state == AgentState.PROCESSING
-                    await self._process_sequentially()
-                else:
-                    self.state = AgentState.IDLE
-            else: 
-                
-                if random.random() < 0.05:
-                    self.lock_queue = True
-                    await self._read_only()
-                    self.monitoring_channel = random.choice([id for id in self.server.channels.keys() if id != self.monitoring_channel])
-                    self.lock_queue = False
-                
-                if self.event_queue.qsize() > 0:
-                    self.state = AgentState.READ_ONLY if self.read_only else AgentState.PROCESSING
-                elif now - last_active > idle_threshold:
-                    self.state = AgentState.INITIATING_TOPIC
-                else:
-                    self.state = AgentState.IDLE
-
-                if self.state == AgentState.PROCESSING:
-                    substate = random.choices(['SEQUENTIAL', 'BATCH', 'IGNORE'],weights=[0.3, 0.3, 0.4],k=1)[0]
-
-                    if substate == 'SEQUENTIAL':
+                if self.sequential:
+                    if self.event_queue.qsize() > 0:
+                        self.state == AgentState.PROCESSING
                         await self._process_sequentially()
-                    elif substate == 'BATCH':
-                        await self._process_batch()
-                    elif substate == 'IGNORE':
-                        await asyncio.sleep(1)
+                    else:
+                        self.state = AgentState.IDLE
+                else: 
+                    
+                    if random.random() < 0.05:
+                        self.lock_queue = True
+                        await self._read_only()
+                        self.monitoring_channel = random.choice([id for id in self.server.channels.keys() if id != self.monitoring_channel])
+                        self.lock_queue = False
+                    
+                    if self.event_queue.qsize() > 0:
+                        self.state = AgentState.READ_ONLY if self.read_only else AgentState.PROCESSING
+                    elif now - last_active > idle_threshold:
+                        self.state = AgentState.INITIATING_TOPIC
+                    else:
+                        self.state = AgentState.IDLE
 
-                    last_active = time.time()
+                    if self.state == AgentState.PROCESSING:
+                        substate = random.choices(['SEQUENTIAL', 'BATCH', 'IGNORE'],weights=[0.3, 0.3, 0.4],k=1)[0]
 
-                elif self.state == AgentState.READ_ONLY:
-                    await self._read_only()
+                        if substate == 'SEQUENTIAL':
+                            await self._process_sequentially()
+                        elif substate == 'BATCH':
+                            await self._process_batch()
+                        elif substate == 'IGNORE':
+                            await asyncio.sleep(1)
 
-                elif self.state == AgentState.INITIATING_TOPIC and not self.read_only:
-                    last_message_is_me = self.server.channels[self.monitoring_channel]['last_id'] != self.user_id
-                    if last_message_is_me:
-                        continue
+                        last_active = time.time()
 
-                    last_active = time.time()
-                    topic = await self.get_new_topic(self.plan, self.personnality_prompt)
-                    if topic:
-                        await self.responses.put((topic, self.monitoring_channel))
+                    elif self.state == AgentState.READ_ONLY:
+                        await self._read_only()
 
+                    elif self.state == AgentState.INITIATING_TOPIC and not self.read_only:
+                        last_message_is_me = self.server.channels[self.monitoring_channel]['last_id'] != self.user_id
+                        if last_message_is_me:
+                            continue
+
+                        last_active = time.time()
+                        topic = await self.get_new_topic(self.plan, self.personnality_prompt)
+                        if topic:
+                            await self.responses.put((topic, self.monitoring_channel))
+            except Exception as e:
+                print('Error with messages', e)
+                    
             await asyncio.sleep(random.uniform(0, self.config.max_random_response_delay))
             await asyncio.sleep(self.config.response_delay)
             
@@ -257,20 +260,26 @@ class Agent:
     
     async def plan_routine(self):
         while self._running and self.config.plan_interval != -1:
-            await asyncio.sleep(self.config.plan_interval)
-            context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
-            neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
-            memories = self.memory.query_multiple(neutral_queries)
-            channel_context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
-            updated_plan = await self.get_plan(self.plan, context, memories, channel_context, self.personnality_prompt)
-            self.plan = updated_plan if updated_plan != None else self.plan
+            try:
+                await asyncio.sleep(self.config.plan_interval)
+                context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
+                neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
+                memories = self.memory.query_multiple(neutral_queries)
+                channel_context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
+                updated_plan = await self.get_plan(self.plan, context, memories, channel_context, self.personnality_prompt)
+                self.plan = updated_plan if updated_plan != None else self.plan
+            except Exception as e:
+                print('Error with planning', e)
                 
     # ------- Memory Routine
 
     async def memory_routine(self):
         while self._running and self.config.memory_interval != -1:
-            await asyncio.sleep(self.config.memory_interval)
-            messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
-            if messages:
-                reflection = await self.get_reflection(messages, self.personnality_prompt)
-                self.memory.add_document(reflection, 'MEMORY')
+            try:
+                await asyncio.sleep(self.config.memory_interval)
+                messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
+                if messages:
+                    reflection = await self.get_reflection(messages, self.personnality_prompt)
+                    self.memory.add_document(reflection, 'MEMORY')
+            except Exception as e:
+                print('Error with Memories', e)
