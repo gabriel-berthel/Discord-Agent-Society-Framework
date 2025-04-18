@@ -2,7 +2,7 @@ config:
   response_delay: 1
   max_random_response_delay: 0
   plan_interval: -1 # -1 = deactivated1
-  memory_interval: -1 # -1 = deactivated
+  memories: False # -1 = deactivated
   model: "llama3:8b"
   base-plan: ""
   channel_id: 1

@@ -2,7 +2,7 @@ config:
   response_delay: 0
   max_random_response_delay: 5
   plan_interval: 360
-  memory_interval: 120
+  memories: True
   model: "mistral-nemo"
   base-plan: ""
   channel_id: 1362178271323623697

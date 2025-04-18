@@ -20,7 +20,7 @@ class QueryEngine():
     async def context_query(self, messages):
         if messages:
             
-            msgs = '\n'.join([f"{msg}" for msg in messages])
+            msgs = '\n'.join(messages)
             
             system_instruction = f"""
             Imagine you are a Discord user who can query your personal notebook and diary to help respond to messages. 
@@ -48,7 +48,7 @@ class QueryEngine():
         return []
 
     async def response_queries(self, plan, context, personality, messages=['No message at the moment.']):
-        msgs = '\n'.join([f"{msg}" for msg in messages])
+        msgs = '\n'.join(messages)
         
         system_instruction = f"""
         Your personality is as follows:

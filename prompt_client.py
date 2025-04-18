@@ -14,7 +14,7 @@ logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 logging.getLogger("tqdm").setLevel(logging.ERROR) 
 logging.getLogger("httpx").setLevel(logging.ERROR) 
 logging.getLogger("modules.WebBrowser").setLevel(logging.ERROR) 
-logging.disable(logging.ERROR)
+# logging.disable(logging.ERROR)
 
 class PromptClient:
     def __init__(self, agent_conf, archetype, name, id, server):
@@ -52,6 +52,17 @@ class PromptClient:
         self.server.add_message(channel_id, user_id, username, message)
         return message
     
+    async def multi_prompt(self, events):
+        for message, user_id, username, channel_id in events:
+            self.server.update_user(user_id, username)
+            event = (channel_id, user_id, username, message)
+            await self.agent.add_event(event)
+            
+        message, _ = await self.agent.responses.get() 
+        self.server.add_message(channel_id, user_id, username, message)
+        return message
+    
+    
     @staticmethod
     def build_clients(config_file='benchmark_config.yaml'):
         server = DiscordServer(1, 'Benchmarking')
@@ -75,40 +86,48 @@ class PromptClient:
     @staticmethod
     async def run_simulation(duration: float, print_replies, config_file, clients=None):
         clients = clients if clients else PromptClient.build_clients(config_file)
-        
+
         await asyncio.gather(*(client.start() for client in clients.values()))
 
         roles = list(clients.keys())
         start_time = time.time()
-        historic = ['Hi! What\'s up gamers']
+        initial_message = "Hi! What's up gamers"
+        historic = [initial_message]
 
         current_archetype = random.choice(roles)
         current_client = clients[current_archetype]
-        message = "Hi! What\'s up gamers"
-        
+        message = initial_message
+
         msg = f"[{current_client.name}] {message}"
-        historic.append(msg)
-        
         if print_replies:
             print(msg)
-        
+
+        agent_histories = {role: [] for role in roles}
+
         while time.time() - start_time < duration:
-            archetype = [r for r in roles if r != current_archetype]
-            next_archetype = random.choice(archetype)
+            for role in roles:
+                if role != current_archetype:
+                    agent_histories[role].append((message, current_client.id, current_client.name, 1))
+
+            next_archetype = random.choice([r for r in roles if r != current_archetype])
             next_client = clients[next_archetype]
-            
-            response = await next_client.prompt(message, user_id=current_client.id, username=current_client.name)
+
+            context_events = agent_histories[next_archetype]
+            response = await next_client.multi_prompt(context_events)
+
             msg = f"[{next_client.name}] {response}"
-            historic.append(msg)
-            
             if print_replies:
                 print(msg)
 
+            historic.append(msg)
+
+            agent_histories[next_archetype] = []
             current_archetype = next_archetype
             current_client = next_client
             message = response
 
         return clients, historic
+
 
 async def main():
     import os

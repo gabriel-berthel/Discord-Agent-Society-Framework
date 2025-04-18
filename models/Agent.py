@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from contextlib import contextmanager
 from datetime import datetime
 from collections import deque
 from utils.utils import *
@@ -15,7 +14,6 @@ from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
 from modules.Planner import Planner
 from modules.Responder import Responder
-from modules.WebBrowser import WebBrowser
 import utils.utils as utils
 from utils.prompt_generator import generate_agent_prompt
 
@@ -91,7 +89,6 @@ class Agent:
         self.query_engine = QueryEngine(self.config.model)
         self.planner = Planner(self.config.model)
         self.contextualizer = Contextualizer(self.config.model)
-        self.web_browser = WebBrowser(use_ollama=True, model=self.config.model)
 
         self.logger = Logger(self.persistance_id, self.config.log_path, self.config.save_logs)
         self.personnality_prompt = generate_agent_prompt(self.archetype, archetype_conf)
@@ -164,7 +161,7 @@ class Agent:
     async def get_plan(self, former_plan, context, unique_memories,channel_context, base_prompt):
         plan = await self.planner.refine_plan(former_plan, context, unique_memories,channel_context, base_prompt)
         self.logger.log_event('plans', (former_plan, context, unique_memories, base_prompt), plan)
-        return plan,
+        return plan
 
     async def get_new_topic(self, plan, base_prompt):
         return await self.responder.new_discussion(plan, base_prompt)
@@ -185,7 +182,7 @@ class Agent:
                 if self.sequential:
                     if self.event_queue.qsize() > 0:
                         self.state == AgentState.PROCESSING
-                        await self._process_sequentially()
+                        await self._process_batch()
                     else:
                         self.state = AgentState.IDLE
                 else: 
@@ -282,19 +279,21 @@ class Agent:
                 
                 if updated_plan:
                     self.memory.add_document(updated_plan, 'PLAN')
+                    
             except Exception as e:
                 print('Error with planning', e)
                 
     # ------- Memory Routine
 
     async def memory_routine(self):
-        while self._running and self.config.memory_interval != -1:
+        while self._running and self.config.memories:
             try:
                 if self.processed_messages.qsize() >= 5:
-                    await asyncio.sleep(self.config.memory_interval)
                     messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
                     if messages:
                         reflection = await self.get_reflection(messages, self.personnality_prompt)
                         self.memory.add_document(reflection, 'MEMORY')
             except Exception as e:
                 print('Error with Memories', e)
+            
+            await asyncio.sleep(10)

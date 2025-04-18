@@ -4,14 +4,13 @@ import re
 
 
 OPTIONS = {
-    "temperature": 0.8,
-    "top_p": 0.9,
-    "repeat_penalty": 1.1,
-    "presence_penalty": 0.6,
+    "temperature": 0.9,
+    "top_p": 0.95,
+    "repeat_penalty": 1.2,
+    "presence_penalty": 0.7,
     "frequency_penalty": 0.3,
     "num_predict": 200,
-    "mirostat": 0,
-    "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
+    "mirostat": 0.4
 }
 
 class Responder:
@@ -20,9 +19,7 @@ class Responder:
 
     async def respond(self, plan, context, memories, messages, argent_base_prompt):
         
-        
         msgs = '\n'.join(messages)
-        # memories = '\n'.join(memories)
         
         if memories:
             memories = '\n'.join(memories)
@@ -43,13 +40,13 @@ class Responder:
             Here are relevant memories that may help:
             {memories}
             
-            If you have memories someone already greeted, avoid greeting again.
+            You are currently reading the chat responding with whatever crosses your mind. You were told to avoid emojis.
             """
             
             response = await ollama.AsyncClient().generate(
                 model=self.model,
                 system=system_instruction,
-                prompt=f"Send a message in the chat the way u want and desire! Most recent messages are: \n{msgs}",
+                prompt = f"Just respond to this: \n{msgs}. Skip the greetings and feel free to change the topic if you want.",
                 options=OPTIONS
             )
 
@@ -86,17 +83,20 @@ class Responder:
     def clean_response(self, response):
         
         response = response.strip()
-        if response.startswith("**"):   
-            cleaned_text = re.sub(r"^\*\*(.+?)\*\*", "", response)
-        elif response.startswith("*"):   
-            cleaned_text = re.sub(r"^\*(.+?)\*", "", response)
-        elif response.startswith('['):
-            cleaned_text = re.sub(r"^\[(.*?)\]\s", "", response)
+        
+        if response.startswith("**"):
+            cleaned_text = re.sub(r"^\*\*.*?\*\*", "", response)
+        elif response.startswith("*"):
+            cleaned_text = re.sub(r"^\*.*?\*", "", response)
+        elif response.startswith("["):
+            cleaned_text = re.sub(r"^\[.*?\]:?\s", "", response)
+        elif response.startswith("("):
+            cleaned_text = re.sub(r"^\((.*?)\):?\s", "", response)
+        elif ":" in response[:25]:
+            cleaned_text = re.sub(r"^[^:]+:", "", response)
         else:
-            cleaned_text = re.sub(r"^(.*?):\s", "", response)
+            cleaned_text = response
             
-        cleaned_text = cleaned_text.strip()
-        if cleaned_text.startswith('"') and cleaned_text.endswith('"'):
-            cleaned_text = cleaned_text[1:-1]
-
+        cleaned_text = cleaned_text.strip().replace('\n', ' ').strip().removeprefix('"').removesuffix('"').removeprefix('"').removesuffix('"')
+   
         return cleaned_text
