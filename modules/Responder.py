@@ -4,12 +4,12 @@ import re
 
 
 OPTIONS = {
-    "temperature": 0.9,
-    "top_p": 0.95,
-    "repeat_penalty": 1.2,
-    "presence_penalty": 0.7,
-    "frequency_penalty": 0.3,
-    "num_predict": 200,
+    "temperature": 1.1,
+    "top_p": 1,
+    "repeat_penalty": 1.3,
+    "presence_penalty": 0.8,
+    "frequency_penalty": 0.5,
+    "num_predict": 300,
     "mirostat": 0.4
 }
 
@@ -40,13 +40,13 @@ class Responder:
             Here are relevant memories that may help:
             {memories}
             
-            You are currently reading the chat responding with whatever crosses your mind. You were told to avoid emojis.
+            Respond to the chat with whatever comes to mind, without including any greetings or emojis.
             """
             
             response = await ollama.AsyncClient().generate(
                 model=self.model,
                 system=system_instruction,
-                prompt = f"Just respond to this: \n{msgs}. Skip the greetings and feel free to change the topic if you want.",
+                prompt = f"Reply to \n{msgs}. Skip the greetings and feel free to change the topic if you want.",
                 options=OPTIONS
             )
 
@@ -82,7 +82,7 @@ class Responder:
 
     def clean_response(self, response):
         
-        response = response.strip()
+        response = re.sub(r'\s+', ' ', response).strip()
         
         if response.startswith("**"):
             cleaned_text = re.sub(r"^\*\*.*?\*\*", "", response)
