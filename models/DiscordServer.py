@@ -39,4 +39,4 @@ class DiscordServer:
     
     def format_message(self, author_id, global_name, content):
         content = self.fix_message(content)
-        return f"[{global_name}] {content}"
+        return f"{global_name}: {content}"

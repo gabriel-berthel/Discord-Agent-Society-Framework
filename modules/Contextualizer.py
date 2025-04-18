@@ -1,28 +1,6 @@
 import ollama
 from utils.utils import *
 
-NEUTRAL_OPTIONS = {
-    "temperature": 0.7,
-    "top_p": 0.85,
-    "repeat_penalty": 1.2,
-    "presence_penalty": 0.4,
-    "frequency_penalty": 0.4,
-    "num_predict": 512,
-    "mirostat": 0,
-    "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
-}
-
-REFLECTIVE_OPTIONS = {
-    "temperature": 1.1,
-    "top_p": 0.9,
-    "repeat_penalty": 1.1,
-    "presence_penalty": 0.7,
-    "frequency_penalty": 0.3,
-    "num_predict": 512,
-    "mirostat": 0,
-    "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
-}
-
 neutral_base = """
 You are a student summarizing a Discord conversation. 
 Your goal is to create a clear and neutral summary, using first-person language for your contributions (when your name appear).
@@ -53,6 +31,30 @@ Here’s what to think about:
 Just keep it real with yourself—be honest and reflective. The point here is to document how the convo made you think differently, so you can look back later and see how your views or goals evolved. Don’t just summarize what was said, but focus on how it made you grow. Keep it around 1024 characters.
 """
 
+NEUTRAL = {
+    "mirostat": 2,
+    "mirostat_tau": 4, 
+    "num_predict": 256,
+    "mirostat_eta": 0.1, 
+    "num_ctx": 4000,
+    "repeat_penalty": 1.5,
+    "presence_penalty": 0,
+    "penalize_newline": True,
+    "stop": ["\n"]
+}
+
+BIAISED = {
+    "mirostat": 2,
+    "mirostat_tau": 9, 
+    "num_predict": 256,
+    "mirostat_eta": 0.1, 
+    "num_ctx": 4000,
+    "repeat_penalty": 1.5,
+    "presence_penalty": 1.5,
+    "penalize_newline": True,
+    "stop": ["\n"]
+}
+
 class Contextualizer():
     def __init__(self, model):
         self.model = model
@@ -76,7 +78,7 @@ class Contextualizer():
                 model=self.model,
                 system=system,
                 prompt=prompt,
-                options=NEUTRAL_OPTIONS
+                options=NEUTRAL
             )
             return response['response']
         
@@ -101,7 +103,7 @@ class Contextualizer():
             model=self.model,
             prompt=prompt,
             system=system,
-            options=REFLECTIVE_OPTIONS
+            options=BIAISED
         )
         
         return response['response']

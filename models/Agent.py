@@ -8,7 +8,7 @@ import random
 import os
 import pickle
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from enum import Enum, auto
 from modules.Contextualizer import Contextualizer
 from modules.QueryEngine import QueryEngine
@@ -16,6 +16,7 @@ from modules.Planner import Planner
 from modules.Responder import Responder
 import utils.utils as utils
 from utils.prompt_generator import generate_agent_prompt
+
 
 class AgentState(Enum):
     IDLE = auto()
@@ -78,6 +79,7 @@ class Agent:
         self.responses = asyncio.Queue()
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
+        self.last_messages = deque(maxlen=5)
         self.last_discussion_time = 0
         self.read_only = False
         self.sequential = self.config.sequential_mode
@@ -149,8 +151,9 @@ class Agent:
         return memories
 
     async def get_response(self, plan, context, memories, messages, base_prompt):
-        response = await self.responder.respond(plan, context, memories, messages, base_prompt)
+        response = await self.responder.respond(plan, context, memories, messages, base_prompt, self.last_messages)
         self.logger.log_event('response', (plan, context, memories, messages, base_prompt), response)
+        self.last_messages.append(response)
         return response
 
     async def get_reflection(self, messages, personality_prompt):
@@ -224,6 +227,8 @@ class Agent:
                         topic = await self.get_new_topic(self.plan, self.personnality_prompt)
                         if topic:
                             await self.responses.put((topic, self.monitoring_channel))
+                            await self.processed_messages.put(f'[Me] topic')
+
             except Exception as e:
                 print('Error with messages', e)
                     

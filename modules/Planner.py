@@ -1,17 +1,6 @@
 import ollama
 from utils.utils import *
 
-PLANNER_OPTIONS = {
-    "temperature": 1.0,
-    "top_p": 0.9,
-    "repeat_penalty": 1.2,
-    "presence_penalty": 0.7,
-    "frequency_penalty": 0.4,
-    "num_predict": 512,
-    "mirostat": 0,
-    "stop": ["\nUser:", "\nAssistant:", "<|end|>", "\n\n"]
-}
-
 planner_base = """
 Alright, imagine you’re jotting down some thoughts in your personal notebook, but you’re being real with yourself. 
 No fluff—just straight-up reflection on where you’re at and what you want going forward.
@@ -28,6 +17,18 @@ Reflect on:
 Be honest and raw—this is about clarifying your direction and capturing your current mindset.
 Base your entry on your memories, context, and prior plans.
 """
+
+OPTIONS = {
+    "mirostat": 2,
+    "mirostat_tau": 8, 
+    "num_predict": 256,
+    "mirostat_eta": 0.1, 
+    "num_ctx": 4000,
+    "repeat_penalty": 1.5,
+    "presence_penalty": 1.5,
+    "penalize_newline": True,
+    "stop": ["\n"]
+}
 
 class Planner:
     def __init__(self, model):
@@ -60,7 +61,7 @@ class Planner:
             model=self.model,
             prompt=prompt,
             system=system_instruction,
-            options=PLANNER_OPTIONS
+            options=OPTIONS
         )
 
         return response['response']

@@ -2,24 +2,30 @@ import ollama
 from utils.utils import *
 import re
 
-
 OPTIONS = {
-    "temperature": 1.1,
-    "top_p": 1,
-    "repeat_penalty": 1.3,
-    "presence_penalty": 0.8,
-    "frequency_penalty": 0.5,
-    "num_predict": 300,
-    "mirostat": 0.4
+    "mirostat": 2,
+    "mirostat_tau": 8, 
+    "num_predict": 100,
+    "mirostat_eta": 0.1, 
+    "num_ctx": 8000,
+    "repeat_penalty": 1.5,
+    "presence_penalty": 1.5,
+    "penalize_newline": True,
+    "stop": ["\n"]
 }
 
 class Responder:
     def __init__(self, model):
         self.model = model
 
-    async def respond(self, plan, context, memories, messages, argent_base_prompt):
+    async def respond(self, plan, context, memories, messages, agent_base_prompt, last_messages=[]):
         
         msgs = '\n'.join(messages)
+
+        if last_messages:
+            last_msgs = '\n'.join(last_messages)
+        else:
+           last_msgs = "No previous message."
         
         if memories:
             memories = '\n'.join(memories)
@@ -28,28 +34,32 @@ class Responder:
         
         try:
             system_instruction = f"""
-            You are a Discord user with the following personality:
-            {argent_base_prompt}
+You are a Discord user with the following personality:
+{agent_base_prompt}
 
-            Here’s what’s going on in the conversation:
-            {context}
+Wnat you remember from previous read messages:
+{context}
 
-            Here's what you planned to do next:
-            {plan} 
+What you were planning on doing:
+{plan} 
 
-            Here are relevant memories that may help:
-            {memories}
-            
-            Respond to the chat with whatever comes to mind, without including any greetings or emojis.
-            """
-            
+What you can remember:
+{memories}
+
+The last 5 messages your sent were:
+{last_msgs}
+
+Skip the greetings. You're reading the chat and responding as you feel. Reply immediately. Keep responses brief, like 1–2 sentences max, like a Discord message
+"""
+
             response = await ollama.AsyncClient().generate(
                 model=self.model,
                 system=system_instruction,
-                prompt = f"Reply to \n{msgs}. Skip the greetings and feel free to change the topic if you want.",
-                options=OPTIONS
+                prompt = f"\n{msgs}",
+                options=OPTIONS,
+                stream=False
             )
-
+        
         except Exception as e:
             print(e)
             
@@ -57,12 +67,11 @@ class Responder:
 
     async def new_discussion(self, plan, argent_base_prompt):
         
-        
         system_instruction = f"""
         You are a Discord user with the following personality:
         {argent_base_prompt}
 
-        Taking this into consideration, here's what you planned to do next:
+        What you were planning on doing:
         {plan} 
         """
         
@@ -96,7 +105,9 @@ class Responder:
             cleaned_text = re.sub(r"^[^:]+:", "", response)
         else:
             cleaned_text = response
-            
+        
+        cleaned_text = re.sub(r'(?:#\w+|:\w+:)', '', cleaned_text)
+        #  cleaned_text = re.sub(r'[^\w\s,.\-!?]', '', cleaned_text) # remove emojis
         cleaned_text = cleaned_text.strip().replace('\n', ' ').strip().removeprefix('"').removesuffix('"').removeprefix('"').removesuffix('"')
    
         return cleaned_text

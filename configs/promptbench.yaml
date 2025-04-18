@@ -3,7 +3,7 @@ config:
   max_random_response_delay: 0
   plan_interval: 60 # -1 = deactivated
   memories: True # -1 = deactivated
-  model: "llama3:8b"
+  model: "hermes3"
   base-plan: ""
   channel_id: 1
   sequential_mode: True
@@ -13,12 +13,3 @@ config:
   persitance_prefix: 'promptbench'
   persistance_path: 'memories'
   log_path: 'logs'
-
-# 3.2 okay
-# Gemma 7 b: okay! better than llama for sure!
-# Mistral 7b: Looks more natural! Require some parsing (slow)
-# gemma3:4b probablu require to tweak base prompts but agents are behaving within their role boundaries!!!
-# llama3:8b more creative than 3.2 but same tendencu to be linkedinish! less than before. Good for benchmarks maybe.
-# hermes3: tourne pas
-
-# mistral-nemo: pas trop mal! avec des tweak sur les prompts je pense ... 
