@@ -46,7 +46,7 @@ class Logger:
             self.logs[key] = []
         
         self.logs[key].append({'input': input_data, 'output': output_data})
-        self.logger.info(f"Log Key: {key} | Input: {input_data} | Output: {output_data}")
+        self.logger.info(f"Log Key: {key} | Output: {output_data}")
 
     def save_logs(self):
         os.makedirs(self.log_path, exist_ok=True)
@@ -293,7 +293,7 @@ class Agent:
     async def memory_routine(self):
         while self._running and self.config.memories:
             try:
-                if self.processed_messages.qsize() >= 10:
+                if self.processed_messages.qsize() >= 5:
                     messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
                     if messages:
                         reflection = await self.get_reflection(messages, self.personnality_prompt)

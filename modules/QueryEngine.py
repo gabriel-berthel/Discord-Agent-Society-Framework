@@ -11,7 +11,7 @@ OPTIONS = {
     "repeat_penalty": 1.3,
     "presence_penalty": 1.4,
     "frequency_penalty": 0.2,
-    "stop": ["\n"]
+    "stop": ["<|endoftext|>"]
 }
 
 class QueryEngine():
