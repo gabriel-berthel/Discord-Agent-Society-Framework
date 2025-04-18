@@ -5,10 +5,10 @@ import re
 OPTIONS = {
     "mirostat": 2,
     "mirostat_tau": 10, 
-    "num_predict": 120,
+    "num_predict": 80,
     "mirostat_eta": 0.1, 
     "num_ctx": 8000,
-    "repeat_penalty": 1.3,
+    "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
     "frequency_penalty": 0.2,
     "penalize_newline": False,

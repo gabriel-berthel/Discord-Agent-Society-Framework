@@ -32,7 +32,7 @@ class Logger:
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             handlers=[
                 logging.StreamHandler(),
-                logging.FileHandler(f"{log_path}/{persistance_id}_agent.log")
+                logging.FileHandler(f"{log_path}/{persistance_id}_log.log")
             ]
         )
         self.logger = logging.getLogger(persistance_id)

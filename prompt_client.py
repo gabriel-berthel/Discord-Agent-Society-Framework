@@ -142,7 +142,7 @@ async def main():
         await client.stop()
         client.agent.logger.save_logs()
 
-    file_path = os.path.join("logs", f"qa_bench/qa_bench_histo.pkl")
+    file_path = os.path.join(f"qa_bench/qa_bench_histo.pkl")
 
     with open(file_path, "wb") as f:
         pickle.dump(historic, f)
