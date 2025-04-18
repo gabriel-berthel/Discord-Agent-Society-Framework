@@ -63,3 +63,7 @@ log/
 
 memories/
 logs/
+
+!qa_bench/
+!qa_bench/logs/
+!qa_bench/memories/

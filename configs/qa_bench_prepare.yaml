@@ -13,7 +13,7 @@ config:
   save_logs: True
   persitance_prefix: 'qa_bench'
   persistance_path: 'qa_bench/memories'
-  log_path: 'qa_bench/logs'
+  log_path: 'logs'
 
 # hermes3:8b
 # gemma

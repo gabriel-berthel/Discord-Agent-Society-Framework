@@ -25,11 +25,11 @@ def load_qa_bench_data():
     with open('./qa_bench/qa_bench_histo.pkl', 'rb') as f:
         historic = pickle.load(f)
         
-    clients = PromptClient.build_clients('qa_config.yaml')
+    clients = PromptClient.build_clients('configs/qa_config.yaml')
     for archetype in archetypes:
         personnality_prompt = generate_agent_prompt(archetype, load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
         agent_memories = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories').get_all_documents()[0]
-        data = load_logs(f"qa_bench/logs/qa_bench_{archetype}_agent.log")
+        data = load_logs(f"qa_bench/logs/qa_bench_{archetype}_agent.pkl")
         
         setattr(logs, archetype, SimpleNamespace(
             client=clients[archetype],

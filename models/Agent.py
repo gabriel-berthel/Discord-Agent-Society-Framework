@@ -51,7 +51,7 @@ class Logger:
     def save_logs(self):
         
         os.makedirs(self.log_path, exist_ok=True)
-        file_path = os.path.join(self.log_path, f"{self.persistance_id}_log.pkl")
+        file_path = os.path.join(self.log_path, f"{self.persistance_id}_log.log")
         with open(file_path, "wb") as f:
             pickle.dump(self.logs, f)
         
