@@ -22,7 +22,7 @@ OPTIONS = {
     "mirostat": 2,
     "mirostat_tau": 8, 
     "mirostat_eta": 0.1, 
-    "num_ctx": 4000,
+    "num_ctx": 8000,
     "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
     "stop": ["."],
