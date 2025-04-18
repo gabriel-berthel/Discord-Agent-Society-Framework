@@ -249,17 +249,17 @@ class Agent:
         for message in formatted_messages:
             await self.processed_messages.put(message)
         
-
     async def _process_sequentially(self):
         channel_id, author_id, global_name, content = await self.event_queue.get()
         await self._process_messages([(channel_id, author_id, global_name, content)])
 
     async def _process_batch(self):
-        batch = []
-        while not self.event_queue.empty():
-            channel_id, author_id, global_name, content = await self.event_queue.get()
-            batch.append((channel_id, author_id, global_name, content))
-        
+        batch_size = self.event_queue.qsize()
+        batch = [
+            await self.event_queue.get() 
+            for _ in range(batch_size)
+        ]
+    
         if batch:
             await self._process_messages(batch)
 
@@ -294,9 +294,7 @@ class Agent:
         while self._running and self.config.memories:
             try:
                 if self.processed_messages.qsize() >= 5:
-                    messages = []
-                    while not self.processed_messages.empty():
-                        messages.append(await self.processed_messages.get())
+                    messages = [await self.processed_messages.get() for _ in range(5)]
                     if messages:
                         reflection = await self.get_reflection(messages, self.personnality_prompt)
                         self.memory.add_document(reflection, 'MEMORY')
