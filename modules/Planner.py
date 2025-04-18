@@ -37,12 +37,6 @@ class Planner:
         system_instruction = f"""
         {argent_base_prompt}
         
-        {planner_base}
-        """
-        
-        memories = '\n'.join(memories)
-        
-        prompt = f"""
         Channel context:
         {channel_context}
         
@@ -55,6 +49,10 @@ class Planner:
         Current context:
         {context}
         """
+        
+        memories = '\n'.join(memories)
+        
+        prompt = f"""{planner_base}"""
 
         response = await ollama.AsyncClient().generate(
             model=self.model,
