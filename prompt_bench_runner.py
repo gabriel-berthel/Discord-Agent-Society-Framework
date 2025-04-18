@@ -12,21 +12,21 @@ import pandas as pd
 # Prompt name
 task_name_map = {
     "sst2": "sst2",
-    # "cola": "cola",
-    #"qqp": "qqp",
-    #"gsm8k": "gsm8k",
-    #"bool_logic": "bool_logic",
-    # "valid_parentheses": "valid_parentheses",
-    # "csqa": "csqa",
-    # "math": "math",
-    # "expert_prompting": "expert_prompting",
+    "cola": "cola",
+    "qqp": "qqp",
+    "gsm8k": "gsm8k",
+    "bool_logic": "bool_logic",
+    "valid_parentheses": "valid_parentheses",
+    "csqa": "csqa",
+    "math": "math",
+    "expert_prompting": "expert_prompting",
 }
 
 
 tasks = []
 tasks += build_tasks_from_prompts(task_oriented.TASK_ORIENTED_PROMPTS, "task_oriented", task_name_map)
-# tasks += build_tasks_from_prompts(method_oriented.METHOD_ORIENTED_PROMPTS, "method_oriented", task_name_map)
-#tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_oriented", task_name_map)
+tasks += build_tasks_from_prompts(method_oriented.METHOD_ORIENTED_PROMPTS, "method_oriented", task_name_map)
+tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_oriented", task_name_map)
 
 
 async def prompt_ollama(prompt):
@@ -45,7 +45,7 @@ def get_projection_fn(pred):
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args = []):
      for prompt in prompts:
         preds, labels = [], []
-        for data in tqdm(dataset[:5], desc=f"{architype} - {dataset}"):
+        for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
 
             input_text = pb.InputProcess.basic_format(prompt, data)
             label = data['label']

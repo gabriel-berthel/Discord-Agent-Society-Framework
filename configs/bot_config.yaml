@@ -3,7 +3,7 @@ config:
   max_random_response_delay: 5
   plan_interval: 360
   memories: True
-  model: "mistral-nemo"
+  model: "llama3:8b"
   base-plan: ""
   channel_id: 1362178271323623697
   sequential_mode: False

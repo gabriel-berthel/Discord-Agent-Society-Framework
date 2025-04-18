@@ -92,6 +92,6 @@ def build_tasks_from_prompts(source_dict, source_name, task_name_map, max_no_pro
             if isinstance(prompts, str):
                 prompts = [prompts]
             elif isinstance(prompts, dict):  # cas des few-shot blocks (ex: gsm8k)
-                prompts = random.choice(prompts.values())
+                prompts = prompts.values()
             tasks.append((task, pb.Prompt(prompts), projection_fn, dataset_name))
     return tasks

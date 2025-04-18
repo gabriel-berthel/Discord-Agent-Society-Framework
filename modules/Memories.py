@@ -8,7 +8,7 @@ import os
 from collections import deque
 
 class Memories:
-    def __init__(self, collection_name, base_folder='memories', model_name='all-MiniLM-L6-v2', max_documents=1000):
+    def __init__(self, collection_name, base_folder='memories', model_name='all-MiniLM-L6-v2', max_documents=500):
         os.makedirs(base_folder, exist_ok=True)
         self.file_path = os.path.join(base_folder, collection_name)
         self.model = SentenceTransformer(model_name)
