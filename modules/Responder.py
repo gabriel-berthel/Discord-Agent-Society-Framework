@@ -110,4 +110,4 @@ Skip the greetings. You're reading the chat and responding as you feel. Reply im
         #  cleaned_text = re.sub(r'[^\w\s,.\-!?]', '', cleaned_text) # remove emojis
         cleaned_text = cleaned_text.strip().replace('\n', ' ').strip().removeprefix('"').removesuffix('"').removeprefix('"').removesuffix('"').removeprefix("[").removesuffix("]").removeprefix(':')
    
-        return cleaned_text
+        return cleaned_text.strip()
