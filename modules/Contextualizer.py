@@ -28,7 +28,10 @@ Here’s what to think about:
 - How might this convo affect your choices or what you care about going forward?  
 - Were there any moments that stood out and are worth remembering?
 
-Just keep it real with yourself—be honest and reflective. The point here is to document how the convo made you think differently, so you can look back later and see how your views or goals evolved. Don’t just summarize what was said, but focus on how it made you grow. Keep it around 1024 characters.
+Start with:
+"I feel that..." or "I noticed that..."
+
+Just keep it real with yourself—be honest and reflective. 
 """
 
 NEUTRAL = {
@@ -40,7 +43,7 @@ NEUTRAL = {
     "repeat_penalty": 0,
     "presence_penalty": 0,
     "frequency_penalty": 0.7,
-    "stop": ["."]
+    "stop": ["<|endoftext|>"]
 }
 
 BIAISED = {
@@ -52,7 +55,7 @@ BIAISED = {
     "repeat_penalty": 1.3,
     "presence_penalty": 1.4,
     "frequency_penalty": 0.2,
-    "stop": ["."]
+    "stop": ["<|endoftext|>"]
 }
 
 class Contextualizer():
@@ -64,11 +67,11 @@ class Contextualizer():
         
         system = f"""
         {bot_context}
-        
-        {neutral_base}
         """
         
         prompt = f"""
+        {neutral_base}
+        
         The transcript to write about immediately:
         {msgs}
         """
@@ -89,12 +92,11 @@ class Contextualizer():
         
         system = f"""
         {agent_base_prompt}
-        
-        Instructions for: 
-        {engaged_base}
         """
         
         prompt = f"""
+        {engaged_base}
+        
         The transcript to reflection about write about:
         {msgs}
         """

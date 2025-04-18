@@ -25,8 +25,8 @@ OPTIONS = {
     "num_ctx": 8000,
     "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
-    "stop": ["."],
-    "num_predict": 500
+    "num_predict": 500,
+    "stop": ["<|endoftext|>"]
 }
 
 class Planner:
@@ -45,14 +45,16 @@ class Planner:
         
         Memories:
         {memories}
-
-        Current context:
-        {context}
         """
         
         memories = '\n'.join(memories)
         
-        prompt = f"""{planner_base}"""
+        prompt = f"""
+        {planner_base}
+        
+        Current context:
+        {context}
+        """
 
         response = await ollama.AsyncClient().generate(
             model=self.model,
