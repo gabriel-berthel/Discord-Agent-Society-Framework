@@ -28,17 +28,16 @@ tasks += build_tasks_from_prompts(task_oriented.TASK_ORIENTED_PROMPTS, "task_ori
 tasks += build_tasks_from_prompts(method_oriented.METHOD_ORIENTED_PROMPTS, "method_oriented", task_name_map)
 tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_oriented", task_name_map)
 
+ollama.pull('llama3:8b')
 
 async def prompt_ollama(prompt):
-    
-    return ollama.generate("llama3.2", prompt)["response"]
+    return ollama.generate("llama3:8b", prompt)["response"]
 
 async def prompt_agent(prompt, client): 
-
-    return await client.prompt(prompt, 2, "moderateur")
+    return await client.prompt(prompt, 2, "Admin")
 
 RESULTS = []
-clients = prompt_client.PromptClient.build_clients()
+clients = prompt_client.PromptClient.build_clients('configs/promptbench.yaml')
 def get_projection_fn(pred):
     return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
 
