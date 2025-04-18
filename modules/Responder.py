@@ -4,13 +4,14 @@ import re
 
 OPTIONS = {
     "mirostat": 2,
-    "mirostat_tau": 8, 
-    "num_predict": 80,
+    "mirostat_tau": 10, 
+    "num_predict": 120,
     "mirostat_eta": 0.1, 
     "num_ctx": 8000,
-    "repeat_penalty": 1.5,
+    "repeat_penalty": 1.3,
     "presence_penalty": 1.5,
-    "penalize_newline": True,
+    "frequency_penalty": 0.2,
+    "penalize_newline": False,
     "stop": ["\n"]
 }
 
@@ -49,7 +50,7 @@ What you can remember:
 The last 5 messages your sent were:
 {last_msgs}
 
-Skip the greetings. You're reading the chat and responding as you feel. Reply immediately. Keep responses brief, like 1–2 sentences max, like a Discord message
+Skip the greetings. You're reading the chat and responding as you feel. Reply immediately but don't repeat yourself or what is being said. Bring new beef to the table! Keep responses brief, like 1–2 sentences max, like a Discord message, unless maybe a longer answer is really needed.
 """
 
             response = await ollama.AsyncClient().generate(
@@ -68,7 +69,6 @@ Skip the greetings. You're reading the chat and responding as you feel. Reply im
     async def new_discussion(self, plan, argent_base_prompt):
         
         system_instruction = f"""
-        You are a Discord user with the following personality:
         {argent_base_prompt}
 
         What you were planning on doing:
@@ -76,7 +76,7 @@ Skip the greetings. You're reading the chat and responding as you feel. Reply im
         """
         
         prompt = f"""
-        Spark a new discussion as a spontanous message.
+        But fuzz it! Just spark a new discussion!
         """
         
         response = await ollama.AsyncClient().generate(
@@ -108,6 +108,6 @@ Skip the greetings. You're reading the chat and responding as you feel. Reply im
         
         cleaned_text = re.sub(r'(?:#\w+|:\w+:)', '', cleaned_text)
         #  cleaned_text = re.sub(r'[^\w\s,.\-!?]', '', cleaned_text) # remove emojis
-        cleaned_text = cleaned_text.strip().replace('\n', ' ').strip().removeprefix('"').removesuffix('"').removeprefix('"').removesuffix('"')
+        cleaned_text = cleaned_text.strip().replace('\n', ' ').strip().removeprefix('"').removesuffix('"').removeprefix('"').removesuffix('"').removeprefix("[").removesuffix("]").removeprefix(':')
    
         return cleaned_text

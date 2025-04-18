@@ -37,9 +37,10 @@ NEUTRAL = {
     "num_predict": 256,
     "mirostat_eta": 0.1, 
     "num_ctx": 4000,
-    "repeat_penalty": 1.5,
+    "repeat_penalty": 0,
     "presence_penalty": 0,
-    "stop": ["\n"]
+    "frequency_penalty": 0.7,
+    "stop": ["."]
 }
 
 BIAISED = {
@@ -48,9 +49,10 @@ BIAISED = {
     "num_predict": 256,
     "mirostat_eta": 0.1, 
     "num_ctx": 4000,
-    "repeat_penalty": 1.5,
-    "presence_penalty": 1.5,
-    "stop": ["\n"]
+    "repeat_penalty": 1.3,
+    "presence_penalty": 1.4,
+    "frequency_penalty": 0.2,
+    "stop": ["."]
 }
 
 class Contextualizer():

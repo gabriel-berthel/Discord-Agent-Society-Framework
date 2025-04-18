@@ -26,7 +26,7 @@ OPTIONS = {
     "num_ctx": 4000,
     "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
-    "stop": ["\n"]
+    "stop": ["."]
 }
 
 class Planner:

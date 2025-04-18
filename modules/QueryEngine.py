@@ -4,15 +4,15 @@ from utils.utils import *
 
 OPTIONS = {
     "mirostat": 2,
-    "mirostat_tau": 8, 
+    "mirostat_tau": 7, 
     "num_predict": 400,
     "mirostat_eta": 0.1, 
     "num_ctx": 4000,
-    "repeat_penalty": 1.5,
-    "presence_penalty": 1.5,
+    "repeat_penalty": 1.3,
+    "presence_penalty": 1.4,
+    "frequency_penalty": 0.2,
     "stop": ["\n"]
 }
-
 
 class QueryEngine():
     def __init__(self, model):
