@@ -294,7 +294,9 @@ class Agent:
         while self._running and self.config.memories:
             try:
                 if self.processed_messages.qsize() >= 5:
-                    messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
+                    messages = []
+                    while not self.processed_messages.empty():
+                        messages.append(await self.processed_messages.get())
                     if messages:
                         reflection = await self.get_reflection(messages, self.personnality_prompt)
                         self.memory.add_document(reflection, 'MEMORY')
