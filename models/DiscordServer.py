@@ -3,7 +3,7 @@ import hikari
 import os
 
 class DiscordServer:
-    def __init__(self, server_id, name, curr_user=None):
+    def __init__(self, server_id, name):
         self.id = server_id
         self.name = name
         self.users = {}

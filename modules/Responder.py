@@ -73,13 +73,10 @@ Bring new beef to the table! Keep responses brief, like 1–2 sentences max, lik
         
         system_instruction = f"""
         {argent_base_prompt}
-
-        What you were planning on doing:
-        {plan} 
         """
         
         prompt = f"""
-        But fuzz it! Just spark a new discussion!
+        No one is talking so maybe you should start a new discussion! Just be spontanous and tell us about what u like or want to do or were doing!
         """
         
         response = await ollama.AsyncClient().generate(

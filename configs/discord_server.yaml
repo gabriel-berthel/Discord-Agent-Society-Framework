@@ -1,8 +1,9 @@
 config:
   response_delay: 0
-  max_random_response_delay: 5
+  max_random_response_delay: 30
   plan_interval: 360
   memories: True
+  plans: True
   model: "llama3:8b"
   base-plan: ""
   channel_id: 1362178271323623697
@@ -10,7 +11,7 @@ config:
   random_ignore: False
   impulses: True
   save_logs: False
-  persitance_prefix: 'run_cours'
+  persitance_prefix: 'discord_server'
   persistance_path: 'memories'
   log_path: 'logs'
 

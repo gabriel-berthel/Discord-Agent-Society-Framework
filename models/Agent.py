@@ -16,7 +16,7 @@ from modules.Planner import Planner
 from modules.Responder import Responder
 import utils.utils as utils
 from utils.prompt_generator import generate_agent_prompt
-
+import math
 
 class AgentState(Enum):
     IDLE = auto()
@@ -46,13 +46,15 @@ class Logger:
             self.logs[key] = []
         
         self.logs[key].append({'input': input_data, 'output': output_data})
-        self.logger.info(f"Log Key: {key} | Output: {output_data}")
+        self.logger.debug(f"Agent-Ouput: [key={key}] | Output: {output_data}")
 
     def save_logs(self):
+        
         os.makedirs(self.log_path, exist_ok=True)
         file_path = os.path.join(self.log_path, f"{self.persistance_id}_log.pkl")
         with open(file_path, "wb") as f:
             pickle.dump(self.logs, f)
+        
         self.logger.info(f"Saved logs to {file_path}")
 
 class Agent:
@@ -66,35 +68,42 @@ class Agent:
 
     # INIT
     
-    def _initialize_components(self):
+    def _initialize_components(self):        
         archetype_conf = self._load_archetype_config(self.archetype)
         self.config = self._load_agent_config(self.agent_conf)
-        
         self.persistance_id = self._get_persistence_id(self.archetype)
         self.name = archetype_conf.name
-        self.monitoring_channel = self.config.channel_id
         self.plan = "Responding to every message."
-        self.memory = self._initialize_memory()
-
+        self.personnality_prompt = generate_agent_prompt(self.archetype, archetype_conf)
+        self.monitoring_channel = self.config.channel_id
+        self.logger = Logger(self.persistance_id, self.config.log_path, self.config.save_logs)
+        self.logger.logger.info(f"Agent-Info: [key={self.name}] | Agent Config loaded")
+        
         self.responses = asyncio.Queue()
         self.processed_messages = asyncio.Queue()
         self.event_queue = asyncio.Queue()
         self.last_messages = deque(maxlen=5)
+        self.logger.logger.info(f"Agent-Info: [key={self.name}] | Queue created")
+        
         self.last_discussion_time = 0
         self.read_only = False
         self.sequential = self.config.sequential_mode
         self._running = True
         self.state = AgentState.IDLE
         self.lock_queue = False
+        self.logger.logger.info(f"Agent-Info: [key={self.name}] | State variable loaded")
+        self.memory_count = 0
 
+        self.memory = self._initialize_memory()
+        self.logger.logger.info(f"Agent-Info: [key={self.name}] | Memory initialized")
+        
         self.responder = Responder(self.config.model)
         self.query_engine = QueryEngine(self.config.model)
         self.planner = Planner(self.config.model)
         self.contextualizer = Contextualizer(self.config.model)
+        self.logger.logger.info(f"Agent-Info: [key={self.name}] | Module Loaded")
 
-        self.logger = Logger(self.persistance_id, self.config.log_path, self.config.save_logs)
-        self.personnality_prompt = generate_agent_prompt(self.archetype, archetype_conf)
-
+    # Utils 
     def _load_archetype_config(self, archetype):
         return utils.DictToAttribute(**utils.load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
 
@@ -106,7 +115,6 @@ class Agent:
         return f"{persistence_prefix}_{archetype}"
 
     def _initialize_memory(self):
-        
         folder = ""
         if self.config.persistance_path:
             folder = self.config.persistance_path
@@ -120,12 +128,10 @@ class Agent:
 
     async def add_event(self, event):
         channel_id, author_id, _, _ = event
-        # event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content
         
         if author_id != self.user_id and self.monitoring_channel == channel_id and not self.lock_queue:
             await self.event_queue.put(event)
 
-    
     # --- Agent to modules helpers
     
     def get_bot_context(self):
@@ -175,7 +181,7 @@ class Agent:
     # ------- Response Routine
     
     async def respond_routine(self):
-        idle_threshold = 180
+        idle_threshold = 60*5
         last_active = time.time()
         
         while self._running:
@@ -189,11 +195,12 @@ class Agent:
                     else:
                         self.state = AgentState.IDLE
                 else: 
-                    
+                    old_state = self.state
                     if random.random() < 0.05:
                         self.lock_queue = True
                         await self._read_only()
                         self.monitoring_channel = random.choice([id for id in self.server.channels.keys() if id != self.monitoring_channel])
+                        self.logger.logger.info(f"Agent-Channel: [key={self.name}] | Switched to channel: {self.server.get_channel(self.monitoring_channel)}")
                         self.lock_queue = False
                     
                     if self.event_queue.qsize() > 0:
@@ -202,15 +209,26 @@ class Agent:
                         self.state = AgentState.INITIATING_TOPIC
                     else:
                         self.state = AgentState.IDLE
+                        
+                    if old_state != self.state:
+                        self.logger.logger.info(f"Agent-State: [key={self.name}] | New State: {self.state}")
 
                     if self.state == AgentState.PROCESSING:
-                        substate = random.choices(['SEQUENTIAL', 'BATCH', 'IGNORE'],weights=[0.3, 0.3, 0.4],k=1)[0]
-
-                        if substate == 'SEQUENTIAL':
-                            await self._process_sequentially()
-                        elif substate == 'BATCH':
-                            await self._process_batch()
+                        
+                        batch_weight = round(random.uniform(0.5, 0.7), 3)
+                        ignore_weight = round(random.uniform(0.05, 0.1), 3)
+                        only_read_weight = max(1 - round(batch_weight + ignore_weight, 3), 0)
+                        
+                        substate = random.choices(['BATCH', 'IGNORE', 'ONLY_READ'],weights=[batch_weight, ignore_weight, only_read_weight],k=1)[0]
+                        self.logger.logger.info(f"Agent-Substate: [key={self.name}] | Substate: {substate}, w=[batch_weight={batch_weight}, ignore_weight={ignore_weight}, only_read_weight={only_read_weight}]")
+        
+                        if substate == 'BATCH':
+                            noelem=int(random.uniform(1, 10))
+                            await self._process_batch(noelem)
+                        elif substate == 'ONLY_READ':
+                            await self._read_only()
                         elif substate == 'IGNORE':
+                            await self._ignore()
                             await asyncio.sleep(1)
 
                         last_active = time.time()
@@ -221,19 +239,24 @@ class Agent:
                     elif self.state == AgentState.INITIATING_TOPIC and not self.read_only:
                         last_message_is_me = self.server.channels[self.monitoring_channel]['last_id'] != self.user_id
                         if last_message_is_me:
-                            continue
+                            self.logger.logger.info(f"Agent-Subtate: [key={self.name}] | last_message_is_me=true")
+                            
+                            if not random.random() < 0.005:
+                                self.logger.logger.info(f"Agent-Subtate: [key={self.name}] | Aborting topic initialisation")
+                                continue
 
                         last_active = time.time()
                         topic = await self.get_new_topic(self.plan, self.personnality_prompt)
                         if topic:
                             await self.responses.put((topic, self.monitoring_channel))
-                            await self.processed_messages.put(f'[Me] topic')
-
-            except Exception as e:
-                print('Error with messages', e)
+                            await self.processed_messages.put(f'[Me] {topic}')
+                            self.logger.logger.info(f"Agent-Output: [key={self.name}] | Created new topic: {topic}")
                     
-            await asyncio.sleep(random.uniform(0, self.config.max_random_response_delay))
+            except Exception as e:
+                self.logger.logger.error(f"Agent-Routine: [key={self.name}] | Error with responder routine: {e}")
+                    
             await asyncio.sleep(self.config.response_delay)
+            await asyncio.sleep(random.uniform(0, self.config.max_random_response_delay))
             
     async def _process_messages(self, messages):
         
@@ -248,57 +271,77 @@ class Agent:
             
         for message in formatted_messages:
             await self.processed_messages.put(message)
-        
-    async def _process_sequentially(self):
-        channel_id, author_id, global_name, content = await self.event_queue.get()
-        await self._process_messages([(channel_id, author_id, global_name, content)])
 
-    async def _process_batch(self):
-        batch_size = self.event_queue.qsize()
+    async def _process_batch(self, noelem=None):
+        
+        q_size = self.event_queue.qsize()
+        noelem = q_size if not noelem else min(q_size, noelem)
+        
         batch = [
             await self.event_queue.get() 
-            for _ in range(batch_size)
+            for _ in range(noelem)
         ]
-    
+        
         if batch:
+            self.logger.logger.info(f"Agent-Info: [key={self.name}] | Processed {noelem} elements in the {q_size} events from the event queue")
             await self._process_messages(batch)
-
+            
     async def _read_only(self):
-        if not self.event_queue.empty():
+        current_size = self.event_queue.qsize()
+        for _ in range(current_size):
             channel_id, author_id, global_name, content = await self.event_queue.get()
             message = self.server.format_message(author_id, global_name, content)
+            self.logger.logger.info(f"Agent-Info: [key={self.name}] | Processing message from {global_name} (read-only)")
             await self.processed_messages.put(message)
+
+    async def _ignore(self):
+        if not self.event_queue.empty():
+            await self.event_queue.get()
+            self.logger.logger.info(f"Agent-Info: [key={self.name}] | Ignoring Message in event queue")
+
 
     # ------- Plan Routine
     
     async def plan_routine(self):
-        while self._running and self.config.plan_interval != -1:
+        while self._running and self.config.plans:
             try:
-                await asyncio.sleep(self.config.plan_interval)
-                context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
-                neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
-                memories = self.memory.query_multiple(neutral_queries)
-                channel_context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
-                updated_plan = await self.get_plan(self.plan, context, memories, channel_context, self.personnality_prompt)
-                self.plan = updated_plan if updated_plan != None else self.plan
-                
-                if updated_plan:
-                    self.memory.add_document(updated_plan, 'PLAN')
+                self.logger.logger.info(f"Agent-Routine: [key={self.name}] | Started plan routine")
+                if self.memory_count % 6 == 0:
+                    context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
+                    neutral_queries = await self.get_neutral_queries(self.monitoring_channel)
+                    memories = self.memory.query_multiple(neutral_queries)
+                    channel_context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
+                    updated_plan = await self.get_plan(self.plan, context, memories, channel_context, self.personnality_prompt)
+                    self.plan = updated_plan if updated_plan != None else self.plan
+                    
+                    if updated_plan:
+                        self.memory_count += 1
+                        self.memory.add_document(updated_plan, 'PLAN')
+                        self.logger.logger.info(f"Agent-Routine: [key={self.name}] | Updated plan")
+                else:
+                    self.logger.logger.info(f"Agent-Routine: [key={self.name}] | Not enough memories to change plan")
                     
             except Exception as e:
-                print('Error with planning', e)
+                self.logger.logger.error(f"Agent-Routine: [key={self.name}] | Error with planning routine: {e}")
+                
+            await asyncio.sleep(30)
                 
     # ------- Memory Routine
 
     async def memory_routine(self):
         while self._running and self.config.memories:
             try:
+                self.logger.logger.info(f"Agent-Routine: [key={self.name}] | Starting memory routine")
                 if self.processed_messages.qsize() >= 5:
                     messages = [await self.processed_messages.get() for _ in range(5)]
                     if messages:
                         reflection = await self.get_reflection(messages, self.personnality_prompt)
                         self.memory.add_document(reflection, 'MEMORY')
+                        self.memory_count += 1
+                        self.logger.logger.info(f"Agent-Routine: [key={self.name}] | Created memory")
+                else:
+                    self.logger.logger.info(f"Agent-Routine: [key={self.name}] | Not enough message to process memories")
             except Exception as e:
-                print('Error with Memories', e)
+                self.logger.logger.error(f"Agent-Routine: [key={self.name}] | Error with memory routine: {e}")
             
-            await asyncio.sleep(10)
+            await asyncio.sleep(30)
