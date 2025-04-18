@@ -21,12 +21,12 @@ Base your entry on your memories, context, and prior plans.
 OPTIONS = {
     "mirostat": 2,
     "mirostat_tau": 8, 
-    "num_predict": 256,
     "mirostat_eta": 0.1, 
     "num_ctx": 4000,
     "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
-    "stop": ["."]
+    "stop": ["."],
+    "num_predict": 500
 }
 
 class Planner:
