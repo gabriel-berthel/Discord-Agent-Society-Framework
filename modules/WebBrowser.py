@@ -22,7 +22,6 @@ class WebBrowser:
         self.llm_endpoint = "https://api.openai.com/v1/chat/completions"
         self.model = model
 
-
     # fetch the web browser search results
     async def _fetch_search_results(self, query):
         params = {

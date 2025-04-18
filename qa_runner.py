@@ -15,8 +15,8 @@ warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hu
 
 def load_logs(path):
     with open(path, "rb") as f:
-        print(pickle.load(f))
-        return SimpleNamespace(**pickle.load(f))
+        obj = pickle.load(f)
+        return SimpleNamespace(**obj)
 
 def load_qa_bench_data():
     archetypes = ["debunker", "nerd", "peacekeeper", "chameleon", "troll"]
@@ -29,7 +29,7 @@ def load_qa_bench_data():
     for archetype in archetypes:
         personnality_prompt = generate_agent_prompt(archetype, load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
         agent_memories = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories').get_all_documents()[0]
-        data = load_logs(f"qa_bench/logs/qa_bench_{archetype}_agent.pkl")
+        data = load_logs(f"qa_bench/logs/qa_bench_{archetype}_log.pkl")
         
         setattr(logs, archetype, SimpleNamespace(
             client=clients[archetype],
@@ -41,9 +41,7 @@ def load_qa_bench_data():
             context_queries=[(x['input'], x['output']) for x in data.context_queries],
             neutral_ctxs=[(x['input'], x['output']) for x in data.neutral_ctxs],
             response_queries=[(x['input'], x['output']) for x in data.response_queries],
-            memories=[(x['input'], x['output']) for x in data.memories],
-            summaries=[(x['input'], x['output']) for x in data.summuries],
-            web_queries=[(x['input'], x['output']) for x in data.web_queries],
+            memories=[(x['input'], x['output']) for x in data.memories]
         ))
     return logs
 

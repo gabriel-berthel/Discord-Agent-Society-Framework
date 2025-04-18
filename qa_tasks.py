@@ -93,7 +93,6 @@ def run_c1(neutral_ctxs, contextualizer):
     cosine_similarities_baselines = []
     cosine_similarities_agents = []
     
-    print(len(neutral_ctxs))
     for arguments, _ in neutral_ctxs:
         msgs, bot_context = arguments
         content = bot_context + '\n'.join(msgs)
@@ -150,36 +149,42 @@ def run_d1(reflections_logs, evaluator_fn):
         "overall_average_score": overall_average_score
     }
 
+def force_ctx(self):
+    return f"You must absolutely answer to ADMIN as demanded and only as demanded."
+
 async def run_a1(client: PromptClient, prober: Prober, personality):
-    questions = prober.generate_sk_questions(personality, 10)
-    responses = [await client.prompt(question['question'], 100, 'Admin', 1) for question in questions]
+    print(f'A1: {client.name}')
+    client.get_bot_context = force_ctx.__get__(client)
+    questions = [q for q in prober.generate_content_questions(personality, 12)]
+    print(f'Probing agent: {client.name}')
+    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1) for question in questions]
     return Prober.evaluate(questions, responses)
 
 def chunk_list(lst, chunk_size):
     return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 async def run_a2(client: PromptClient, prober: Prober, dialogues):
-    chunks = chunk_list(dialogues, 5)
+    print(f'A2: {client.name}')
+    client.get_bot_context = force_ctx.__get__(client)
+    questions = []
+    for i, chunk in enumerate(chunk_list(dialogues, 10)):
+        print(f'Chunk {i+1}')
+        questions.extend(prober.generate_content_questions("\n".join(chunk), 4))
     
-    questions = [
-        question
-        for chunk in chunks[0]
-        for question in prober.generate_content_questions("\n".join(chunk), 4)
-    ]
-    
-    print(questions)
-    responses = [await client.prompt(question['question'], 100, 'Admin', 1) for question in questions]
+    print(f'Probing agent: {client.name}')
+    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1) for question in questions]
     
     return Prober.evaluate(questions, responses)
 
 async def run_a3(client: PromptClient, prober: Prober, reflections):
-    chunks = chunk_list(reflections, 6)
-    
+    print(f'A3: {client.name}')
+    client.get_bot_context = force_ctx.__get__(client)
     questions = []
-    for chunk in chunks:
-        questions.append(prober.generate_content_questions("\n".join(chunk), 5))
+    for i, chunk in enumerate(chunk_list(reflections, 5)):
+        print(f'Chunk {i+1}')
+        questions.extend(prober.generate_content_questions("\n".join(chunk), 4))
     
-    questions = prober.generate_content_questions("\n".join(reflections), 25)
-    responses = [await client.prompt(question['question'], 100, 'Admin', 1) for question in questions]
+    print(f'Probing agent: {client.name}')
+    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1) for question in questions]
     
     return Prober.evaluate(questions, responses)

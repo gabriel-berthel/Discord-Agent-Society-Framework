@@ -1,0 +1,36 @@
+{
+    "a1": {
+        "description": "Self-knowledge Recall,",
+        "archetypes": {}
+    },
+    "a2": {
+        "description": "Dialogue Recall",
+        "archetypes": {
+            "debunker": 2,
+            "nerd": 2,
+            "peacekeeper": 2,
+            "chameleon": 2,
+            "troll": 2
+        }
+    },
+    "a3": {
+        "description": "Reflection Recall",
+        "archetypes": {}
+    },
+    "b1": {
+        "description": "Context Queries Relevancy",
+        "archetypes": {}
+    },
+    "b2": {
+        "description": "Responder Queries Relevancy",
+        "archetypes": {}
+    },
+    "c1": {
+        "description": "Context Accuracy",
+        "archetypes": {}
+    },
+    "d1": {
+        "description": "Reflection Relevancy",
+        "archetypes": {}
+    }
+}
