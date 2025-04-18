@@ -135,7 +135,7 @@ async def main():
     import shutil
     
     print_replies = True
-    simulation_duration = 60 * 35
+    simulation_duration = 60 * 120
     clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies, config_file='configs/qa_bench_prepare.yaml')
     
     for archetype, client in clients.items():
