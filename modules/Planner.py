@@ -25,7 +25,7 @@ OPTIONS = {
     "num_ctx": 8000,
     "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
-    "num_predict": 500,
+    "num_predict": 400,
     "stop": ["<|endoftext|>"]
 }
 

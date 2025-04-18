@@ -37,7 +37,7 @@ Just keep it real with yourself—be honest and reflective.
 NEUTRAL = {
     "mirostat": 2,
     "mirostat_tau": 4, 
-    "num_predict": 500,
+    "num_predict": 400,
     "mirostat_eta": 0.1, 
     "num_ctx": 8000,
     "repeat_penalty": 0,
@@ -49,7 +49,7 @@ NEUTRAL = {
 BIAISED = {
     "mirostat": 2,
     "mirostat_tau": 9, 
-    "num_predict": 500,
+    "num_predict": 400,
     "mirostat_eta": 0.1, 
     "num_ctx": 8000,
     "repeat_penalty": 1.3,
