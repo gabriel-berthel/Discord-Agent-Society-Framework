@@ -85,6 +85,5 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
         df.to_csv(save_to, index=False)
         print(f"\n Résultats sauvegardés dans {save_to}")
 
-
 if __name__ == '__main__':
     asyncio.run(run_agents_benchmark())

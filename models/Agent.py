@@ -293,7 +293,7 @@ class Agent:
     async def memory_routine(self):
         while self._running and self.config.memories:
             try:
-                if self.processed_messages.qsize() >= 5:
+                if self.processed_messages.qsize() >= 10:
                     messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
                     if messages:
                         reflection = await self.get_reflection(messages, self.personnality_prompt)
