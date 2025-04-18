@@ -73,7 +73,7 @@ class Agent:
         self.persistance_id = self._get_persistence_id(self.archetype)
         self.name = archetype_conf.name
         self.monitoring_channel = self.config.channel_id
-        self.plan = "No specific plan at the moment. I am simply responding."
+        self.plan = "Responding to every message."
         self.memory = self._initialize_memory()
 
         self.responses = asyncio.Queue()
