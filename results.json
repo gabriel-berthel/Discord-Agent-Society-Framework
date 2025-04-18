@@ -1,0 +1,151 @@
+{
+    "a1": {
+        "description": "Self-knowledge Recall,",
+        "archetypes": {
+            "debunker": {
+                "results": [
+                    {
+                        "question": "Is Caspian's age 24?",
+                        "expected_answer": "Yes",
+                        "system_answer": "Yeah, I'm 24, dude!",
+                        "score": 0
+                    },
+                    {
+                        "question": "What is Caspian's job?",
+                        "expected_answer": "Software Developer / Research Assistant",
+                        "system_answer": "Software Developer / Research Assistant, yo!",
+                        "score": 0
+                    },
+                    {
+                        "question": "Is Caspian a perfectionist?",
+                        "expected_answer": "Yes",
+                        "system_answer": "Yeah, I'm a total perfectionist, didn't you know?",
+                        "score": 0
+                    },
+                    {
+                        "question": "What does Caspian enjoy doing?",
+                        "expected_answer": "proving people wrong",
+                        "system_answer": "Proving people wrong and digging deep into sources!",
+                        "score": 0
+                    },
+                    {
+                        "question": "Does Caspian dislike conspiracies?",
+                        "expected_answer": "Yes",
+                        "system_answer": "Oh, you bet I do! No patience for vague theories and dubious claims.",
+                        "score": 0
+                    },
+                    {
+                        "question": "What is Caspian's main drive?",
+                        "expected_answer": "expose misinformation, challenge dubious claims, drop cold, hard facts",
+                        "system_answer": "Expose misinformation, challenge dubious claims, and drop cold, hard facts",
+                        "score": 0
+                    },
+                    {
+                        "question": "Is Caspian a Debunker?",
+                        "expected_answer": "Yes",
+                        "system_answer": "Yeah, you bet I do!",
+                        "score": 0
+                    },
+                    {
+                        "question": "What does Caspian often do?",
+                        "expected_answer": "make jokes, drop reaction gifs, pop in with absurd, random comments",
+                        "system_answer": "Proving people wrong and digging deep into sources!",
+                        "score": 0
+                    },
+                    {
+                        "question": "Is Caspian's goal to express himself authentically?",
+                        "expected_answer": "Yes",
+                        "system_answer": "No way, my goal is to expose misinformation, challenge dubious claims, and drop cold, hard facts!",
+                        "score": 0
+                    },
+                    {
+                        "question": "What does Caspian not do?",
+                        "expected_answer": "hold back",
+                        "system_answer": "Caspian doesn't hold back!",
+                        "score": 0
+                    },
+                    {
+                        "question": "Is Caspian's vibe low-key fun?",
+                        "expected_answer": "Yes",
+                        "system_answer": "NO WAY, Caspian's vibe is DEADPAN LOGICAL NONSENSE!",
+                        "score": 0
+                    },
+                    {
+                        "question": "What does Caspian not have?",
+                        "expected_answer": "filter",
+                        "system_answer": "Caspian doesn't have a filter, no rules, and no problem with being a Debunker!",
+                        "score": 0
+                    }
+                ],
+                "total_score": 0,
+                "max_score": 12
+            }
+        }
+    },
+    "a2": {
+        "description": "Dialogue Recall",
+        "archetypes": {}
+    },
+    "a3": {
+        "description": "Reflection Recall",
+        "archetypes": {}
+    },
+    "b1": {
+        "description": "Context Queries Relevancy",
+        "archetypes": {
+            "debunker": {
+                "std": {
+                    "baseline": 0.017888393253087997,
+                    "agent": 0.040848977863788605
+                },
+                "mean": {
+                    "baseline": 0.3584470748901367,
+                    "agent": 0.30609285831451416
+                }
+            }
+        }
+    },
+    "b2": {
+        "description": "Responder Queries Relevancy",
+        "archetypes": {
+            "debunker": {
+                "std": {
+                    "baseline": 0.019240986555814743,
+                    "agent": 0.0840669795870781
+                },
+                "mean": {
+                    "baseline": 0.35704025626182556,
+                    "agent": 0.27974075078964233
+                }
+            }
+        }
+    },
+    "c1": {
+        "description": "Context Accuracy",
+        "archetypes": {
+            "debunker": {
+                "shared_keyword_ratio": 0.11447084233261338,
+                "cosine_similarity": {
+                    "baseline": 0.14190234243869781,
+                    "agent": 0.15372523665428162
+                }
+            }
+        }
+    },
+    "d1": {
+        "description": "Reflection Relevancy",
+        "archetypes": {
+            "debunker": {
+                "total_scores": {
+                    "personality": 32,
+                    "dialogue": 29
+                },
+                "average_scores": {
+                    "personality": 2.909090909090909,
+                    "dialogue": 2.6363636363636362
+                },
+                "overall_average_score": 2.7727272727272725
+            }
+        }
+    }
+}

@@ -88,7 +88,7 @@ def run_b2(logs, memory_module):
         'mean': {'baseline': np.mean(cos_baselines), 'agent': np.mean(cos_agents)}
     }
 
-def run_c1(neutral_ctxs, contextualizer):
+async def run_c1(neutral_ctxs, contextualizer):
     shared_keywords, unique_keywords  = [], []
     cosine_similarities_baselines = []
     cosine_similarities_agents = []
@@ -97,7 +97,7 @@ def run_c1(neutral_ctxs, contextualizer):
         msgs, bot_context = arguments
         content = bot_context + '\n'.join(msgs)
         
-        agent = asyncio.run(contextualizer.neutral_context(msgs, bot_context))
+        agent = await contextualizer.neutral_context(msgs, bot_context)
         baseline = summarize_text(content)
         
         agent_keywords = extract_keywords(agent)

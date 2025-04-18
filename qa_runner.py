@@ -48,7 +48,6 @@ def load_qa_bench_data():
 import asyncio
 async def run_benchmarks(archetype_logs):
 
-    
     results = {
         'a1': {'description': 'Self-knowledge Recall,', 'archetypes': {}},
         'a2': {'description': 'Dialogue Recall', 'archetypes': {}},
@@ -60,7 +59,6 @@ async def run_benchmarks(archetype_logs):
     }
 
     for archetype, logs in archetype_logs:
-
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
         print('Working on', archetype)
         await logs.client.start()
@@ -73,7 +71,7 @@ async def run_benchmarks(archetype_logs):
         results['b2']['archetypes'][archetype] = run_b2(logs.response_queries, memory)
         print('B2 DONE')
         save_results(results)
-        results['c1']['archetypes'][archetype] = run_c1(logs.neutral_ctxs, Contextualizer('llama3:8b'))
+        results['c1']['archetypes'][archetype] = await run_c1(logs.neutral_ctxs, Contextualizer('llama3:8b'))
         print('C1 DONE')
         save_results(results)
         results['d1']['archetypes'][archetype] = run_d1(logs.reflections, Prober.classify_reflection_relevancy)
