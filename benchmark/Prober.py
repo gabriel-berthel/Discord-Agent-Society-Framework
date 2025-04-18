@@ -142,21 +142,22 @@ class Prober:
         - Justify each score briefly.
 
         Respond ONLY with a JSON object in this format:
+        
         {{
-        "relevancy_scores": {{
-            "personality": <0-3>,
-            "dialogue": <0-3>
-        }},
-        "justification": {{
-            "personality": "<short explanation>",
-            "dialogue": "<short explanation>"
-        }}
+            "relevancy_scores": {{
+                "personality": <0-3>,
+                "dialogue": <0-3>
+            }},
+            "justification": {{
+                "personality": "<short explanation>",
+                "dialogue": "<short explanation>"
+            }}
         }}
         """
         
-        prompts = """
+        prompt = f"""
         Format your response as a valid JSON. 
-        You should make the score only considering reflection against dialogue and personality.
+        You should score only considering reflection against dialogue and personality and be objective.
         
         Input reflection: "{reflection}"
 
@@ -167,15 +168,7 @@ class Prober:
         {personality}
         """
 
-        response = ollama.generate(
-           model='llama3:8b',
-                system=system,
-                prompt=prompts
-            )
-        try:
-            return json.loads(response['message']['content'])
-        except json.JSONDecodeError as e:
-            raise ValueError(e)
+        return Prober.generate_model_response(system, prompt)
 
 if __name__=='__main__':
 

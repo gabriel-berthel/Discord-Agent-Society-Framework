@@ -77,9 +77,9 @@ def run_b2(logs, memory_module):
     cos_baselines = []
     cos_agents = []
     for arguments, queries in logs:
-        plan, context, messages = arguments
+        plan, context, personnality_prompt, messages = arguments
         agent = memory_module.query_multiple(queries)
-        baseline = memory_module.query_multiple([plan, context] + messages)
+        baseline = memory_module.query_multiple([plan, context, personnality_prompt] + messages)
         cos_baselines.append(np.mean(compute_cosine_distances(baseline)))
         cos_agents.append(np.mean(compute_cosine_distances(agent)))
 
@@ -131,9 +131,9 @@ def run_d1(reflections_logs, evaluator_fn):
     num_reflections = 0
 
     for arguments, reflection in reflections_logs:
-        messages, _, personality_prompt = arguments
+        messages, personality_prompt = arguments
         result = evaluator_fn('\n'.join(messages), reflection, personality_prompt)
-        scores = result["relevancy_scores"]
+        scores = result[0]
 
         for key in total_scores:
             total_scores[key] += scores.get(key, 0)
@@ -153,7 +153,6 @@ def force_ctx(self):
     return f"You must absolutely answer to ADMIN as demanded and only as demanded."
 
 async def run_a1(client: PromptClient, prober: Prober, personality):
-    print(f'A1: {client.name}')
     client.get_bot_context = force_ctx.__get__(client)
     questions = [q for q in prober.generate_content_questions(personality, 12)]
     print(f'Probing agent: {client.name}')
@@ -164,7 +163,6 @@ def chunk_list(lst, chunk_size):
     return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 async def run_a2(client: PromptClient, prober: Prober, dialogues):
-    print(f'A2: {client.name}')
     client.get_bot_context = force_ctx.__get__(client)
     questions = []
     for i, chunk in enumerate(chunk_list(dialogues, 10)):
@@ -177,7 +175,6 @@ async def run_a2(client: PromptClient, prober: Prober, dialogues):
     return Prober.evaluate(questions, responses)
 
 async def run_a3(client: PromptClient, prober: Prober, reflections):
-    print(f'A3: {client.name}')
     client.get_bot_context = force_ctx.__get__(client)
     questions = []
     for i, chunk in enumerate(chunk_list(reflections, 5)):
