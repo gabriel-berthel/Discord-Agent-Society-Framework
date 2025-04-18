@@ -39,6 +39,7 @@ class Logger:
         self.logger = logging.getLogger(persistance_id)
         self.logs = defaultdict(list)
         self.log_path = log_path
+        self.persistance_id = persistance_id
 
     def log_event(self, key, input_data, output_data):
         
@@ -48,9 +49,9 @@ class Logger:
         self.logs[key].append({'input': input_data, 'output': output_data})
         self.logger.info(f"Log Key: {key} | Input: {input_data} | Output: {output_data}")
 
-    def save_logs(self, persistance_id):
+    def save_logs(self):
         os.makedirs(self.log_path, exist_ok=True)
-        file_path = os.path.join(self.log_path, f"{persistance_id}_log.pkl")
+        file_path = os.path.join(self.log_path, f"{self.persistance_id}_log.pkl")
         with open(file_path, "wb") as f:
             pickle.dump(self.logs, f)
         self.logger.info(f"Saved logs to {file_path}")
@@ -278,6 +279,9 @@ class Agent:
                 channel_context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
                 updated_plan = await self.get_plan(self.plan, context, memories, channel_context, self.personnality_prompt)
                 self.plan = updated_plan if updated_plan != None else self.plan
+                
+                if updated_plan:
+                    self.memory.add_document(updated_plan, 'PLAN')
             except Exception as e:
                 print('Error with planning', e)
                 
@@ -286,10 +290,11 @@ class Agent:
     async def memory_routine(self):
         while self._running and self.config.memory_interval != -1:
             try:
-                await asyncio.sleep(self.config.memory_interval)
-                messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
-                if messages:
-                    reflection = await self.get_reflection(messages, self.personnality_prompt)
-                    self.memory.add_document(reflection, 'MEMORY')
+                if self.processed_messages.qsize() >= 5:
+                    await asyncio.sleep(self.config.memory_interval)
+                    messages = [await self.processed_messages.get() for _ in range(self.processed_messages.qsize())]
+                    if messages:
+                        reflection = await self.get_reflection(messages, self.personnality_prompt)
+                        self.memory.add_document(reflection, 'MEMORY')
             except Exception as e:
                 print('Error with Memories', e)

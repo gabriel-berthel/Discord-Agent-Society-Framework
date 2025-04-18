@@ -42,12 +42,14 @@ class Responder:
 
             Here are relevant memories that may help:
             {memories}
+            
+            If you have memories someone already greeted, avoid greeting again.
             """
             
             response = await ollama.AsyncClient().generate(
                 model=self.model,
                 system=system_instruction,
-                prompt=f"Reply immediately to:\n{msgs}",
+                prompt=f"Send a message in the chat the way u want and desire! Most recent messages are: \n{msgs}",
                 options=OPTIONS
             )
 
@@ -86,12 +88,15 @@ class Responder:
         response = response.strip()
         if response.startswith("**"):   
             cleaned_text = re.sub(r"^\*\*(.+?)\*\*", "", response)
+        elif response.startswith("*"):   
+            cleaned_text = re.sub(r"^\*(.+?)\*", "", response)
         elif response.startswith('['):
             cleaned_text = re.sub(r"^\[(.*?)\]\s", "", response)
         else:
             cleaned_text = re.sub(r"^(.*?):\s", "", response)
             
         cleaned_text = cleaned_text.strip()
-        cleaned_text = re.sub(r'^"(.*)"$', r'\1', cleaned_text)
+        if cleaned_text.startswith('"') and cleaned_text.endswith('"'):
+            cleaned_text = cleaned_text[1:-1]
 
         return cleaned_text

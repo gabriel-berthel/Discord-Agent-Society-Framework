@@ -116,15 +116,12 @@ async def main():
     import shutil
     
     print_replies = True
-    simulation_duration = 60 * 12 + 30
+    simulation_duration = 60 * 20
     clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies, config_file='configs/qa_bench_prepare.yaml')
-    
-    shutil.rmtree('qa_bench/logs')
-    shutil.rmtree('qa_bench/memories')
     
     for archetype, client in clients.items():
         await client.stop()
-        client.agent.save_logs()
+        client.agent.logger.save_logs()
 
     file_path = os.path.join("logs", f"qa_bench/qa_bench_histo.pkl")
 
