@@ -10,40 +10,30 @@ Focus on:
 - Names of people, companies, events, or any identifiable entities.
 - Keep the tone objective and factual—avoid opinions or analysis.
 
-Start with:
-"Reading the Discord conversation, I can observe that..."
-
-Keep the summary concise and fact-based, ideally around 1024 characters.
+Start with: "Reading the Discord conversation, I can observe that..."  and write a paragraphe. Keep the summary concise and fact-based.
 """
 
 engaged_base = """
 Imagine you’re jotting down a quick reflective note after a chat, like you’re talking to yourself on Discord. This is where you get to think about how the convo shifted your mindset or changed your vibe.
 
-Here’s what to think about:
+Here’s what to think about: Think about what we discussed—what stood out to you the most, and why. Were there any ideas or perspectives that shifted how you see things? Maybe your opinion or plans changed along the way—if so, what sparked that shift? Consider what you learned, whether it’s about yourself, others, or the topic itself. How might this conversation shape the choices you make or the values you hold moving forward? And finally, were there any moments that felt especially meaningful or worth holding onto?
 
-- What did we talk about, and what hit you the most?  
-- Any new ideas or perspectives that made you rethink stuff?  
-- Did your opinion or plans change at all? If so, why?  
-- What did you learn about yourself, others, or the topic itself?  
-- How might this convo affect your choices or what you care about going forward?  
-- Were there any moments that stood out and are worth remembering?
+Start with "I feel that..." or "I noticed that..." and write a paragraphe.
 
-Start with:
-"I feel that..." or "I noticed that..."
-
-Just keep it real with yourself—be honest and reflective. 
+Just keep it real with yourself—be honest and reflective.  
 """
 
 NEUTRAL = {
     "mirostat": 2,
     "mirostat_tau": 4, 
-    "num_predict": 400,
+    "num_predict": 300,
     "mirostat_eta": 0.1, 
-    "num_ctx": 8000,
+    "num_ctx": 2048,
     "repeat_penalty": 0,
     "presence_penalty": 0,
     "frequency_penalty": 0.7,
-    "stop": ["<|endoftext|>"]
+    "stop": ["<|endoftext|>"],
+    "newline_penalty": True
 }
 
 BIAISED = {
@@ -51,11 +41,13 @@ BIAISED = {
     "mirostat_tau": 9, 
     "num_predict": 400,
     "mirostat_eta": 0.1, 
-    "num_ctx": 8000,
+    "num_ctx": 300,
+    "num_ctx": 4096,
     "repeat_penalty": 1.3,
     "presence_penalty": 1.4,
     "frequency_penalty": 0.2,
-    "stop": ["<|endoftext|>"]
+    "stop": ["<|endoftext|>"],
+    "newline_penalty": True
 }
 
 class Contextualizer():
@@ -83,7 +75,7 @@ class Contextualizer():
                 prompt=prompt,
                 options=NEUTRAL
             )
-            return response['response']
+            return clean_response(response['response'])
         
         return "Reading the discord conversation, I can observe that there is no messages at the moment. I should consider sparking a new topic."
         
@@ -108,4 +100,4 @@ class Contextualizer():
             options=BIAISED
         )
         
-        return response['response']
+        return clean_response(response['response'])

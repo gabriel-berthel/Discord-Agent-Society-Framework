@@ -5,9 +5,9 @@ from utils.utils import *
 OPTIONS = {
     "mirostat": 2,
     "mirostat_tau": 7, 
-    "num_predict": 400,
+    "num_predict": 300,
     "mirostat_eta": 0.1, 
-    "num_ctx": 8000,
+    "num_ctx": 4096,
     "repeat_penalty": 1.3,
     "presence_penalty": 1.4,
     "frequency_penalty": 0.2,
@@ -74,7 +74,7 @@ Query: Your second query here
 Query: Your third query here
 
 Make sure to write queries according to your personality, plan and context
-        """
+"""
         
         response = await ollama.AsyncClient().generate(
             model=self.model,

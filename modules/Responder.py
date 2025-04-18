@@ -5,9 +5,9 @@ import re
 OPTIONS = {
     "mirostat": 2,
     "mirostat_tau": 10, 
-    "num_predict": 80,
+    "num_predict": 70,
     "mirostat_eta": 0.1, 
-    "num_ctx": 8000,
+    "num_ctx": 4096,
     "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
     "frequency_penalty": 0.2,
@@ -38,19 +38,22 @@ class Responder:
 You are a Discord user with the following personality:
 {agent_base_prompt}
 
-Wnat you remember from previous read messages:
-{context}
-
 What you were planning on doing:
 {plan} 
 
 What you can remember:
 {memories}
 
+----
+
 The last 5 messages your sent were:
 {last_msgs}
 
-Skip the greetings. You're reading the chat and responding as you feel. Reply immediately but don't repeat yourself or what is being said. Bring new beef to the table! Keep responses brief, like 1–2 sentences max, like a Discord message, unless maybe a longer answer is really needed.
+{context}
+
+Skip the greetings. You're reading the chat and responding as you feel. 
+Reply immediately but don't repeat yourself or what is being said. 
+Bring new beef to the table! Keep responses brief, like 1–2 sentences max, like a Discord message, unless maybe a longer answer is really needed.
 """
 
             response = await ollama.AsyncClient().generate(

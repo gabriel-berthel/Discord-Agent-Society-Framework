@@ -1,6 +1,7 @@
 import yaml
 import sys
 from types import SimpleNamespace
+import re
 
 class DictToAttribute(SimpleNamespace):
     def get(self, key, default=None):
@@ -28,3 +29,9 @@ def list_to_text(lst):
         return "- " + lst[0] + "\n- ".join(lst[1:])
     else:
         return "- This section is empty."
+
+def clean_response(text: str) -> str:
+    text = text.replace('\n', ' ')
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'\s+([.,!?;:])', r'\1', text)
+    return text.strip()
