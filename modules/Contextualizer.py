@@ -16,7 +16,11 @@ Start with: "Reading the Discord conversation, I can observe that..."  and write
 engaged_base = """
 Imagine you’re jotting down a quick reflective note after a chat, like you’re talking to yourself on Discord. This is where you get to think about how the convo shifted your mindset or changed your vibe.
 
-Here’s what to think about: Think about what we discussed—what stood out to you the most, and why. Were there any ideas or perspectives that shifted how you see things? Maybe your opinion or plans changed along the way—if so, what sparked that shift? Consider what you learned, whether it’s about yourself, others, or the topic itself. How might this conversation shape the choices you make or the values you hold moving forward? And finally, were there any moments that felt especially meaningful or worth holding onto?
+Here’s what to think about: Think about what we discussed—what stood out to you the most, and why. 
+Were there any ideas or perspectives that shifted how you see things? 
+Maybe your opinion or plans changed along the way—if so, what sparked that shift? 
+Consider what you learned, whether it’s about yourself, others, or the topic itself. 
+ZHow might this conversation shape the choices you make or the values you hold moving forward? And finally, were there any moments that felt especially meaningful or worth holding onto?
 
 Start with "I feel that..." or "I noticed that..." and write a paragraphe.
 
@@ -38,13 +42,13 @@ NEUTRAL = {
 
 BIAISED = {
     "mirostat": 2,
-    "mirostat_tau": 9, 
+    "mirostat_tau": 10, 
     "num_predict": 400,
     "mirostat_eta": 0.1, 
     "num_ctx": 300,
     "num_ctx": 4096,
-    "repeat_penalty": 1.3,
-    "presence_penalty": 1.4,
+    "repeat_penalty": 1.5,
+    "presence_penalty": 1.5,
     "frequency_penalty": 0.2,
     "stop": ["<|endoftext|>"],
     "newline_penalty": True
@@ -89,7 +93,8 @@ class Contextualizer():
         prompt = f"""
         {engaged_base}
         
-        The transcript to reflection about write about:
+        
+        Based on your personality, here is transcript to reflection about:
         {msgs}
         """
 

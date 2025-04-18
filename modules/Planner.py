@@ -16,11 +16,12 @@ Base your entry on your memories, context, and prior plans and write a paragraph
 
 OPTIONS = {
     "mirostat": 2,
-    "mirostat_tau": 8, 
+    "mirostat_tau": 10, 
     "mirostat_eta": 0.1, 
     "num_ctx": 4096,
     "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
+    "frequency_penalty": 0.2,
     "num_predict": 300,
     "stop": ["<|endoftext|>"],
     "newline_penalty": True
