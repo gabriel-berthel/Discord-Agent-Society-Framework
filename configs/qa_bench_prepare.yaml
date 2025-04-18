@@ -3,7 +3,7 @@ config:
   max_random_response_delay: 0
   plan_interval: 60 # -1 = deactivated
   memories: True # -1 = deactivated
-  model: "gemma"
+  model: "llama3:8b"
   base-plan: ""
   channel_id: 1
   sequential_mode: True

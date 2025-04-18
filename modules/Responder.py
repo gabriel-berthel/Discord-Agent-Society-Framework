@@ -5,7 +5,7 @@ import re
 OPTIONS = {
     "mirostat": 2,
     "mirostat_tau": 8, 
-    "num_predict": 100,
+    "num_predict": 80,
     "mirostat_eta": 0.1, 
     "num_ctx": 8000,
     "repeat_penalty": 1.5,
