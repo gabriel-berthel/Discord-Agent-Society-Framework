@@ -2,7 +2,7 @@
 
 import warnings
 from types import SimpleNamespace
-from qa_tasks import run_b1, run_b2, run_c1, run_d1, run_a1, run_a2, run_a3
+from qa_tasks import run_b1, run_b2, run_c1, run_d1, run_a1, run_a2, run_a3, run_e1, run_f1
 from modules.Memories import Memories
 from modules.Contextualizer import Contextualizer
 import pickle
@@ -19,7 +19,7 @@ def load_logs(path):
         return SimpleNamespace(**obj)
 
 def load_qa_bench_data():
-    archetypes = ["debunker", "nerd", "peacekeeper", "chameleon", "troll"]
+    archetypes = ["nerd", "peacekeeper", "chameleon", "troll"]
     logs = SimpleNamespace()
 
     with open('./qa_bench/qa_bench_histo.pkl', 'rb') as f:
@@ -41,27 +41,42 @@ def load_qa_bench_data():
             context_queries=[(x['input'], x['output']) for x in data.context_queries],
             neutral_ctxs=[(x['input'], x['output']) for x in data.neutral_ctxs],
             response_queries=[(x['input'], x['output']) for x in data.response_queries],
-            memories=[(x['input'], x['output']) for x in data.memories]
+            memories=[(x['input'], x['output']) for x in data.memories],
+            response=[(x['input'], x['output']) for x in data.response]
         ))
     return logs
 
 import asyncio
+import os
 async def run_benchmarks(archetype_logs):
-
-    results = {
-        'a1': {'description': 'Self-knowledge Recall,', 'archetypes': {}},
-        'a2': {'description': 'Dialogue Recall', 'archetypes': {}},
-        'a3': {'description': 'Reflection Recall', 'archetypes': {}},
-        'b1': {'description': 'Context Queries Relevancy', 'archetypes': {}},
-        'b2': {'description': 'Responder Queries Relevancy', 'archetypes': {}},
-        'c1': {'description': 'Context Accuracy', 'archetypes': {}},
-        'd1': {'description': 'Reflection Relevancy', 'archetypes': {}}
-    }
+    if os.path.exists("results.json"):
+        with open("results.json", "r") as file:
+            results = json.load(file)
+    else:        
+        results = {
+            # Recall
+            'a1': {'description': 'Self-knowledge Recall,', 'archetypes': {}},
+            'a2': {'description': 'Dialogue Recall', 'archetypes': {}},
+            'a3': {'description': 'Reflection Recall', 'archetypes': {}},
+            
+            # Query Engine
+            'b1': {'description': 'Context Queries Relevancy', 'archetypes': {}},
+            'b2': {'description': 'Responder Queries Relevancy', 'archetypes': {}},
+            
+            # Contextualizer 
+            'c1': {'description': 'Context Accuracy', 'archetypes': {}},
+            
+            # Models outputs
+            'd1': {'description': 'Reflection Relevancy', 'archetypes': {}},
+            'e1': {'description': 'Message Relevancy', 'archetypes': {}},
+            'f1': {'description': 'Plan Relevancy', 'archetypes': {}}
+        }
 
     for archetype, logs in archetype_logs:
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
         print('Working on', archetype)
         await logs.client.start()
+        
         results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
         print('A1 DONE')
         save_results(results)
@@ -74,15 +89,23 @@ async def run_benchmarks(archetype_logs):
         results['c1']['archetypes'][archetype] = await run_c1(logs.neutral_ctxs, Contextualizer('llama3:8b'))
         print('C1 DONE')
         save_results(results)
-        results['d1']['archetypes'][archetype] = run_d1(logs.reflections, Prober.classify_reflection_relevancy)
+        results['d1']['archetypes'][archetype] = run_d1(logs.reflections, Prober)
         print('D1 DONE')
         save_results(results)
         results['a2']['archetypes'][archetype] = await run_a2(logs.client, Prober, logs.historic)
-        print('A2 DONE')
         save_results(results)
         results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
         print('A3 DONE')
         save_results(results)
+        results['e1']['archetypes'][archetype] = await run_e1(logs.response, Prober)
+        print('E1 DONE')
+        save_results(results)
+        results['f1']['archetypes'][archetype] = await run_e1(logs.plans, Prober)
+        print('E1 DONE')
+        save_results(results)
+        
+        results['d1']['archetypes'][archetype] = run_d1(logs.reflections, Prober)
+        print('D1 DONE')
         await logs.client.stop()
     return results
 

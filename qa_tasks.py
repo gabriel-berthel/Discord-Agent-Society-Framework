@@ -70,7 +70,9 @@ def run_b1(context_queries, memory_module):
     
     return {
         'std': {'baseline': np.std(cos_baselines), 'agent': np.std(cos_agents)},
-        'mean': {'baseline': np.mean(cos_baselines), 'agent': np.mean(cos_agents)}
+        'mean': {'baseline': np.mean(cos_baselines), 'agent': np.mean(cos_agents)},
+        'min': {'baseline': np.min(cos_baselines), 'agent': np.min(cos_agents)},
+        'max': {'baseline': np.max(cos_baselines), 'agent': np.max(cos_agents)}
     }
 
 def run_b2(logs, memory_module):
@@ -85,7 +87,9 @@ def run_b2(logs, memory_module):
 
     return {
         'std': {'baseline': np.std(cos_baselines), 'agent': np.std(cos_agents)},
-        'mean': {'baseline': np.mean(cos_baselines), 'agent': np.mean(cos_agents)}
+        'mean': {'baseline': np.mean(cos_baselines), 'agent': np.mean(cos_agents)},
+        'min': {'baseline': np.min(cos_baselines), 'agent': np.min(cos_agents)},
+        'max': {'baseline': np.max(cos_baselines), 'agent': np.max(cos_agents)}
     }
 
 async def run_c1(neutral_ctxs, contextualizer):
@@ -126,28 +130,35 @@ async def run_c1(neutral_ctxs, contextualizer):
         }
     }
 
-def run_d1(reflections_logs, evaluator_fn):
-    total_scores = {"personality": 0, "dialogue": 0}
-    num_reflections = 0
-
+def run_d1(reflections_logs, prober:Prober):
+    print('Running D1')
+    results = []
     for arguments, reflection in reflections_logs:
         messages, personality_prompt = arguments
-        result = evaluator_fn('\n'.join(messages), reflection, personality_prompt)
-        scores = result[0]
+        results.append(prober.score_reflection_relevancy('\n'.join(messages), reflection, personality_prompt))
 
-        for key in total_scores:
-            total_scores[key] += scores.get(key, 0)
+    print('Evaluating D1')
+    return prober.evaluate_scales(results)
 
-        num_reflections += 1
+def run_e1(response_log, prober:Prober):
+    print('Running E1')
+    results = []
+    for arguments, response in response_log:
+        plan, context, memories, messages, personality, _ = arguments
+        results.append(prober.score_message_relevancy(personality, plan, memories, context, '\n'.join(messages), response))
 
-    final_avg_scores = {k: v / num_reflections for k, v in total_scores.items()}
-    overall_average_score = sum(final_avg_scores.values()) / len(final_avg_scores)
+    print('Evaluating E1')
+    return prober.evaluate_scales(results)
 
-    return {
-        "total_scores": total_scores,
-        "average_scores": final_avg_scores,
-        "overall_average_score": overall_average_score
-    }
+def run_f1(plan_log, prober:Prober):
+    print('Running F1')
+    results = []
+    for arguments, new_plan in plan_log:
+        former_plan, context, memories, _, personality = arguments
+        results.append(prober.score_plan_relevancy(former_plan, context, personality,'\n'.join(memories), new_plan))
+
+    print('Evaluating F1')
+    return prober.evaluate_scales(results)
 
 def force_ctx(self):
     return f"You must absolutely answer to ADMIN as demanded and only as demanded."

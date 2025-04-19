@@ -12,51 +12,43 @@ load_dotenv()
 
 class Prober:
     @staticmethod
-    def generate_model_response(system, prompt):
+    def generate_model_response(system, prompt, required_fields=[]):
         """
         Generate the content based on the prompt
 
         Returns: json 
         """
-
-        try:
-            client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-            response = client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.5
-            )
-            answer = response.choices[0].message.content
-        except Exception as e:
-            
-            response = ollama.generate(
-                model='llama3:8b',
-                system=system,
-                prompt=prompt,
-                format='json',
-                options = {
-                    "mirostat": 2,
-                    "mirostat_tau": 7, 
-                    "mirostat_eta": 0.1, 
-                    "num_ctx": 2048,
-                    "repeat_penalty": 1.3,
-                    "presence_penalty": 1.4,
-                    "frequency_penalty": 0.2,
-                    "stop": ["<|endofjson|>"]
-                }
-            )
-
-            answer = response['response']
         
-        try: 
+        response = ollama.generate(
+            model='llama3:8b',
+            system=system,
+            prompt=prompt,
+            format='json',
+            options = {
+                "mirostat": 2,
+                "mirostat_tau": 7, 
+                "mirostat_eta": 0.1, 
+                "num_ctx": 4048,
+                "repeat_penalty": 1.3,
+                "presence_penalty": 1.4,
+                "frequency_penalty": 0.2,
+                "stop": ["<|endofjson|>"]
+            }
+        )
+
+        answer = response['response']
+    
+        try:
             questions = json.loads(answer)
-            return list(questions.values())
-            
         except json.JSONDecodeError as e:
-            raise ValueError(e)
+            raise ValueError(f"Error decoding JSON: {e}")
+
+        for q in questions.values():
+            if not all(field in q for field in required_fields):
+                raise ValueError('Missing required fields in question.')
+
+        return list(questions.values())
+
 
     @staticmethod
     def generate_content_questions(content: str, num_questions=10):
@@ -97,60 +89,54 @@ class Prober:
         """
         
         prompt = f"Format your response as a valid JSON. You should make the question ONLY about the following document Make sure to generate {num_questions} as asked and not more. Document:\n{content}"
-        
-        return Prober.generate_model_response(system, prompt)
+        while True:
+            try: 
+                return Prober.generate_model_response(system, prompt, required_fields=['type', 'question', 'correct_answer', 'choices'])
+            except ValueError as e:
+                print('Error while parsing! Retrying:', e)
         
 
     @staticmethod
     def evaluate(questions:list,  responses:list):
-        """ 
-        Evaluate responses based on questions 
-
-        Returns: dict of results and scor
-        """
         
-        results = []
         score = 0
         total_score = 0
+        total_detailed = 0
         for i, q in enumerate(questions):
             expected_answer = q['correct_answer']
             system_answer = responses[i] if i < len(responses) else ""
+    
+            scores = Prober.score_answer_alignment(q.get("question", ""), expected_answer, system_answer)[0]     
+            binary_votes = [
+                scores["flexible_binary_score"],
+                scores["neutral_binary_score"],
+                scores["conservative_binary_score"]
+            ]
             
-            score = 1 if system_answer.strip().lower() == expected_answer.strip().lower() else 0
-            total_score += score
-            
-            results.append({
-                "question": q.get("question", ""),
-                "expected_answer": expected_answer,
-                "system_answer": system_answer,
-                "score": score
-            })
+            score += 1 if sum(binary_votes) >= 2 else 0
+            total_detailed += scores["detailed_score"]
         
+        print(total_score, total_detailed, len(questions))
         return {
-            "results": results,
             "total_score": total_score,
+            "total_detailed_score": total_detailed,
             "max_score": len(questions)
         }
         
     @staticmethod
-    def classify_reflection_relevancy(transcript, reflection, personality):
+    def score_reflection_relevancy(transcript, reflection, personality):
         system = f"""
         You are a JSON-only evaluator. Rate how relevant the reflection is to the dialogue and personality.
 
         Instructions:
         - Score each axis (personality, dialogue) from 0 (irrelevant) to 3 (strongly relevant).
-        - Justify each score briefly.
-
+        
         Respond ONLY with a JSON object in this format:
         
         {{
             "relevancy_scores": {{
                 "personality": <0-3>,
                 "dialogue": <0-3>
-            }},
-            "justification": {{
-                "personality": "<short explanation>",
-                "dialogue": "<short explanation>"
             }}
         }}
         """
@@ -168,19 +154,165 @@ class Prober:
         {personality}
         """
 
-        return Prober.generate_model_response(system, prompt)
+        return Prober.generate_model_response(system, prompt)[0]
+    
+    
+    @staticmethod
+    def evaluate_scales(score_list):
+        total_scores = {}
+        num_items = len(score_list)
 
-if __name__=='__main__':
+        for scores in score_list:
+            for key, value in scores.items():
+                if key not in total_scores:
+                    total_scores[key] = 0
+                total_scores[key] += value
 
-    # test
-    general_content = "Je pense que Jean est fiable. Je crois que Marie n'est pas ambitieuse. Le projet avance rapidement."
-    try:
-        prober = Prober()
-        # sk_questions = prober.generate_sk_questions()
-        content_questions = prober.generate_content_questions(general_content)
+        final_avg_scores = {
+            key: round(total / num_items, 4) for key, total in total_scores.items()
+        }
 
-        print(content_questions)
+        overall_average_score = round(
+            sum(final_avg_scores.values()) / len(final_avg_scores), 4
+        ) if final_avg_scores else 0.0
 
+        return {
+            "total_scores": total_scores,
+            "average_scores": final_avg_scores,
+            "overall_average_score": overall_average_score
+        }
+
+
+    @staticmethod
+    def score_message_relevancy(personality, plan, memories, context, dialogue, response):
         
-    except Exception as e:
-        print(e)
+        system = f"""
+        You are a JSON-only evaluator. You are evaluating response relevancy against: personality, plan, memories, context and dialogue
+
+        Instructions:
+        - Score each axis (personality, dialogue) from 0 (irrelevant) to 3 (strongly relevant).
+
+        Respond ONLY with a JSON object in this format:
+        
+        {{
+            "relevancy_scores": {{
+                "personality": <0-3>,
+                "plan": <0-3>,
+                "memories": <0-3>,
+                "context": <0-3>,
+                "dialogue": <0-3>,
+                "personality": <0-3>
+            }}
+        }}
+        """
+        
+        prompt = f"""
+        Format your response as a valid JSON. 
+        You should score only considering reflection against relevancy personality, plan, memories, context and dialogue and be objective.
+        
+        Personality:
+        {personality}
+        
+        Plan:
+        {plan}
+        
+        Memories:
+        {memories}
+        
+        Context:
+        {context}
+        
+        Dialogue:
+        {dialogue}
+        
+        
+        Here is the response to evaluate: 
+        Response: {response}
+        """
+
+        return Prober.generate_model_response(system, prompt, required_fields=['relevancy_scores'])[0]
+    
+
+    @staticmethod
+    def score_plan_relevancy(former_plan, context, personality, memories, new_plan):
+        
+        system = f"""
+        You are a JSON-only evaluator. You are evaluating response notebook entries against: personality, former plan and context
+
+        Instructions:
+        - Score each axis (personality, dialogue) from 0 (irrelevant) to 3 (strongly relevant).
+
+        Respond ONLY with a JSON object in this format:
+        
+        {{
+            "relevancy_scores": {{
+                "personality": <0-3>,
+                "former_plan": <0-3>,
+                "memories": <0-3>,
+                "context": <0-3>,
+            }}
+        }}
+        """
+        
+        prompt = f"""
+        Format your response as a valid JSON. 
+        You should score only considering notebook entries relevancy against personality, former plan and context, and be objective.
+        
+        Personality:
+        {personality}
+        
+        Former plan:
+        {former_plan}
+        
+        Memories:
+        {memories}
+        
+        Context:
+        {context}
+        
+        
+        Here is the response to notebook entry to evaluated: 
+        Response: {new_plan}
+        """
+
+        return Prober.generate_model_response(system, prompt, required_fields=['relevancy_scores'])[0]
+    
+    
+    @staticmethod
+    def score_answer_alignment(question, expected_answer, system_answer):
+        system = """
+        You are a strict JSON-only evaluator.
+
+        Task:
+        Determine whether the system_answer *is the expected answer*, under three levels of strictness.
+
+        Scoring:
+        - "flexible_binary_score" (0 or 1): Give 1 if the system answer implies or conveys the expected meaning, even if informally, humorously, or indirectly.
+        - "neutral_binary_score" (0 or 1): Give 1 only if the system answer clearly communicates the expected answer with minimal ambiguity.
+        - "conservative_binary_score" (0 or 1): Give 1 only if the system answer *exactly* matches the expected answer's meaning and tone, and is phrased clearly, directly, and literally.
+        
+        Also return:
+        - "detailed_score" (0.0 to 1.0): Reflects how well the system answer expresses the expected answer — accounting for completeness, clarity, and fidelity.
+
+        Format:
+        {
+            "alignment_scores": {
+                "flexible_binary_score": 0 or 1,
+                "neutral_binary_score": 0 or 1,
+                "conservative_binary_score": 0 or 1,
+                "detailed_score": float (0.0 to 1.0)
+            }
+        }
+        """
+
+        prompt = f"""
+        Question: "{question}"
+        Expected Answer: "{expected_answer}"
+        System Answer: "{system_answer}"
+
+        Decide if the system answer *is the expected answer* under each perspective, and score depth of match.
+
+        Respond only in JSON.
+        """
+
+        return Prober.generate_model_response(system, prompt)
