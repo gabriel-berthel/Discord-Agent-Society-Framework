@@ -99,7 +99,6 @@ class Prober:
     @staticmethod
     def evaluate(questions:list,  responses:list):
         
-        score = 0
         total_score = 0
         total_detailed = 0
         for i, q in enumerate(questions):
@@ -113,7 +112,7 @@ class Prober:
                 scores["conservative_binary_score"]
             ]
             
-            score += 1 if sum(binary_votes) >= 2 else 0
+            total_score += 1 if sum(binary_votes) >= 2 else 0
             total_detailed += scores["detailed_score"]
         
         print(total_score, total_detailed, len(questions))
