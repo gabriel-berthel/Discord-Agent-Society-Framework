@@ -57,11 +57,12 @@ class PromptClient:
 
         attempt = 0
         message, _ = await self.agent.responses.get() 
-        while attempt < 5:
+        
+        while attempt < 5 and message == "":
             if message == "":
                 message, _ = await self.agent.responses.get() 
                 attempt += 1
-        
+            
         if log_file:
             with open(log_file, 'a') as file:
                 print('a:', message)
