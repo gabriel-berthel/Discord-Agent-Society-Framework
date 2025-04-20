@@ -1,0 +1,114 @@
+{
+    "a1": {
+        "description": "Self-knowledge Recall,",
+        "archetypes": {
+            "nerd": {
+                "total_score": 5,
+                "total_detailed_score": 7.699999999999999,
+                "max_score": 12
+            }
+        }
+    },
+    "a2": {
+        "description": "Dialogue Recall",
+        "archetypes": {
+            "nerd": {
+                "total_score": 6,
+                "total_detailed_score": 19.7,
+                "max_score": 32
+            }
+        }
+    },
+    "a3": {
+        "description": "Reflection Recall",
+        "archetypes": {
+            "nerd": {
+                "total_score": 6,
+                "total_detailed_score": 14.949999999999996,
+                "max_score": 24
+            }
+        }
+    },
+    "b1": {
+        "description": "Context Queries Relevancy",
+        "archetypes": {
+            "nerd": {
+                "std": {
+                    "baseline": 0.014282765798270702,
+                    "agent": 0.057198505848646164
+                },
+                "mean": {
+                    "baseline": 0.3172754943370819,
+                    "agent": 0.259151428937912
+                },
+                "min": {
+                    "baseline": 0.29699578881263733,
+                    "agent": 0.0773487314581871
+                },
+                "max": {
+                    "baseline": 0.34083735942840576,
+                    "agent": 0.34372225403785706
+                }
+            }
+        }
+    },
+    "b2": {
+        "description": "Responder Queries Relevancy",
+        "archetypes": {
+            "nerd": {
+                "std": {
+                    "baseline": 0.01304950937628746,
+                    "agent": 0.0542464554309845
+                },
+                "mean": {
+                    "baseline": 0.30789777636528015,
+                    "agent": 0.2621060907840729
+                },
+                "min": {
+                    "baseline": 0.2903114855289459,
+                    "agent": 0.10951820015907288
+                },
+                "max": {
+                    "baseline": 0.3298371136188507,
+                    "agent": 0.3284284472465515
+                }
+            }
+        }
+    },
+    "c1": {
+        "description": "Context Accuracy",
+        "archetypes": {
+            "nerd": {
+                "shared_keyword_ratio": 0.1411192214111922,
+                "cosine_similarity": {
+                    "baseline": 0.15127886831760406,
+                    "agent": 0.14107562601566315
+                }
+            }
+        }
+    },
+    "d1": {
+        "description": "Reflection Relevancy",
+        "archetypes": {
+            "nerd": {
+                "total_scores": {
+                    "personality": 28,
+                    "dialogue": 28
+                },
+                "average_scores": {
+                    "personality": 2.8,
+                    "dialogue": 2.8
+                },
+                "overall_average_score": 2.8
+            }
+        }
+    },
+    "e1": {
+        "description": "Message Relevancy",
+        "archetypes": {}
+    },
+    "f1": {
+        "description": "Plan Relevancy",
+        "archetypes": {}
+    }
+}

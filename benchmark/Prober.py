@@ -28,7 +28,7 @@ class Prober:
                 "mirostat": 2,
                 "mirostat_tau": 7, 
                 "mirostat_eta": 0.1, 
-                "num_ctx": 4048,
+                "num_ctx": 8000,
                 "repeat_penalty": 1.3,
                 "presence_penalty": 1.4,
                 "frequency_penalty": 0.2,
@@ -37,18 +37,19 @@ class Prober:
         )
 
         answer = response['response']
-    
-        try:
-            questions = json.loads(answer)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Error decoding JSON: {e}")
 
-        for q in questions.values():
-            if not all(field in q for field in required_fields):
-                raise ValueError('Missing required fields in question.')
-
-        return list(questions.values())
-
+        attemps = 0
+        while attemps < 10:
+            try:
+                questions = json.loads(answer) 
+                for q in questions.values():
+                    if not all(field in q for field in required_fields):
+                        print(questions, prompt, system)
+                        raise ValueError('Missing required fields in question.')
+                return list(questions.values())
+            except Exception as e:
+                attemps += 1
+                print('Error while parsi<ng! Retrying:', e)
 
     @staticmethod
     def generate_content_questions(content: str, num_questions=10):
@@ -153,7 +154,7 @@ class Prober:
         {personality}
         """
 
-        return Prober.generate_model_response(system, prompt)[0]
+        return Prober.generate_model_response(system, prompt, required_fields=['personality', 'dialogue'])[0]
     
     
     @staticmethod
@@ -199,8 +200,7 @@ class Prober:
                 "plan": <0-3>,
                 "memories": <0-3>,
                 "context": <0-3>,
-                "dialogue": <0-3>,
-                "personality": <0-3>
+                "dialogue": <0-3>
             }}
         }}
         """
@@ -229,8 +229,7 @@ class Prober:
         Response: {response}
         """
 
-        return Prober.generate_model_response(system, prompt, required_fields=['relevancy_scores'])[0]
-    
+        return Prober.generate_model_response(system, prompt, required_fields=['personality', 'plan', 'memories', 'context', 'dialogue'])[0]
 
     @staticmethod
     def score_plan_relevancy(former_plan, context, personality, memories, new_plan):
@@ -248,7 +247,7 @@ class Prober:
                 "personality": <0-3>,
                 "former_plan": <0-3>,
                 "memories": <0-3>,
-                "context": <0-3>,
+                "context": <0-3>
             }}
         }}
         """
@@ -274,7 +273,7 @@ class Prober:
         Response: {new_plan}
         """
 
-        return Prober.generate_model_response(system, prompt, required_fields=['relevancy_scores'])[0]
+        return Prober.generate_model_response(system, prompt, required_fields=['personality', 'former_plan', 'memories', 'context'])[0]
     
     
     @staticmethod

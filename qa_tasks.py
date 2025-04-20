@@ -144,7 +144,7 @@ def run_e1(response_log, prober:Prober):
     print('Running E1')
     results = []
     for arguments, response in response_log:
-        plan, context, memories, messages, personality, _ = arguments
+        plan, context, memories, messages, personality = arguments
         results.append(prober.score_message_relevancy(personality, plan, memories, context, '\n'.join(messages), response))
 
     print('Evaluating E1')

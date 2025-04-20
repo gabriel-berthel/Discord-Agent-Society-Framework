@@ -76,7 +76,6 @@ async def run_benchmarks(archetype_logs):
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
         print('Working on', archetype)
         await logs.client.start()
-        
         results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
         print('A1 DONE')
         save_results(results)
@@ -97,15 +96,12 @@ async def run_benchmarks(archetype_logs):
         results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
         print('A3 DONE')
         save_results(results)
-        results['e1']['archetypes'][archetype] = await run_e1(logs.response, Prober)
+        results['e1']['archetypes'][archetype] = run_e1(logs.response, Prober)
         print('E1 DONE')
         save_results(results)
-        results['f1']['archetypes'][archetype] = await run_e1(logs.plans, Prober)
+        results['f1']['archetypes'][archetype] = run_f1(logs.plans, Prober)
         print('E1 DONE')
         save_results(results)
-        
-        results['d1']['archetypes'][archetype] = run_d1(logs.reflections, Prober)
-        print('D1 DONE')
         await logs.client.stop()
     return results
 
