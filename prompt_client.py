@@ -43,12 +43,30 @@ class PromptClient:
             except asyncio.CancelledError:
                 pass
     
-    async def prompt(self, message, user_id, username, channel_id=1):
+    async def prompt(self, message, user_id, username, channel_id=1, log_file=None):
         self.server.update_user(user_id, username)
         event = (channel_id, user_id, username, message)
         self.server.add_message(channel_id, user_id, username, message)
+        
+        if log_file:
+            with open(log_file, 'a') as file:
+                print('q:', message)
+                file.write(f"q: [{message}]\n")
+                
         await self.agent.add_event(event)
+
+        attempt = 0
         message, _ = await self.agent.responses.get() 
+        while attempt < 5:
+            if message == "":
+                message, _ = await self.agent.responses.get() 
+                attempt += 1
+        
+        if log_file:
+            with open(log_file, 'a') as file:
+                print('a:', message)
+                file.write(f"a: [{message}]\n")
+                
         self.server.add_message(channel_id, user_id, username, message)
         return message
     

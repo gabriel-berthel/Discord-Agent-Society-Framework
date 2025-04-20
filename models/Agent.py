@@ -268,6 +268,8 @@ class Agent:
         
         if response:
             await self.responses.put((response, messages[0][0]))
+        else: 
+            await self.responses.put(("", messages[0][0]))
             
         for message in formatted_messages:
             await self.processed_messages.put(message)

@@ -154,7 +154,7 @@ def run_f1(plan_log, prober:Prober):
     print('Running F1')
     results = []
     for arguments, new_plan in plan_log:
-        former_plan, context, memories, _, personality = arguments
+        former_plan, context, memories, personality = arguments
         results.append(prober.score_plan_relevancy(former_plan, context, personality,'\n'.join(memories), new_plan))
 
     print('Evaluating F1')
@@ -167,7 +167,7 @@ async def run_a1(client: PromptClient, prober: Prober, personality):
     client.get_bot_context = force_ctx.__get__(client)
     questions = [q for q in prober.generate_content_questions(personality, 12)]
     print(f'Probing agent: {client.name}')
-    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1) for question in questions]
+    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1, f'a1_{client.name}_{client.agent.archetype}.txt') for question in questions]
     return Prober.evaluate(questions, responses)
 
 def chunk_list(lst, chunk_size):
@@ -181,7 +181,7 @@ async def run_a2(client: PromptClient, prober: Prober, dialogues):
         questions.extend(prober.generate_content_questions("\n".join(chunk), 4))
     
     print(f'Probing agent: {client.name}')
-    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1) for question in questions]
+    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1, f'a2_{client.name}_{client.agent.archetype}.txt') for question in questions]
     
     return Prober.evaluate(questions, responses)
 
@@ -193,6 +193,6 @@ async def run_a3(client: PromptClient, prober: Prober, reflections):
         questions.extend(prober.generate_content_questions("\n".join(chunk), 4))
     
     print(f'Probing agent: {client.name}')
-    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1) for question in questions]
+    responses = [await client.prompt(question['question'], 100, 'ADMIN', 1, f'a3_{client.name}_{client.agent.archetype}.txt') for question in questions]
     
     return Prober.evaluate(questions, responses)

@@ -29,26 +29,24 @@ class Prober:
                 "mirostat_tau": 7, 
                 "mirostat_eta": 0.1, 
                 "num_ctx": 8000,
-                "repeat_penalty": 1.3,
-                "presence_penalty": 1.4,
-                "frequency_penalty": 0.2,
+                "repeat_penalty": 1.2,
+                "presence_penalty": 1.5,
+                "frequency_penalty": 0.0,
                 "stop": ["<|endofjson|>"]
             }
         )
 
         answer = response['response']
 
-        attemps = 0
-        while attemps < 10:
+        while True:
             try:
                 questions = json.loads(answer) 
                 for q in questions.values():
                     if not all(field in q for field in required_fields):
-                        print(questions, prompt, system)
+                        print(questions)
                         raise ValueError('Missing required fields in question.')
                 return list(questions.values())
             except Exception as e:
-                attemps += 1
                 print('Error while parsi<ng! Retrying:', e)
 
     @staticmethod
@@ -84,11 +82,12 @@ class Prober:
           "q2": <Multiple>,
           ...
           "q{num_questions}": <Binary>
-            
         }}
         
+        Fields should **ONLY** be "type", "question", "correct_answer" and "choices"
         """
         
+        print('Gnerating responses')
         prompt = f"Format your response as a valid JSON. You should make the question ONLY about the following document Make sure to generate {num_questions} as asked and not more. Document:\n{content}"
         while True:
             try: 
@@ -105,7 +104,8 @@ class Prober:
         for i, q in enumerate(questions):
             expected_answer = q['correct_answer']
             system_answer = responses[i] if i < len(responses) else ""
-    
+
+            print('Generating aligmentment.')
             scores = Prober.score_answer_alignment(q.get("question", ""), expected_answer, system_answer)[0]     
             binary_votes = [
                 scores["flexible_binary_score"],
@@ -161,7 +161,7 @@ class Prober:
     def evaluate_scales(score_list):
         total_scores = {}
         num_items = len(score_list)
-
+        print('Evaluating scale', score_list)
         for scores in score_list:
             for key, value in scores.items():
                 if key not in total_scores:
@@ -282,17 +282,36 @@ class Prober:
         You are a strict JSON-only evaluator.
 
         Task:
-        Determine whether the system_answer *is the expected answer*, under three levels of strictness.
+        Evaluate whether the `system_answer` matches the `expected_answer` under three levels of strictness.
 
-        Scoring:
-        - "flexible_binary_score" (0 or 1): Give 1 if the system answer implies or conveys the expected meaning, even if informally, humorously, or indirectly.
-        - "neutral_binary_score" (0 or 1): Give 1 only if the system answer clearly communicates the expected answer with minimal ambiguity.
-        - "conservative_binary_score" (0 or 1): Give 1 only if the system answer *exactly* matches the expected answer's meaning and tone, and is phrased clearly, directly, and literally.
-        
+        Scoring Criteria:
+
+        - flexible_binary_score (0 or 1):
+        Assign 1 if the `system_answer` is sufficiently equivalent to the `expected_answer`,
+        allowing for minor variations in phrasing or structure.
+        Focus is on overall meaning, not exact wording.
+
+        - neutral_binary_score (0 or 1):
+        Assign 1 if the `system_answer` conveys the intended meaning of the `expected_answer`
+        with minimal ambiguity. The answer should be clear and understandable,
+        without requiring subjective interpretation.
+
+        - conservative_binary_score (0 or 1):
+        Assign 1 only if the `system_answer` is clearly and unambiguously equivalent to the `expected_answer`.
+        This is a strict match in meaning, structure, and clarity—no room for uncertainty.
+
         Also return:
-        - "detailed_score" (0.0 to 1.0): Reflects how well the system answer expresses the expected answer — accounting for completeness, clarity, and fidelity.
 
-        Format:
+        - detailed_score (0.0 to 1.0):
+        A fine-grained score that reflects how well the `system_answer` expresses the `expected_answer`.
+        1.0 means fully aligned, 0.0 means completely unrelated.
+        Intermediate values indicate partial correctness.
+
+        Important:
+        Do not consider verbosity. Longer or shorter answers should not affect scoring.
+        Focus only on content accuracy and semantic equivalence.
+
+                Format:
         {
             "alignment_scores": {
                 "flexible_binary_score": 0 or 1,

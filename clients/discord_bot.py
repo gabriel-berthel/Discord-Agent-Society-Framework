@@ -20,7 +20,8 @@ def run(agent_conf, archetype):
                 or await bot.rest.fetch_channel(channel_id)
             )
             
-            await channel.send(message)
+            if message != "":
+                await channel.send(message)
             
             agent.responses.task_done()
 

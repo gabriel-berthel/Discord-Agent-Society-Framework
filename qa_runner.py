@@ -19,7 +19,8 @@ def load_logs(path):
         return SimpleNamespace(**obj)
 
 def load_qa_bench_data():
-    archetypes = ["nerd", "peacekeeper", "chameleon", "troll"]
+    archetypes = ["debunker", "nerd", "peacekeeper", "chameleon", "troll"]
+
     logs = SimpleNamespace()
 
     with open('./qa_bench/qa_bench_histo.pkl', 'rb') as f:
@@ -76,9 +77,25 @@ async def run_benchmarks(archetype_logs):
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
         print('Working on', archetype)
         await logs.client.start()
-        results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
-        print('A1 DONE')
+        
+        if archetype in ["troll"]:
+            print('Starting')
+            results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
+            print('A1 DONE')
+            results['a2']['archetypes'][archetype] = await run_a2(logs.client, Prober, logs.historic)
+            print('A2 DONE')
+            results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
+            print('A3 DONE')
+        
+        if archetype == 'neutri':
+            results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
+            print('A3 DONE')
+        
         save_results(results)
+        
+    
+        
+        """
         results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)
         print('B1 DONE')
         save_results(results)
@@ -91,11 +108,8 @@ async def run_benchmarks(archetype_logs):
         results['d1']['archetypes'][archetype] = run_d1(logs.reflections, Prober)
         print('D1 DONE')
         save_results(results)
-        results['a2']['archetypes'][archetype] = await run_a2(logs.client, Prober, logs.historic)
-        save_results(results)
-        results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
-        print('A3 DONE')
-        save_results(results)
+        """
+        """
         results['e1']['archetypes'][archetype] = run_e1(logs.response, Prober)
         print('E1 DONE')
         save_results(results)
@@ -103,6 +117,7 @@ async def run_benchmarks(archetype_logs):
         print('E1 DONE')
         save_results(results)
         await logs.client.stop()
+        """
     return results
 
 def save_results(results):

@@ -3,13 +3,13 @@
         "description": "Self-knowledge Recall,",
         "archetypes": {
             "nerd": {
-                "total_score": 7,
-                "total_detailed_score": 9.049999999999999,
+                "total_score": 8,
+                "total_detailed_score": 7.8999999999999995,
                 "max_score": 12
             },
             "peacekeeper": {
-                "total_score": 6,
-                "total_detailed_score": 6.95,
+                "total_score": 9,
+                "total_detailed_score": 9.0,
                 "max_score": 12
             },
             "chameleon": {
@@ -21,11 +21,6 @@
                 "total_score": 6,
                 "total_detailed_score": 8.799999999999999,
                 "max_score": 12
-            },
-            "debunker": {
-                "total_score": 10,
-                "total_detailed_score": 8.399999999999999,
-                "max_score": 12
             }
         }
     },
@@ -33,13 +28,13 @@
         "description": "Dialogue Recall",
         "archetypes": {
             "nerd": {
-                "total_score": 12,
-                "total_detailed_score": 21.299999999999994,
+                "total_score": 13,
+                "total_detailed_score": 15.850000000000001,
                 "max_score": 32
             },
             "peacekeeper": {
-                "total_score": 10,
-                "total_detailed_score": 15.67,
+                "total_score": 14,
+                "total_detailed_score": 18.500000000000004,
                 "max_score": 32
             },
             "chameleon": {
@@ -51,11 +46,6 @@
                 "total_score": 13,
                 "total_detailed_score": 15.099999999999998,
                 "max_score": 32
-            },
-            "debunker": {
-                "total_score": 12,
-                "total_detailed_score": 17.85,
-                "max_score": 32
             }
         }
     },
@@ -63,13 +53,13 @@
         "description": "Reflection Recall",
         "archetypes": {
             "nerd": {
-                "total_score": 13,
-                "total_detailed_score": 15.649999999999999,
+                "total_score": 12,
+                "total_detailed_score": 14.900000000000004,
                 "max_score": 24
             },
             "peacekeeper": {
-                "total_score": 12,
-                "total_detailed_score": 14.8,
+                "total_score": 13,
+                "total_detailed_score": 15.8,
                 "max_score": 24
             },
             "chameleon": {
@@ -80,11 +70,6 @@
             "troll": {
                 "total_score": 11,
                 "total_detailed_score": 11.299999999999999,
-                "max_score": 24
-            },
-            "debunker": {
-                "total_score": 13,
-                "total_detailed_score": 17.150000000000006,
                 "max_score": 24
             }
         }
