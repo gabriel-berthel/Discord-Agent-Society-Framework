@@ -11,6 +11,8 @@ config:
   random_ignore: False
   impulses: False
   save_logs: False
-  persitance_prefix: 'promptbench'
+  persistance_prefix: 'promptbench'
   persistance_path: 'output/memories'
   log_path: 'output/logs'
+  log_level: 40
+

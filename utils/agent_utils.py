@@ -2,9 +2,9 @@ import yaml
 import sys
 from types import SimpleNamespace
 import re
-import json
 
 class DictToAttribute(SimpleNamespace):
+    """SimpleNameSpace + get method compability :D"""
     def get(self, key, default=None):
         return getattr(self, key, default)
 
@@ -17,21 +17,23 @@ def load_yaml(file_path):
     except yaml.YAMLError as e:
         print(f"Error loading YAML file '{file_path}': {e}", file=sys.stderr)
         sys.exit(1)
+        
+def clean_module_output(text: str) -> str:
+    """
+    Cleans and formats the input text to remove unnecessary whitespace and ensure proper punctuation spacing.
 
-def format_llm_prompt(role, content):
-    return {'role': role, 'content': content}
+    This function performs the following operations:
+    1. Replaces all newlines (`\n`) with a space.
+    2. Collapses multiple consecutive spaces into a single space.
+    3. Ensures that punctuation marks (.,!?;:) are not preceded by spaces.
 
-def format_llm_prompts(messages):
-    return [format_llm_prompt(role, content) for role, content in messages]
+    Args:
+        text (str): The input text that needs to be cleaned.
 
-def list_to_text(lst):
-
-    if len(lst) > 0:
-        return "- " + lst[0] + "\n- ".join(lst[1:])
-    else:
-        return "- This section is empty."
-
-def clean_response(text: str) -> str:
+    Returns:
+        str: The cleaned and formatted text.
+    """
+    
     text = text.replace('\n', ' ')
     text = re.sub(r'\s+', ' ', text)
     text = re.sub(r'\s+([.,!?;:])', r'\1', text)

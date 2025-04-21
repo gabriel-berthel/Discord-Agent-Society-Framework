@@ -4,7 +4,7 @@ import promptbench as pb
 import json
 from datetime import datetime
 from tqdm import tqdm
-import prompt_client
+import clients.prompt_client as prompt_client
 import asyncio
 import ollama
 import random

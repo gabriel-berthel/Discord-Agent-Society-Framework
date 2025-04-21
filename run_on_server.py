@@ -8,12 +8,8 @@ import logging
 from sentence_transformers import SentenceTransformer
 
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("transformers").setLevel(logging.ERROR)
-logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
-logging.getLogger("tqdm").setLevel(logging.ERROR) 
-logging.getLogger("httpx").setLevel(logging.ERROR) 
-logging.getLogger("modules.WebBrowser").setLevel(logging.ERROR)
-logger = logging.getLogger("models.Agent").setLevel(logging.INFO)
+
+SERVER_CONFIG = 'configs/discord_server.yaml'
 
 # Linux optimisations for asyncio.
 if os.name != "nt":
@@ -21,7 +17,6 @@ if os.name != "nt":
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 if __name__ == "__main__":
-    print("hi")
     parser = argparse.ArgumentParser(description="Load .env and YAML configuration files for an agent.")
     parser.add_argument("env", type=str, help="Path to the agent config folder")
     
@@ -33,4 +28,4 @@ if __name__ == "__main__":
 
     load_dotenv(args.env)
 
-    discord_client.run('configs/discord_server.yaml', os.getenv('ARCHETYPE'))
+    discord_client.run(SERVER_CONFIG, os.getenv('ARCHETYPE'))

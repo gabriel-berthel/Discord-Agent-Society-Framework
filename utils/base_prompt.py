@@ -1,10 +1,8 @@
-import yaml 
-import os 
-from typing import Dict, Any
-from utils.utils import load_yaml
 
-def generate_agent_prompt(archetype_name: str, archetype_data: Dict[str, Any]):
-    """ Generate a personality prompt based on an archetype's data """
+from typing import Dict, Any
+
+def generate_agent_prompt(archetype_name: str, archetype_data: Dict[str, Any]):  
+    """ Generate agent base prompt based on an archetype's data """
     name = archetype_data.get('name', archetype_name.capitalize())
     age = archetype_data.get('age', 'Unknown')
     job = archetype_data.get('job', 'Unknown job')
@@ -18,7 +16,6 @@ def generate_agent_prompt(archetype_name: str, archetype_data: Dict[str, Any]):
     comm_style = archetype_data.get('communication_style', {})
     tone = ", ".join(comm_style.get('tone', []))
     motivation = ", ".join(comm_style.get('motivation', []))
-    guidelines = "\n- " + "\n- ".join(comm_style.get('interaction_guidelines', []))
 
     # format profile
     profile = archetype_data.get('psychological_profile', {})
@@ -53,12 +50,3 @@ No filter, no rules! Just be that {archetype_name.capitalize()}, do not hold bac
 """
 
     return prompt
-
-
-def main():
-    yaml_path = "archetypes.yaml"
-    archetypes = load_yaml(file_path=yaml_path)
-    print(generate_agent_prompt("trouble_maker", archetypes["trouble_maker"]))
-
-if __name__=="__main__":
-    main()

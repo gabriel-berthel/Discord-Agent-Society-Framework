@@ -1,5 +1,5 @@
 config:
-  response_delay: 1
+  response_delay: 5
   max_random_response_delay: 0
   plan_interval: 120 # -1 = deactivated
   memories: True # -1 = deactivated
@@ -10,11 +10,11 @@ config:
   sequential_mode: True
   random_ignore: False
   impulses: False
-  save_logs: True
-  persistance_prefix: 'qa_bench'
-  persistance_path: 'output/qa_bench/memories'
-  log_path: 'output/qa_bench/logs'
-  log_level: 40
+  save_logs: False
+  persistance_prefix: 'local'
+  persistance_path: 'output/local/memories'
+  log_path: 'output/local/logs'
+  log_level: 50
 
 # hermes3:8b
 # gemma

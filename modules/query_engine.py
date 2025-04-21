@@ -1,6 +1,6 @@
 import ollama
 import re
-from utils.utils import *
+from utils.agent_utils import *
 
 OPTIONS = {
     "mirostat": 2,
@@ -31,10 +31,29 @@ Here is the Discord conversation you need to write queries about:
 """
 
 class QueryEngine():
+    """
+    QueryEngine class generates natural language queries based on Discord messages and user context.
+
+    This class uses a language model to produce context-aware queries that help retrieve relevant 
+    information from a user's notebook or diary, formatted in a natural human-like way.
+    
+    Context Queries (used in planning refinement) are purely neutral, 
+    while response (used to forge response) queries inject agent related information into the prompt.
+    """
+
     def __init__(self, model):
         self.model = model
 
     async def context_query(self, messages):
+        """
+        Generates queries based on a list of Discord messages only.
+
+        Args:
+            messages (list): A list of message strings from a conversation.
+
+        Returns:
+            list: A list of cleaned query strings.
+        """
         if messages:
             
             msgs = '\n'.join(messages)
@@ -50,6 +69,18 @@ class QueryEngine():
         return []
 
     async def response_queries(self, plan, context, personality, messages=['No message at the moment.']):
+        """
+        Generates queries using current plan, user context, and personality traits.
+
+        Args:
+            plan (str): The current plan or objective.
+            context (str): Relevant notebook or diary context.
+            personality (str): Description of the assistant's personality.
+            messages (list, optional): Discord messages. Defaults to a placeholder.
+
+        Returns:
+            list: A list of cleaned query strings.
+        """
         msgs = '\n'.join(messages)
         
         system_instruction = f"""
@@ -77,6 +108,16 @@ Here is the context from your notebook or diary:
         return self.split_queries(response['response'])
     
     def split_queries(self, txt):
+        """
+        Splits raw model output into individual, cleaned queries.
+
+        Args:
+            txt (str): Raw response text containing multiple queries.
+
+        Returns:
+            list: A list of parsed and cleaned queries.
+        """
+        
         queries = re.findall(r'Query:\s*(.+?)(?=\nQuery:|\Z)', txt, flags=re.DOTALL)
         return [
             re.sub(r'\s+', ' ', re.sub(r'[^\w\s?]', '', q.strip()))

@@ -8,13 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv('agent.env')
 
-logging.basicConfig(level=logging.INFO)
-logging.getLogger("transformers").setLevel(logging.ERROR)
-logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
-logging.getLogger("tqdm").setLevel(logging.ERROR) 
-logging.getLogger("httpx").setLevel(logging.ERROR) 
-logging.getLogger("modules.WebBrowser").setLevel(logging.ERROR) 
-logging.disable(logging.INFO)
+logger = logging.getLogger(__name__)
 
 class PromptClient:
     def __init__(self, agent_conf, archetype, name, id, server):
@@ -24,26 +18,31 @@ class PromptClient:
         self.agent = Agent(id, agent_conf, server, archetype)
         self.tasks = []
         self.server.update_user(id, self.agent.name)
-        
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Initialized with archetype '{archetype}', ID: {id}")
+
     async def start(self):
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Starting agent routines.")
         self.tasks = [
             asyncio.create_task(self.agent.respond_routine()),
             asyncio.create_task(self.agent.memory_routine()),
             asyncio.create_task(self.agent.plan_routine())
         ]
-        
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Agent routines started.")
+
     async def stop(self):
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Stopping agent and cancelling tasks.")
         self.agent.stop()
         for task in self.tasks:
             task.cancel()
         for task in self.tasks:
             try:
                 await task
-                self.agent.stop()
+                logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Task completed cleanly.")
             except asyncio.CancelledError:
-                pass
-    
+                logger.warning(f"Agent-Client: [key=PromptClient] | [{self.name}] Task cancellation was not clean.")
+
     async def prompt(self, message, user_id, username, channel_id=1, log_file=None):
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Prompting with message: '{message}'")
         self.server.update_user(user_id, username)
         event = (channel_id, user_id, username, message)
         self.server.add_message(channel_id, user_id, username, message)
@@ -52,37 +51,43 @@ class PromptClient:
             with open(log_file, 'a') as file:
                 print('q:', message)
                 file.write(f"q: [{message}]\n")
-                
+        
         await self.agent.add_event(event)
 
         attempt = 0
-        message, _ = await self.agent.responses.get() 
-        
+        message, _ = await self.agent.responses.get()
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
+
         while attempt < 5 and message == "":
-            if message == "":
-                message, _ = await self.agent.responses.get() 
-                attempt += 1
-            
+            logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Empty response attempt {attempt + 1}, retrying...")
+            message, _ = await self.agent.responses.get() 
+            attempt += 1
+
         if log_file:
             with open(log_file, 'a') as file:
                 print('a:', message)
                 file.write(f"a: [{message}]\n")
-                
+        
         self.server.add_message(channel_id, user_id, username, message)
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Final response: '{message}'")
         return message
-    
+
     async def multi_prompt(self, events):
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Executing multi_prompt with {len(events)} events.")
         for message, user_id, username, channel_id in events:
             self.server.update_user(user_id, username)
             event = (channel_id, user_id, username, message)
             await self.agent.add_event(event)
+            logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Event added: [{username}] -> '{message}'")
             
         message, _ = await self.agent.responses.get() 
         self.server.add_message(channel_id, user_id, username, message)
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Multi-prompt response: '{message}'")
         return message
-    
+
     @staticmethod
     def build_clients(config_file='benchmark_config.yaml'):
+        logger.info("Agent-Client: [key=PromptClient] | Building prompt clients.")
         server = DiscordServer(1, 'Benchmarking')
         server.add_channel(1, 'General')
         
@@ -99,17 +104,20 @@ class PromptClient:
             for role, name, client_id in roles
         }
 
-        return clients # dict -> archetype: client
+        logger.info("Agent-Client: [key=PromptClient] | Prompt clients built successfully.")
+        return clients
 
     @staticmethod
-    async def run_simulation(duration: float, print_replies, config_file, clients=None):
+    async def run_simulation(duration: float, print_replies, config_file, initial_message="Hi! What's up gamers", clients=None):
+        logger.info(f"Agent-Client: [key=PromptClient] | Running simulation for {duration} seconds.")
         clients = clients if clients else PromptClient.build_clients(config_file)
 
-        await asyncio.gather(*(client.start() for client in clients.values()))
-
+        for client in clients.values():
+            await client.start()
+        
+        logger.info("Agent-Client: [key=PromptClient] | All clients started.")
         roles = list(clients.keys())
         start_time = time.time()
-        initial_message = "Hi! What's up gamers"
         historic = [initial_message]
 
         current_archetype = random.choice(roles)
@@ -123,6 +131,8 @@ class PromptClient:
         agent_histories = {role: [] for role in roles}
 
         while time.time() - start_time < duration:
+            logger.info(f"Agent-Client: [key=PromptClient] | [{current_client.name}] Broadcasting message to next agent.")
+
             for role in roles:
                 if role != current_archetype:
                     agent_histories[role].append((message, current_client.id, current_client.name, 1))
@@ -131,6 +141,8 @@ class PromptClient:
             next_client = clients[next_archetype]
 
             context_events = agent_histories[next_archetype]
+            logger.info(f"Agent-Client: [key=PromptClient] | [{next_client.name}] Responding to message from previous agent.")
+
             response = await next_client.multi_prompt(context_events)
 
             msg = f"[{next_client.name}] {response}"
@@ -138,10 +150,10 @@ class PromptClient:
                 print(msg)
 
             historic.append(msg)
-
             agent_histories[next_archetype] = []
             current_archetype = next_archetype
             current_client = next_client
             message = response
 
+        logger.info("Agent-Client: [key=PromptClient] | Simulation completed.")
         return clients, historic

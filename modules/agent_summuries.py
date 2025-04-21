@@ -1,5 +1,5 @@
 import ollama
-from utils.utils import *
+from utils.agent_utils import *
 
 neutral_base = """
 You are a student summarizing a Discord conversation. 
@@ -55,10 +55,27 @@ BIAISED = {
 }
 
 class Contextualizer():
+    """
+    Contextualizer class generates summaries and reflections from Discord conversations.
+
+    It provides two modes:
+    - A neutral, objective summary using a student-like tone (so agents are not goldfishes)
+    - Reflections, taking agent personality biaises into account (memories)
+    """
     def __init__(self, model):
         self.model = model
 
     async def neutral_context(self, messages, bot_context):
+        """
+        Generates a neutral, factual summary of a Discord conversation.
+
+        Args:
+            messages (list): List of message strings from the conversation.
+            bot_context (str): Contextual system prompt for the assistant.
+
+        Returns:
+            str: A concise summary paragraph written in a neutral tone.
+        """
         msgs = '\n'.join([f"{msg}" for msg in messages])
         
         system = f"""
@@ -79,11 +96,22 @@ class Contextualizer():
                 prompt=prompt,
                 options=NEUTRAL
             )
-            return clean_response(response['response'])
+            return clean_module_output(response['response'])
         
         return "Reading the discord conversation, I can observe that there is no messages at the moment. I should consider sparking a new topic."
         
     async def reflection(self, messages, agent_base_prompt):
+        """
+        Produces a reflective, personal note based on a Discord conversation.
+
+        Args:
+            messages (list): List of message strings from the conversation.
+            agent_base_prompt (str): Assistant's personality or base system prompt.
+
+        Returns:
+            str: A personal reflection paragraph written in a casual, introspective tone.
+        """
+        
         msgs = '\n'.join([f"{msg}" for msg in messages])
         
         system = f"""
@@ -105,4 +133,4 @@ class Contextualizer():
             options=BIAISED
         )
         
-        return clean_response(response['response'])
+        return clean_module_output(response['response'])

@@ -1,5 +1,5 @@
 import ollama
-from utils.utils import *
+from utils.agent_utils import *
 
 planner_base = """
 Alright, imagine you’re jotting down some thoughts in your personal notebook, but you’re being real with yourself. 
@@ -28,10 +28,31 @@ OPTIONS = {
 }
 
 class Planner:
+    """
+    Planner class is used to generate reflections and refine plans based on context, memories, and previous decisions.
+
+    Methods:
+    - refine_plan: Refines and generates a new plan based on the provided context, memories, channel context, and prior plans.
+    """
+
     def __init__(self, model):
         self.model = model
 
     async def refine_plan(self, plan, context, memories, channel_context, argent_base_prompt):
+        """
+        Refines and generates a new plan based on current context, memories, previous decisions, and channel context.
+
+        Args:
+            plan (str): The initial plan or goal to be refined.
+            context (str): The current context relevant to the plan.
+            memories (list): A list of relevant memories influencing the current plan.
+            channel_context (str): Specific context related to the communication channel.
+            argent_base_prompt (str): The personality description or agent base prompt.
+
+        Returns:
+            str: A refined plan based on reflection and context.
+        """
+        
         system_instruction = f"""
         {argent_base_prompt}
         
@@ -61,4 +82,4 @@ class Planner:
             options=OPTIONS
         )
 
-        return clean_response(response['response'])
+        return clean_module_output(response['response'])

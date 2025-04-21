@@ -1,52 +1,108 @@
-import asyncio
-import logging
+from asyncio import Queue, sleep
 from datetime import datetime
-from utils.utils import *
-import modules.agent_memories as db
+from utils.agent_utils import *
 import random
 import time
 from collections import deque
-from enum import Enum, auto
 from modules.agent_summuries import Contextualizer
+import modules.agent_memories as db
 from modules.query_engine import QueryEngine
 from modules.agent_planner import Planner
 from modules.agent_response_handler import Responder
-import utils.utils as utils
-from utils.prompt_generator import generate_agent_prompt
-import math
+from utils.base_prompt import generate_agent_prompt
 from models.agent_logger import AgentLogger
 from models.agent_state import AgentState
-from models.archetype import ArchetypeManager
 from models.discord_server import DiscordServer
+import os
+import logging
+
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+logging.getLogger("tqdm").setLevel(logging.ERROR) 
+logging.getLogger("httpx").setLevel(logging.ERROR) 
 
 class Agent:
-    def __init__(self, user_id, agent_conf, server, archetype):
+    """
+    Represents an autonomous agent that processes and responds to user messages asynchronously. It integrates with various modules to:
+        - Generate humanlike replies (Responder)
+        - Forge Relevant Meories (Contextualizer -> reflection)
+        - Summurize context for greater attention (Contextualizer -> Neutral Context)
+        - Continuously refine objectives and plans (Planner)
+        - Retrive relevant memories (Memories + Query Engine)
+
+    Contextual handling is supported through the `DiscordServer` abstraction, which maps IDs to readable names, switches channels, and caches recent messages. 
+    Context summaries prevent loss of short-term context and reduce reliance on memory modules in early stages, while allowing the agent to focus on the message to process.
+
+    Flow of operations ---
+
+    Message flow is managed through queues:
+        - `event_queue`: Consumed events from the monitored Discord channel.
+        - `responses`: Output responses ready to be consumed
+        - `processed_messages`: Stores messages the agent has read/handled.
+
+    This Agent provides two processing modes for handling message streams:
+        - Sequential Mode:
+            Processes messages in a strict first-in, first-out (FIFO) order, producing deterministic
+            responses. Suitable for rule-based or prompt-driven applications where predictability is key.
+
+        - Non-Sequential Mode:
+            Introduces random behavior in message handling to simulate human-like interactions.
+            Includes skipping messages, ignoring inputs, or sending spontaneous messages. 
+            It allows agent to behave unexpectedly and discover new "interest"
+
+    Methods:
+        - _read_only(event_queue): Transfers events from the `event_queue` to the `processed_messages` queue 
+            without triggering the agent’s response mechanism.
+
+        - _ignore(event_queue): Retrieves and discards a single event from the `event_queue`. No processing or response occurs.
+
+        - _process_batch(event_queue):
+        - _process_messages(event_queue):
+            Processes one or more events from the `event_queue`, passing them through the full response
+            pipeline. Results in updates to the `processed_messages` queue AND the `response_queue`
+
+    Planning, memory, and responses operate asynchronously. 
+    The `memory_count` and `processed_messages` queue regulate reflection/planning frequency.
+        
+    Some general considerations ---
+    
+    Archetypes must be defined in `archetypes.yaml` following the same structure. 
+    Please refer to config documentations for further information about to be managed externally.
+    """
+
+    def __init__(self, user_id, agent_conf, server, archetype, log_level=logging.INFO):
         self.user_id: int = int(user_id)
         self.archetype: str = archetype
         self.agent_conf: str = agent_conf
         self.server: DiscordServer = server
         
         # .yaml config related attributes
-        self.config = utils.DictToAttribute(**utils.load_yaml(self.agent_conf)['config'])
+        self.config = DictToAttribute(**load_yaml(self.agent_conf)['config'])
         self.monitoring_channel: int = self.config.channel_id
-        self.persistance_prefix: str = self.config.persitance_prefix 
-        self.persistance_id: str = f"{self.persistance_prefix}_{self.archetype}" if self.persitance_prefix else ""
+        self.persistance_prefix: str = self.config.persistance_prefix 
+        self.log_path: str = self.config.log_path 
+        self.persistance_path = self.config.persistance_path
+        self.persistance_id: str = f"{self.persistance_prefix}_{self.archetype}" if self.persistance_prefix else ""
         self.plan: str = self.config.base_plan or "Responding to every message."
         self.sequential: bool = self.config.sequential_mode    
-            
-        # Logger
-        self.logger = AgentLogger(self.persistance_id, self.config.log_path, self.config.save_logs)
-        self.logger.logger.info(f"Agent-Info: [key={self.name}] | Agent Config loaded")
+        
+        # creating necessary folders
+        os.makedirs(self.persistance_path, exist_ok=True)
+        os.makedirs(self.log_path, exist_ok=True)
         
         # archetype.yaml related attributes
-        self.archetype_conf =  utils.DictToAttribute(**utils.load_yaml('archetypes.yaml')['agent_archetypes'][self.archetype])
+        self.archetype_conf =  DictToAttribute(**load_yaml('archetypes.yaml')['agent_archetypes'][self.archetype])
         self.personnality_prompt: str = generate_agent_prompt(self.archetype, self.archetype_conf)
         self.name:str = self.archetype_conf.name
         
+        # Logger
+        self.logger = AgentLogger(self.persistance_id, self.config.log_path, self.config.log_level)
+        self.logger.logger.info(f"Agent-Info: [key={self.name}] | Agent Configs loaded")
+        
         # Agent Queues
-        self.responses: asyncio.Queue = asyncio.Queue()
-        self.processed_messages: asyncio.Queue  = asyncio.Queue()
-        self.event_queue: asyncio.Queue  = asyncio.Queue()
+        self.responses: Queue = Queue()
+        self.processed_messages: Queue  = Queue()
+        self.event_queue: Queue  = Queue()
         self.last_messages: deque = deque(maxlen=5)
         self.logger.logger.info(f"Agent-Info: [key={self.name}] | Queue created")
         
@@ -74,7 +130,12 @@ class Agent:
         self._running = False
 
     async def add_event(self, event) -> None:
-        """Add event to agent event queue"""
+        """
+        Adds an event to the agent's queue if:
+        - The agent is not the message author
+        - The message is in the monitored channel
+        - The event queue is not locked
+        """
         channel_id, author_id, _, _ = event
         
         # If queue is not locked, and agent is monitoring the channel
@@ -84,13 +145,13 @@ class Agent:
     # --- Module Helper ---
     
     def get_bot_context(self) -> str:
-        """Returns some information about what the bot is doing. Ie... time, name, channel being monitored."""
+        """Returns real-time context: agent name, timestamp, and currently monitored channel."""
         return f"Your name is {self.name}. It is {datetime.now():%Y-%m-%d %H:%M:%S}. You are currently on discord reading the channel {self.server.get_channel(self.monitoring_channel)['name']}"
     
     async def get_channel_context(self, channel_id, bot_context) -> str:
         """
-        Gets the deque from channel message queue and write a neutral summury about it.
-        This helps agents not acting like godfishes.
+        Summarizes recent messages in a channel to provide a contextual backdrop. 
+        Helps the agent retain short-term information without overloading the memory system.
         """
         msgs = [msg for msg in self.server.get_messages(channel_id).copy()]
         neutral_ctx = await self.contextualizer.neutral_context(msgs, bot_context)
@@ -99,8 +160,8 @@ class Agent:
 
     async def get_neutral_queries(self, channel_id) -> list[str]:
         """
-        Create queries later used to retrive memories. 
-        These queries are "neutral" as only the dialogues are passed. No plan, memories or base prompt.
+        Generates neutral search queries (dialogue-based only, no plan/personality input) for memory retrieval.
+        Used during planning to retrive the most context-aware memories.
         """
         msgs = [msg for msg in self.server.get_messages(channel_id).copy()]
         context_queries = await self.query_engine.context_query(msgs)
@@ -109,8 +170,8 @@ class Agent:
 
     async def get_memories(self, plan, context, messages) -> list[str]:
         """
-        Get memories from agent vector database. First Response Queries are retrived. As opposed to neutral queires, theses
-        are creating using personality prompt and plan. Then these queries are used to fetch documents in the agent memories.
+        Queries memory using personality, plan, and current context to retrieve relevant reflections.
+        Used during response generation to give agents consistent personalities.
         """
         queries = await self.query_engine.response_queries(plan, context, self.personnality_prompt, messages)
         self.logger.log_event('response_queries', (plan, context, self.personnality_prompt, messages), queries)
@@ -120,7 +181,8 @@ class Agent:
 
     async def get_response(self, plan, context, memories, messages, base_prompt) -> str:
         """
-        Prompt for a response from the response modules. These will be the final output visible by users.
+        Generates a user response. 
+        Combines current context, short-term memory, long-term memory, and personality info.
         """
         response = await self.responder.respond(plan, context, memories, messages, base_prompt, self.last_messages)
         self.logger.log_event('response', (plan, context, memories, messages, base_prompt), response)
@@ -129,7 +191,8 @@ class Agent:
 
     async def get_reflection(self, messages, personality_prompt) -> str:
         """
-        Prompt for a reflection, then stored in memories.
+        Generates a reflective summary based on recent messages.
+        Used to store meaningful insights into long-term memory & allow agent to evolve.
         """
         reflection = await self.contextualizer.reflection(messages, personality_prompt)
         self.logger.log_event('reflections', (messages, personality_prompt), reflection)
@@ -137,7 +200,7 @@ class Agent:
 
     async def get_plan(self, former_plan, context, unique_memories,channel_context, base_prompt) -> str:
         """
-        Prompt for a new plan, then stored in memory and passed to other modules.
+        Refines the agent's plan by incorporating new memories, context, and the personality prompt.
         """
         plan = await self.planner.refine_plan(former_plan, context, unique_memories,channel_context, base_prompt)
         self.logger.log_event('plans', (former_plan, context, unique_memories, base_prompt), plan)
@@ -145,9 +208,10 @@ class Agent:
 
     async def get_new_topic(self, plan, base_prompt) -> str:
         """
-        Prompt for a spontatnous message, without giving context. Given enough time, this allow agents to develop a diverse range of memories
-        instead of looping on the same subjects.
+        Generates a spontaneous discussion topic.
+        Used when idle to encourage diversity in conversation and memory creation.
         """
+
         return await self.responder.new_discussion(plan, base_prompt)
 
     
@@ -157,11 +221,12 @@ class Agent:
     
     async def respond_routine(self) -> None:
         """
-        If sequential mode, the event queue is ALWAYS emptied entirely (at time of the call).
-        This is used for benchmarking or more globally for the prompting client! Though it could work on servers,
-        this would lead the agent to respond as soon as availible.
-        
-        If not sequential mode, there's random at play to make agent more "human"
+        Main routine that controls agent response behavior.
+
+        - **Sequential Mode**: Processes all queued events deterministically and continuously.
+        ->> Channel switch must be handled externally.
+        - **Non-Sequential Mode**: Adds random elements (e.g., ignore, read-only, random responses) for more lifelike behavior.
+        ->> Also handles spontaneous topic initiation when idle, and supports switching between channels.
         """
        
         idle_threshold = 60*5
@@ -176,9 +241,9 @@ class Agent:
                 else:
                     self.state = AgentState.IDLE
             
-            await asyncio.sleep(self.config.response_delay)
-            await asyncio.sleep(random.uniform(0, self.config.max_random_response_delay))
-        
+                await sleep(self.config.response_delay)
+                await sleep(random.uniform(0, self.config.max_random_response_delay))
+            
         # Agent will behave more randomly
         # It's not always easy to keep track of what they're doing
         # But it's good as human are not predictable! sometime they answer, sometime they read but forget, sometime they ignore...
@@ -259,19 +324,16 @@ class Agent:
                 self.logger.logger.error(f"Agent-Routine: [key={self.name}] | Error with responder routine: {e}")
             
             # random delays to make agent more "human"
-            await asyncio.sleep(self.config.response_delay)
-            await asyncio.sleep(random.uniform(0, self.config.max_random_response_delay))
+            await sleep(self.config.response_delay)
+            await sleep(random.uniform(0, self.config.max_random_response_delay))
             
     async def _process_messages(self, messages) -> None:
         """
-        This methods process a list of message meaning:
-            - It will format them properly for downstream modules
-            - Retrieves every element needed to form a response
-            - Append response to agent response queue if needed
-            - Appends messages in agent processed message queues
-            
-        99% of the time this leads to a response from the agent tho, in rare occasion, the models outputs nothing.
-        In this case, we simply output an empty response that can later be filtered.
+        Processes a list of messages by:
+        - Formatting them for downstream modules
+        - Retrieving context and memory
+        - Generating and queuing a response (if applicable)
+        - Adding messages to the processed message queue
         """
         
         formatted_messages = [self.server.format_message(author_id, global_name, content) for _, author_id, global_name, content in messages]
@@ -290,10 +352,9 @@ class Agent:
 
     async def _process_batch(self, noelem:int=None) -> None:
         """
-        This methods calls _process_messages()! If noelem is defined, it will retrive the at most noelem elements from the event queue.
-        This is useful in the response routine as this allow to randomly select an amount of message to process, giving more change for random
-        ignore or the agent simply reading without responding. Though, it can be used to empty the batch entirely... as used in sequential mode.
-        
+        Retrieves up to `noelem` messages from the event queue and processes them.
+        If `noelem` is None, the entire queue is processed. It is used in both sequential & non-sequential mode.
+        Indeed, if only putting one message at a time and only continuing when consuming a response, the agent is essentially synchone.
         """
         
         q_size = self.event_queue.qsize()
@@ -310,10 +371,8 @@ class Agent:
             
     async def _read_only(self) -> None:
         """
-        As opposed to _process_batch, this will read the entire queue and put every message in processed queue.
-        No responder module is called. This allow agent to form memories from message without having to respond.
-        
-        This is useful to simulate human behavior but also swich channel, gracefully emptying the event queue.
+        Reads all messages from the event queue and stores them as processed without responding.
+        Useful for forming memories or during graceful transitions (e.g., channel switching) or simply make the agent more human.
         """
         current_size = self.event_queue.qsize()
         for _ in range(current_size):
@@ -324,7 +383,8 @@ class Agent:
 
     async def _ignore(self) -> None:
         """
-        This will ignore one message from the event queue. Apart from the context summury, agent will never process this one.
+        Ignores one message from the event queue. 
+        This message will not be reflected in context, memory, or response modules.
         """
         if not self.event_queue.empty():
             await self.event_queue.get()
@@ -335,10 +395,12 @@ class Agent:
     
     async def plan_routine(self) -> None:
         """
-        This methods works with the memory_count variable.
-        If plans are activated, plans are formed every 5 new memories. Modulo 6 as plans are added into memories.
+        Periodically evaluates and updates the agent's plan based on accumulated memory and context.
+
+        Triggered every 6 memory events (using modulo check). Updates are then stored in memory for future reference.
         """
         while self._running and self.config.plans:
+            await sleep(random.uniform(30, 120))
             try:
                 self.logger.logger.info(f"Agent-Routine: [key={self.name}] | Started plan routine")
                 if self.memory_count % 6 == 0:
@@ -359,15 +421,17 @@ class Agent:
             except Exception as e:
                 self.logger.logger.error(f"Agent-Routine: [key={self.name}] | Error with planning routine: {e}")
                 
-            await asyncio.sleep(30)
+            await sleep(30)
                 
     # ------- Memory Routine
 
     async def memory_routine(self) -> None:
         """
-        This methods works with the processed_message queue.
-        If memories (reflection) are activated, they are formed every 5 message processed.
-        _read_only() no makes more senses as it does not call the responder but put the message in the response queue.
+        Handles interaction with the processed_messages queue.
+
+        If memory (reflection) is enabled, a reflection is triggered every 5 messages processed.
+
+        Note: The _read_only() is given sense here as it will not trigger response, yet messages will be compacted into memories.
         """
         while self._running and self.config.memories:
             try:
@@ -384,4 +448,4 @@ class Agent:
             except Exception as e:
                 self.logger.logger.error(f"Agent-Routine: [key={self.name}] | Error with memory routine: {e}")
             
-            await asyncio.sleep(30)
+            await sleep(30)

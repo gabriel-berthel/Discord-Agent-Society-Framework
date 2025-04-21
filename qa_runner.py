@@ -2,14 +2,14 @@
 
 import warnings
 from types import SimpleNamespace
-from qa_tasks import *
-from modules.Memories import Memories
-from modules.Contextualizer import Contextualizer
+from benchmark.qa_tasks import *
+from modules.agent_memories import Memories
+from modules.agent_summuries import Contextualizer
 import pickle
-from utils.utils import *
-from utils.prompt_generator import generate_agent_prompt
-from utils.Prober import Prober
-from prompt_client import PromptClient
+from utils.agent_utils import *
+from utils.base_prompt import generate_agent_prompt
+from benchmark.agent_prober import Prober
+from clients.prompt_client import PromptClient
 import asyncio
 import os
 import shutil

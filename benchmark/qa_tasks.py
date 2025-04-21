@@ -1,8 +1,8 @@
 import numpy as np
-from utils.Prober import Prober
-from prompt_client import PromptClient
-from modules.Memories import Memories
-from modules.Contextualizer import Contextualizer
+from benchmark.agent_prober import Prober
+from clients.prompt_client import PromptClient
+from modules.agent_memories import Memories
+from modules.agent_summuries import Contextualizer
 from utils.qa_utils import *
 
 def run_b1(context_queries, memory_module: Memories):
