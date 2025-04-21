@@ -1,14 +1,7 @@
-from typing import Callable
 import re
+from typing import Callable
+
 import promptbench as pb
-import json
-from datetime import datetime
-from tqdm import tqdm
-import clients.prompt_client as prompt_client
-import asyncio
-import ollama
-import random
-from promptbench.prompts import task_oriented, method_oriented, role_oriented
 
 
 def get_projection_fn(task_name: str) -> Callable[[str], object]:
@@ -29,6 +22,7 @@ def get_projection_fn(task_name: str) -> Callable[[str], object]:
                 return 0
             else:
                 return -1
+
         return projection
 
     elif task_name == "cola":
@@ -47,6 +41,7 @@ def get_projection_fn(task_name: str) -> Callable[[str], object]:
             elif "contradict" in pred:
                 return "contradiction"
             return "invalid"
+
         return proj
 
     elif task_name in ["gsm8k", "chain_of_thought"]:
@@ -55,6 +50,7 @@ def get_projection_fn(task_name: str) -> Callable[[str], object]:
             if matches:
                 return float(matches[-1]) if '.' in matches[-1] else int(matches[-1])
             return None
+
         return projection
 
     elif task_name == "math":
@@ -64,6 +60,7 @@ def get_projection_fn(task_name: str) -> Callable[[str], object]:
                 return int(pred_clean) if pred_clean.isdigit() else float(pred_clean)
             except ValueError:
                 return None
+
         return projection
 
     elif task_name in ["numersense", "generated_knowledge"]:
@@ -72,6 +69,7 @@ def get_projection_fn(task_name: str) -> Callable[[str], object]:
             if matches:
                 return float(matches[0]) if '.' in matches[0] else int(matches[0])
             return None
+
         return projection
 
     elif task_name in ["iwslt", "un_multi", "translation"]:
@@ -81,6 +79,7 @@ def get_projection_fn(task_name: str) -> Callable[[str], object]:
         return lambda pred: pred.strip()
 
     return lambda pred: pred.strip()
+
 
 def build_tasks_from_prompts(source_dict, source_name, task_name_map, max_no_prompt=1):
     tasks = []

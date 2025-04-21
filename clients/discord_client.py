@@ -1,15 +1,18 @@
-import hikari
-import os
 import asyncio
+import logging
+import os
+
+import hikari
+
 import models.agent as ag
 from models.discord_server import DiscordServer
-import logging
 
 logger = logging.getLogger(__name__)
 
 agent = None
 server = None
 tasks = []
+
 
 def run(agent_conf, archetype):
     async def message_handler():
@@ -18,14 +21,14 @@ def run(agent_conf, archetype):
         Continuously checks the queue for messages and sends them to the channel.
         """
         logger.info("Message handler started")
-        
+
         while True:
             message, channel_id = await agent.responses.get()
             logger.debug(f"Agent-Client: [key=Discord] | Dequeued message for channel {channel_id}: {message}")
 
             channel = (
-                bot.cache.get_guild_channel(channel_id)
-                or await bot.rest.fetch_channel(channel_id)
+                    bot.cache.get_guild_channel(channel_id)
+                    or await bot.rest.fetch_channel(channel_id)
             )
             logger.debug(f"Agent-Client: [key=Discord] | Fetched channel object: {channel}")
 
@@ -33,20 +36,24 @@ def run(agent_conf, archetype):
                 await channel.send(message)
                 logger.info(f"Agent-Client: [key=Discord] | Sent message to channel {channel_id}")
             else:
-                logger.info(f"Agent-Client: [key=Discord] | Empty message received and skipped for channel {channel_id}")
-            
+                logger.info(
+                    f"Agent-Client: [key=Discord] | Empty message received and skipped for channel {channel_id}")
+
             agent.responses.task_done()
 
     bot = hikari.GatewayBot(
-        intents=hikari.Intents.ALL, 
+        intents=hikari.Intents.ALL,
         token=os.getenv("TOKEN")
     )
 
     @bot.listen(hikari.GuildMessageCreateEvent)
     async def on_message(event: hikari.GuildMessageCreateEvent):
-        logger.debug(f"Agent-Client: [key=Discord] | Received message from {event.message.author.username}: {event.message.content}")
-        await agent.add_event((event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content))
-        agent.server.add_message(event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content)
+        logger.debug(
+            f"Agent-Client: [key=Discord] | Received message from {event.message.author.username}: {event.message.content}")
+        await agent.add_event(
+            (event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content))
+        agent.server.add_message(event.channel_id, event.message.author.id, event.message.author.display_name,
+                                 event.message.content)
         logger.debug(f"Agent-Client: [key=Discord] | Message queued for processing and added to server representation")
 
     @bot.listen(hikari.MemberCreateEvent)
@@ -59,7 +66,7 @@ def run(agent_conf, archetype):
     @bot.listen(hikari.StoppingEvent)
     async def on_stopping(event: hikari.StoppingEvent) -> None:
         logger.info("Agent-Client: [key=Discord] | Bot is shutting down...")
-        agent.stop() 
+        agent.stop()
 
         for task in tasks:
             task.cancel()
@@ -86,21 +93,21 @@ def run(agent_conf, archetype):
             logger.info(f"Agent-Client: [key=Discord] | Channel deleted: {channel.name} ({channel.id})")
 
     @bot.listen(hikari.StartedEvent)
-    async def on_started(event):
+    async def on_started(event: hikari.StartedEvent):
         global agent, tasks, server
         logger.info("Agent-Client: [key=Discord] | Bot startup initiated")
 
-        server_id = os.getenv("SERVER_ID")
+        server_id = int(os.getenv("SERVER_ID"))
         uid = bot.get_me()
         guild = await bot.rest.fetch_guild(server_id)
         logger.info(f"CAgent-Client: [key=Discord] | onnected to server: {guild.name} ({server_id})")
 
         server = DiscordServer(server_id, guild.name)
-        
+
         async for member in bot.rest.fetch_members(server_id):
             server.update_user(member.id, member.display_name)
             logger.debug(f"Agent-Client: [key=Discord] | Loaded member: {member.display_name} ({member.id})")
-        
+
         for channel in await bot.rest.fetch_guild_channels(server_id):
             if isinstance(channel, hikari.TextableChannel):
                 server.add_channel(channel.id, channel.name)

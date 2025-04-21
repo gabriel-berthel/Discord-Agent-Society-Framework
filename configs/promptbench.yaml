@@ -1,18 +1,25 @@
 config:
-  response_delay: 1
-  max_random_response_delay: 0
-  plan_interval: -1 # -1 = deactivated
-  memories: True # -1 = deactivated
-  plans: True
-  model: "llama3:8b"
-  base_plan: ""
-  channel_id: 1
-  sequential_mode: True
-  random_ignore: False
-  impulses: False
-  save_logs: False
-  persistance_prefix: 'promptbench'
-  persistance_path: 'output/memories'
-  log_path: 'output/logs'
-  log_level: 40
+  # Routine Configuration
+  # response_delay -> Guaranteed sleep @ the end of each cycle
+  # max_random_response_delay -> random sleep between 0 & defined value
+  response_delay: 1 # -> Guaranteed sleep @ the end of each cycle
+  max_random_response_delay: 0 # -> random sleep between 0 & defined value
+  sequential_mode: True # If sequential, manual channel switch & all messages are processed ASAP
 
+  # Module toggles
+  memories: True # Enable / Disable creation of memories
+  plans: True # Enable / Disable creation of plans
+
+  # Persistance
+  persistance_prefix: 'promptbench' # prefix identifying agent memories. new prefix = new memories
+  persistance_path: 'output/memories' # path to agent memories (or where they should be stored)
+
+  # Agent
+  model: "llama3:8b" # Base model for the agent
+  base_plan: "I should respond to every single message." # Plan for the agent. Will change if plans = True
+  channel_id: 1 # Channel the agent is monitoring. Will change dynamically if sequential_mode is off and >= 2 channels
+
+  # Logs
+  save_logs: False # Save module outputs as pickles
+  log_path: 'output/logs' # where module output should be saved
+  log_level: 40 # log level to show from the console (only for the agent)

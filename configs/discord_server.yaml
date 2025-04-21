@@ -1,28 +1,25 @@
 config:
-  response_delay: 0
-  max_random_response_delay: 30
-  plan_interval: 360
-  memories: True
-  plans: True
-  model: "llama3:8b"
-  base_plan: ""
-  channel_id: 1362178271323623697
-  sequential_mode: False
-  random_ignore: False
-  impulses: True
-  save_logs: False
-  persistance_prefix: 'discord_server'
-  persistance_path: 'output/memories'
-  log_path: 'output/logs'
-  log_level: 40
+  # Routine Configuration
+  # response_delay -> Guaranteed sleep @ the end of each cycle
+  # max_random_response_delay -> random sleep between 0 & defined value
+  response_delay: 0 # -> Guaranteed sleep @ the end of each cycle
+  max_random_response_delay: 45 # -> random sleep between 0 & defined value
+  sequential_mode: False # If sequential, manual channel switch & all messages are processed ASAP
 
-  # DeepSeek-R1-Distill-Llama-8B
-  # Gemma 2
-  #LLMA 7B
-  # Mistral 7B
+  # Module toggles
+  memories: True # Enable / Disable creation of memories
+  plans: True # Enable / Disable creation of plans
 
-  # Deepseek 7B: ✅ Runs with quantized versions (Q4_0, Q4_K_M).
-  # Gemma 7B: Runs with 8-bit quantization (e.g., Q4_0).
+  # Persistance
+  persistance_prefix: 'discord_server' # prefix identifying agent memories. new prefix = new memories
+  persistance_path: 'output/memories' # path to agent memories (or where they should be stored)
 
-  # LLaMA 2 7B: ✅ Runs well with Q4_0 or Q5_1.
-  # Mistral 7B: ✅ Runs fine on 4060 with Q4_0 or Q5_1.
+  # Agent
+  model: "llama3:8b" # Base model for the agent
+  base_plan: "I should respond to every single message." # Plan for the agent. Will change if plans = True
+  channel_id: 1362178271323623697 # Channel the agent is monitoring. Will change dynamically if sequential_mode is off and >= 2 channels
+
+  # Logs
+  save_logs: False # Save module outputs as pickles
+  log_path: 'output/logs' # where module output should be saved
+  log_level: 40 # log level to show from the console (only for the agent)

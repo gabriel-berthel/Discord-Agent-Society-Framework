@@ -7,12 +7,12 @@ hikari
 numpy
 scikit-learn
 sentence-transformers
-uvloop; sys_platform != "win32"
 transformers 
 torch
-accelerate
 promptbench
 pytextrank
 spacy
-
-# python -m spacy download en_core_web_sm
+pytextrank
+PyYAML
+tqdm
+pandas

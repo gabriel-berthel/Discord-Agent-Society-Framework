@@ -1,6 +1,7 @@
-from dotenv import load_dotenv
 import json
+
 import ollama
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -50,6 +51,7 @@ Return:
 }
 """.strip()
 
+
 # --- Validator Class ---
 class Validator:
     @staticmethod
@@ -59,10 +61,13 @@ class Validator:
                 raise ValueError("Missing required fields in data item.")
         return list(data.values())
 
+
 # --- ModelInteraction Class ---
 class ModelInteraction:
     @staticmethod
-    def generate_model_response(system, prompt, required_fields=[]):
+    def generate_model_response(system, prompt, required_fields=None):
+        if required_fields is None:
+            required_fields = []
         response = ollama.generate(
             model='llama3:8b',
             system=system.strip(),
@@ -88,6 +93,7 @@ class ModelInteraction:
                 print("Retrying due to parse error:", e)
                 print("Raw Response:", response['response'])
 
+
 # --- QuestionGenerator Class ---
 class QuestionGenerator:
     @staticmethod
@@ -102,6 +108,7 @@ class QuestionGenerator:
             prompt,
             required_fields=['type', 'question', 'correct_answer', 'choices']
         )
+
 
 # --- AnswerEvaluator Class ---
 class AnswerEvaluator:
@@ -140,6 +147,7 @@ class AnswerEvaluator:
             ALIGNMENT_SYSTEM_PROMPT,
             prompt
         )
+
 
 # --- AxisEvaluator Class ---
 class AxisEvaluator:
@@ -185,6 +193,7 @@ class AxisEvaluator:
     @staticmethod
     def make_scaled_relevancy_poll(item_type: str, axes: dict, content_value: str):
         return AxisEvaluator.score_relevancy(item_type, axes, content_value)
+
 
 # --- Prober Class ---
 class Prober:

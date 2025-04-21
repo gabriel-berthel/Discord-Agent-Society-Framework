@@ -1,11 +1,11 @@
+import os
 import pickle
 import time
-import uuid
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
-import os
 from collections import deque
+
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 class Memories:
     """
@@ -21,7 +21,8 @@ class Memories:
         _metadatas (deque): A deque storing metadata associated with the documents.
     """
 
-    def __init__(self, collection_name, base_folder='memories', model_name='all-MiniLM-L6-v2', max_documents=500):
+    def __init__(self, collection_name: str, base_folder: str = 'memories', model_name: str = 'all-MiniLM-L6-v2',
+                 max_documents: int = 500):
         """
         Initializes the Memories class, setting up the necessary directories and loading previous data if available.
 
@@ -76,8 +77,7 @@ class Memories:
             timestamp (float, optional): The timestamp of when the document was added. If None, the current time is used.
         """
         embedding = self.model.encode(document, show_progress_bar=False)
-        metadatas = {"type": doc_type}
-        metadatas["timestamp"] = timestamp if timestamp else time.time()
+        metadatas = {"type": doc_type, "timestamp": timestamp if timestamp else time.time()}
 
         self._documents.append(document + '\n')
         self._embeddings.append(embedding)
@@ -128,5 +128,5 @@ class Memories:
             )
 
             results.extend([result['doc'] for result in sorted_docs[:n_results] if result['doc']])
-        
+
         return results

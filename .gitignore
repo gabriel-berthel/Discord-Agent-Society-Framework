@@ -42,10 +42,8 @@ venv.bak/
 .mypy_cache/
 
 # PyCharm
-.idea/
 
 # VS Code
-.vscode/
 
 # Eclipse
 .project

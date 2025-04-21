@@ -1,36 +1,11 @@
 import ollama
-import re
-from utils.agent_utils import *
 
-OPTIONS = {
-    "mirostat": 2,
-    "mirostat_tau": 7, 
-    "num_predict": 300,
-    "mirostat_eta": 0.1, 
-    "num_ctx": 4096,
-    "repeat_penalty": 1.3,
-    "presence_penalty": 1.4,
-    "frequency_penalty": 0.2,
-    "stop": ["<|endoftext|>"]
-}
+from configs.ollama_options import QUERIES_OPTIONS
+from utils.agent_utils import split_queries
+from utils.base_prompt import query_prompt_base
 
-QUERY_BASE = f"""
-Imagine you are a Discord user who can query your personal notebook and diary to help respond to messages. 
-It’s important to ask relevant queries that will assist in crafting appropriate responses. 
 
-When you query, make sure to identify important entities (such as names, dates, or topics) and align your responses with the plan or context you are working with. 
-You should ask your queries in natural human language like you are browsing the web, and I will provide relevant information from your notebook and diary.
-
-Please format your queries as follows:
-
-Query: Your first query here  
-Query: Your second query here  
-Query: Your third query here
-
-Here is the Discord conversation you need to write queries about:
-"""
-
-class QueryEngine():
+class QueryEngine:
     """
     QueryEngine class generates natural language queries based on Discord messages and user context.
 
@@ -55,20 +30,19 @@ class QueryEngine():
             list: A list of cleaned query strings.
         """
         if messages:
-            
             msgs = '\n'.join(messages)
 
             response = await ollama.AsyncClient().generate(
                 model=self.model,
-                system=QUERY_BASE,
+                system=query_prompt_base,
                 prompt=msgs,
-                options=OPTIONS
+                options=QUERIES_OPTIONS
             )
-            return self.split_queries(response['response'])
+            return split_queries(response['response'])
 
         return []
 
-    async def response_queries(self, plan, context, personality, messages=['No message at the moment.']):
+    async def response_queries(self, plan, context, personality, messages=None):
         """
         Generates queries using current plan, user context, and personality traits.
 
@@ -81,8 +55,11 @@ class QueryEngine():
         Returns:
             list: A list of cleaned query strings.
         """
+        if messages is None:
+            messages = ['No message at the moment.']
+
         msgs = '\n'.join(messages)
-        
+
         system_instruction = f"""
 Your personality is as follows:
 {personality}
@@ -95,31 +72,14 @@ Here is the context from your notebook or diary:
 
 ---
 
-{QUERY_BASE}
+{query_prompt_base}
 """
-        
+
         response = await ollama.AsyncClient().generate(
             model=self.model,
             system=system_instruction,
             prompt=msgs,
-            options=OPTIONS
+            options=QUERIES_OPTIONS
         )
-        
-        return self.split_queries(response['response'])
-    
-    def split_queries(self, txt):
-        """
-        Splits raw model output into individual, cleaned queries.
 
-        Args:
-            txt (str): Raw response text containing multiple queries.
-
-        Returns:
-            list: A list of parsed and cleaned queries.
-        """
-        
-        queries = re.findall(r'Query:\s*(.+?)(?=\nQuery:|\Z)', txt, flags=re.DOTALL)
-        return [
-            re.sub(r'\s+', ' ', re.sub(r'[^\w\s?]', '', q.strip()))
-            for q in queries if q.strip()
-        ]
+        return split_queries(response['response'])
