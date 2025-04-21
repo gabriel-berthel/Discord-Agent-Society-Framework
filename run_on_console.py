@@ -6,7 +6,7 @@ from clients.prompt_client import PromptClient
 
 logging.getLogger("clients.prompt_client").setLevel(logging.WARNING)
 
-SERVER_CONFIG = 'configs/local.yaml'
+SERVER_CONFIG = 'configs/console.yaml'
 
 # Linux optimisations for asyncio.
 if os.name != "nt":
