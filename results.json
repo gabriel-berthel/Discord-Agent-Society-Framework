@@ -357,25 +357,25 @@
             },
             "chameleon": {
                 "total_scores": {
-                    "personality": 33,
-                    "dialogue": 30
+                    "personality": 32,
+                    "dialogue": 36
                 },
                 "average_scores": {
-                    "personality": 2.75,
-                    "dialogue": 2.5
+                    "personality": 2.6667,
+                    "dialogue": 3.0
                 },
-                "overall_average_score": 2.625
+                "overall_average_score": 2.8334
             },
             "troll": {
                 "total_scores": {
-                    "personality": 29,
-                    "dialogue": 29
+                    "personality": 26,
+                    "dialogue": 30
                 },
                 "average_scores": {
-                    "personality": 2.9,
-                    "dialogue": 2.9
+                    "personality": 2.6,
+                    "dialogue": 3.0
                 },
-                "overall_average_score": 2.9
+                "overall_average_score": 2.8
             }
         }
     },
@@ -432,6 +432,40 @@
                     "dialogue": 2.7368
                 },
                 "overall_average_score": 2.5368
+            },
+            "chameleon": {
+                "total_scores": {
+                    "personality": 20,
+                    "plan": 14,
+                    "memories": 14,
+                    "context": 24,
+                    "dialogue": 23
+                },
+                "average_scores": {
+                    "personality": 2.2222,
+                    "plan": 1.5556,
+                    "memories": 1.5556,
+                    "context": 2.6667,
+                    "dialogue": 2.5556
+                },
+                "overall_average_score": 2.1111
+            },
+            "troll": {
+                "total_scores": {
+                    "personality": 33,
+                    "plan": 18,
+                    "memories": 29,
+                    "context": 39,
+                    "dialogue": 34
+                },
+                "average_scores": {
+                    "personality": 2.3571,
+                    "plan": 1.2857,
+                    "memories": 2.0714,
+                    "context": 2.7857,
+                    "dialogue": 2.4286
+                },
+                "overall_average_score": 2.1857
             }
         }
     },
@@ -482,6 +516,36 @@
                     "former_plan": 2.8824
                 },
                 "overall_average_score": 2.8971
+            },
+            "chameleon": {
+                "total_scores": {
+                    "personality": 49,
+                    "memories": 46,
+                    "context": 45,
+                    "former_plan": 54
+                },
+                "average_scores": {
+                    "personality": 2.7222,
+                    "memories": 2.5556,
+                    "context": 2.5,
+                    "former_plan": 3.0
+                },
+                "overall_average_score": 2.6944
+            },
+            "troll": {
+                "total_scores": {
+                    "personality": 29,
+                    "memories": 41,
+                    "context": 48,
+                    "former_plan": 51
+                },
+                "average_scores": {
+                    "personality": 1.7059,
+                    "memories": 2.4118,
+                    "context": 2.8235,
+                    "former_plan": 3.0
+                },
+                "overall_average_score": 2.4853
             }
         }
     }
