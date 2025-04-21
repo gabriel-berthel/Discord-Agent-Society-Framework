@@ -17,7 +17,7 @@ config:
   # Agent
   model: "llama3:8b" # Base model for the agent
   base_plan: "I should respond to every single message." # Plan for the agent. Will change if plans = True
-  channel_id: 1 # Channel the agent is monitoring. Will change dynamically if sequential_mode is off and >= 2 channels
+  channel_id: 1 # Channel the agent is monitoring. Change dynamically if sequential_mode is off. Random if non-existant.
 
   # Logs
   save_logs: True # Save module outputs as pickles

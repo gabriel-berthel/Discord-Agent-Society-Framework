@@ -5,16 +5,23 @@ import os
 import hikari
 
 import models.agent as ag
+from models.agent import Agent
 from models.discord_server import DiscordServer
 
 logger = logging.getLogger(__name__)
 
-agent = None
-server = None
+agent: Agent|None = None
+server: DiscordServer|None = None
 tasks = []
-
+guild: hikari.RESTGuild|None = None
 
 def run(agent_conf, archetype):
+    bot = hikari.GatewayBot(
+        intents=hikari.Intents.ALL, # Important! Didn't test with less intents! Toggle them all just to be sure.
+        token=os.getenv("TOKEN")
+    )
+
+
     async def message_handler():
         """
         Handles the message queue and sends messages to the appropriate Discord channel.
@@ -26,10 +33,11 @@ def run(agent_conf, archetype):
             message, channel_id = await agent.responses.get()
             logger.debug(f"Agent-Client: [key=Discord] | Dequeued message for channel {channel_id}: {message}")
 
-            channel = (
+            channel: hikari = (
                     bot.cache.get_guild_channel(channel_id)
                     or await bot.rest.fetch_channel(channel_id)
             )
+
             logger.debug(f"Agent-Client: [key=Discord] | Fetched channel object: {channel}")
 
             if message != "":
@@ -40,11 +48,6 @@ def run(agent_conf, archetype):
                     f"Agent-Client: [key=Discord] | Empty message received and skipped for channel {channel_id}")
 
             agent.responses.task_done()
-
-    bot = hikari.GatewayBot(
-        intents=hikari.Intents.ALL,
-        token=os.getenv("TOKEN")
-    )
 
     @bot.listen(hikari.GuildMessageCreateEvent)
     async def on_message(event: hikari.GuildMessageCreateEvent):
@@ -94,36 +97,45 @@ def run(agent_conf, archetype):
 
     @bot.listen(hikari.StartedEvent)
     async def on_started(event: hikari.StartedEvent):
-        global agent, tasks, server
+        global agent, tasks, server, guild
         logger.info("Agent-Client: [key=Discord] | Bot startup initiated")
 
+        # Retriving discord-bot related metadata
         server_id = int(os.getenv("SERVER_ID"))
         uid = bot.get_me()
         guild = await bot.rest.fetch_guild(server_id)
-        logger.info(f"CAgent-Client: [key=Discord] | onnected to server: {guild.name} ({server_id})")
+        logger.info(f"Agent-Client: [key=Discord] | onnected to server: {guild.name} ({server_id})")
 
+        # Creating virtual server Representation
         server = DiscordServer(server_id, guild.name)
 
+        # Loading current discord users into server representation
         async for member in bot.rest.fetch_members(server_id):
             server.update_user(member.id, member.display_name)
             logger.debug(f"Agent-Client: [key=Discord] | Loaded member: {member.display_name} ({member.id})")
 
+        # Loading current channels into server representation.
         for channel in await bot.rest.fetch_guild_channels(server_id):
             if isinstance(channel, hikari.TextableChannel):
                 server.add_channel(channel.id, channel.name)
                 logger.debug(f"Agent-Client: [key=Discord] | Loaded channel: {channel.name} ({channel.id})")
 
+        # Creating Agent
         agent = ag.Agent(uid, agent_conf, server, archetype)
+        logger.info(f"Agent-Client: [key=Discord] | Created Agent")
 
+        # Starting message_handler() ready to consume messages from agent
+        tasks.append(asyncio.create_task(message_handler()))
+        logger.info(f"Agent-Client: [key=Discord] | Discord server Interface is ready")
         logger.info(f"Agent-Client: [key=Discord] | Loaded Server: {server}")
         logger.info(f"Agent-Client: [key=Discord] | Users: {server.users}")
         logger.info(f"Agent-Client: [key=Discord] | Channels: {server.channels}")
 
-        tasks.append(asyncio.create_task(message_handler()))
+        # Starting Agent Routines
+        logger.info(f"Agent-Client: [key=Discord] | Starting Agent Routines")
         tasks.append(asyncio.create_task(agent.respond_routine()))
         tasks.append(asyncio.create_task(agent.memory_routine()))
         tasks.append(asyncio.create_task(agent.plan_routine()))
 
-        logger.info("Agent-Client: [key=Discord] | All agent routines started. Bot is ready.")
-
+        logger.info("Agent-Client: [key=Discord] | Bot is ready.")
     bot.run()
