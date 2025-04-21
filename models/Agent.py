@@ -81,8 +81,11 @@ class Agent:
 
         # .yaml config related attributes
         self.config = DictToAttribute(**load_yaml(self.agent_conf)['config'])
-        self.monitoring_channel: int = self.config.channel_id if self.config.channel_id in self.server.channels.keys() else random.choice(
-            self.server.channels.keys())
+        if self.config.channel_id in self.server.channels and self.config.channel_id:
+            self.monitoring_channel: int = self.config.channel_id
+        else:
+            available_channels = list(self.server.channels.keys())
+            self.monitoring_channel: int = random.choice(available_channels)
         self.persistance_prefix: str = self.config.persistance_prefix
         self.log_path: str = self.config.log_path
         self.persistance_path = self.config.persistance_path
