@@ -130,32 +130,68 @@ async def run_c1(neutral_ctxs, contextualizer):
         }
     }
 
-def run_d1(reflections_logs, prober:Prober):
+def run_d1(reflections_logs, prober: Prober):
     print('Running D1')
     results = []
     for arguments, reflection in reflections_logs:
         messages, personality_prompt = arguments
-        results.append(prober.score_reflection_relevancy('\n'.join(messages), reflection, personality_prompt))
+        
+        axes = {
+            "personality": personality_prompt,
+            "dialogue": '\n'.join(messages)
+        }
+
+        results.append(
+            prober.make_scaled_relevancy_poll("personnal reflection", axes, reflection)
+        )
 
     print('Evaluating D1')
     return prober.evaluate_scales(results)
 
-def run_e1(response_log, prober:Prober):
+
+def run_e1(response_log, prober: Prober):
     print('Running E1')
     results = []
     for arguments, response in response_log:
         plan, context, memories, messages, personality = arguments
-        results.append(prober.score_message_relevancy(personality, plan, memories, context, '\n'.join(messages), response))
+        
+        axes = {
+            "personality": personality,
+            "plan": plan,
+            "memories": '\n'.join(memories),
+            "context": context,
+            "dialogue": '\n'.join(messages)
+        }
+
+        results.append(
+            prober.make_scaled_relevancy_poll("discord response", axes, response)
+        )
 
     print('Evaluating E1')
     return prober.evaluate_scales(results)
+
 
 def run_f1(plan_log, prober:Prober):
     print('Running F1')
     results = []
     for arguments, new_plan in plan_log:
         former_plan, context, memories, personality = arguments
-        results.append(prober.score_plan_relevancy(former_plan, context, personality,'\n'.join(memories), new_plan))
+        
+        axes = {
+            "personality": personality,
+            "memories": '\n'.join(memories),
+            "context": context,
+            "former_plan": former_plan
+        }
+
+        results.append(
+            prober.make_scaled_relevancy_poll(
+                "new plan", 
+                axes, 
+                new_plan
+            )
+        )
+
 
     print('Evaluating F1')
     return prober.evaluate_scales(results)
@@ -168,7 +204,7 @@ async def run_a1(client: PromptClient, prober: Prober, personality):
     questions = [q for q in prober.generate_content_questions(personality, 12)]
     print(f'Probing agent: {client.name}')
     responses = [await client.prompt(question['question'], 100, 'ADMIN', 1, f'a1_{client.name}_{client.agent.archetype}.txt') for question in questions]
-    return Prober.evaluate(questions, responses)
+    return Prober.evaluate_qa(questions, responses)
 
 def chunk_list(lst, chunk_size):
     return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
@@ -183,7 +219,7 @@ async def run_a2(client: PromptClient, prober: Prober, dialogues):
     print(f'Probing agent: {client.name}')
     responses = [await client.prompt(question['question'], 100, 'ADMIN', 1, f'a2_{client.name}_{client.agent.archetype}.txt') for question in questions]
     
-    return Prober.evaluate(questions, responses)
+    return Prober.evaluate_qa(questions, responses)
 
 async def run_a3(client: PromptClient, prober: Prober, reflections):
     client.get_bot_context = force_ctx.__get__(client)
@@ -195,4 +231,4 @@ async def run_a3(client: PromptClient, prober: Prober, reflections):
     print(f'Probing agent: {client.name}')
     responses = [await client.prompt(question['question'], 100, 'ADMIN', 1, f'a3_{client.name}_{client.agent.archetype}.txt') for question in questions]
     
-    return Prober.evaluate(questions, responses)
+    return Prober.evaluate_qa(questions, responses)

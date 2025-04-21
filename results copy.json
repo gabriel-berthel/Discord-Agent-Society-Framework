@@ -3,13 +3,13 @@
         "description": "Self-knowledge Recall,",
         "archetypes": {
             "nerd": {
-                "total_score": 8,
-                "total_detailed_score": 7.8999999999999995,
+                "total_score": 7,
+                "total_detailed_score": 9.049999999999999,
                 "max_score": 12
             },
             "peacekeeper": {
-                "total_score": 9,
-                "total_detailed_score": 9.0,
+                "total_score": 6,
+                "total_detailed_score": 6.95,
                 "max_score": 12
             },
             "chameleon": {
@@ -18,8 +18,13 @@
                 "max_score": 12
             },
             "troll": {
-                "total_score": 6,
-                "total_detailed_score": 8.799999999999999,
+                "total_score": 7,
+                "total_detailed_score": 7.949999999999999,
+                "max_score": 12
+            },
+            "debunker": {
+                "total_score": 10,
+                "total_detailed_score": 8.399999999999999,
                 "max_score": 12
             }
         }
@@ -28,13 +33,13 @@
         "description": "Dialogue Recall",
         "archetypes": {
             "nerd": {
-                "total_score": 13,
-                "total_detailed_score": 15.850000000000001,
+                "total_score": 12,
+                "total_detailed_score": 21.299999999999994,
                 "max_score": 32
             },
             "peacekeeper": {
-                "total_score": 14,
-                "total_detailed_score": 18.500000000000004,
+                "total_score": 10,
+                "total_detailed_score": 15.67,
                 "max_score": 32
             },
             "chameleon": {
@@ -43,8 +48,13 @@
                 "max_score": 32
             },
             "troll": {
-                "total_score": 13,
-                "total_detailed_score": 15.099999999999998,
+                "total_score": 10,
+                "total_detailed_score": 14.550000000000004,
+                "max_score": 32
+            },
+            "debunker": {
+                "total_score": 12,
+                "total_detailed_score": 17.85,
                 "max_score": 32
             }
         }
@@ -53,13 +63,13 @@
         "description": "Reflection Recall",
         "archetypes": {
             "nerd": {
-                "total_score": 12,
-                "total_detailed_score": 14.900000000000004,
+                "total_score": 13,
+                "total_detailed_score": 15.649999999999999,
                 "max_score": 24
             },
             "peacekeeper": {
-                "total_score": 13,
-                "total_detailed_score": 15.8,
+                "total_score": 12,
+                "total_detailed_score": 14.8,
                 "max_score": 24
             },
             "chameleon": {
@@ -68,8 +78,13 @@
                 "max_score": 24
             },
             "troll": {
-                "total_score": 11,
-                "total_detailed_score": 11.299999999999999,
+                "total_score": 10,
+                "total_detailed_score": 10.499999999999998,
+                "max_score": 24
+            },
+            "debunker": {
+                "total_score": 13,
+                "total_detailed_score": 17.150000000000006,
                 "max_score": 24
             }
         }
@@ -94,6 +109,78 @@
                     "baseline": 0.34083735942840576,
                     "agent": 0.34372225403785706
                 }
+            },
+            "debunker": {
+                "std": {
+                    "baseline": 0.017888393253087997,
+                    "agent": 0.040848977863788605
+                },
+                "mean": {
+                    "baseline": 0.3584470748901367,
+                    "agent": 0.30609285831451416
+                },
+                "min": {
+                    "baseline": 0.32214316725730896,
+                    "agent": 0.21303753554821014
+                },
+                "max": {
+                    "baseline": 0.3836328983306885,
+                    "agent": 0.36884692311286926
+                }
+            },
+            "peacekeeper": {
+                "std": {
+                    "baseline": 0.012552894651889801,
+                    "agent": 0.06786426156759262
+                },
+                "mean": {
+                    "baseline": 0.35461747646331787,
+                    "agent": 0.29958468675613403
+                },
+                "min": {
+                    "baseline": 0.3385288715362549,
+                    "agent": 0.0685693621635437
+                },
+                "max": {
+                    "baseline": 0.38304635882377625,
+                    "agent": 0.3723897933959961
+                }
+            },
+            "chameleon": {
+                "std": {
+                    "baseline": 0.027037814259529114,
+                    "agent": 0.03133893385529518
+                },
+                "mean": {
+                    "baseline": 0.30764299631118774,
+                    "agent": 0.27916720509529114
+                },
+                "min": {
+                    "baseline": 0.27863380312919617,
+                    "agent": 0.21942801773548126
+                },
+                "max": {
+                    "baseline": 0.3704846501350403,
+                    "agent": 0.35634222626686096
+                }
+            },
+            "troll": {
+                "std": {
+                    "baseline": 0.04960767552256584,
+                    "agent": 0.042880021035671234
+                },
+                "mean": {
+                    "baseline": 0.29630953073501587,
+                    "agent": 0.31349265575408936
+                },
+                "min": {
+                    "baseline": 0.2416008710861206,
+                    "agent": 0.21892794966697693
+                },
+                "max": {
+                    "baseline": 0.38701939582824707,
+                    "agent": 0.36868715286254883
+                }
             }
         }
     },
@@ -117,6 +204,78 @@
                     "baseline": 0.3298371136188507,
                     "agent": 0.3284284472465515
                 }
+            },
+            "debunker": {
+                "std": {
+                    "baseline": 0.019240986555814743,
+                    "agent": 0.0840669795870781
+                },
+                "mean": {
+                    "baseline": 0.35704025626182556,
+                    "agent": 0.27974075078964233
+                },
+                "min": {
+                    "baseline": 0.324148565530777,
+                    "agent": 0.05392642319202423
+                },
+                "max": {
+                    "baseline": 0.39502277970314026,
+                    "agent": 0.3600834906101227
+                }
+            },
+            "peacekeeper": {
+                "std": {
+                    "baseline": 0.059533797204494476,
+                    "agent": 0.08265548944473267
+                },
+                "mean": {
+                    "baseline": 0.3463834524154663,
+                    "agent": 0.29805243015289307
+                },
+                "min": {
+                    "baseline": 0.16402162611484528,
+                    "agent": 0.09855664521455765
+                },
+                "max": {
+                    "baseline": 0.40003418922424316,
+                    "agent": 0.3994837701320648
+                }
+            },
+            "chameleon": {
+                "std": {
+                    "baseline": 0.02725066989660263,
+                    "agent": 0.03823013976216316
+                },
+                "mean": {
+                    "baseline": 0.3368358314037323,
+                    "agent": 0.282039999961853
+                },
+                "min": {
+                    "baseline": 0.2945844829082489,
+                    "agent": 0.20409151911735535
+                },
+                "max": {
+                    "baseline": 0.3788403570652008,
+                    "agent": 0.3371465504169464
+                }
+            },
+            "troll": {
+                "std": {
+                    "baseline": 0.019406607374548912,
+                    "agent": 0.07670865952968597
+                },
+                "mean": {
+                    "baseline": 0.38268008828163147,
+                    "agent": 0.26721182465553284
+                },
+                "min": {
+                    "baseline": 0.34233611822128296,
+                    "agent": 0.14079497754573822
+                },
+                "max": {
+                    "baseline": 0.4064549207687378,
+                    "agent": 0.36360299587249756
+                }
             }
         }
     },
@@ -124,10 +283,38 @@
         "description": "Context Accuracy",
         "archetypes": {
             "nerd": {
-                "shared_keyword_ratio": 0.13027744270205066,
+                "shared_keyword_ratio": 0.12740384615384615,
                 "cosine_similarity": {
                     "baseline": 0.15127886831760406,
-                    "agent": 0.14961375296115875
+                    "agent": 0.1520880162715912
+                }
+            },
+            "debunker": {
+                "shared_keyword_ratio": 0.13546255506607932,
+                "cosine_similarity": {
+                    "baseline": 0.14190234243869781,
+                    "agent": 0.14925715327262878
+                }
+            },
+            "peacekeeper": {
+                "shared_keyword_ratio": 0.13833157338965152,
+                "cosine_similarity": {
+                    "baseline": 0.13951356709003448,
+                    "agent": 0.14372557401657104
+                }
+            },
+            "chameleon": {
+                "shared_keyword_ratio": 0.10714285714285715,
+                "cosine_similarity": {
+                    "baseline": 0.14320044219493866,
+                    "agent": 0.14402362704277039
+                }
+            },
+            "troll": {
+                "shared_keyword_ratio": 0.13420427553444178,
+                "cosine_similarity": {
+                    "baseline": 0.1355491429567337,
+                    "agent": 0.15477746725082397
                 }
             }
         }
@@ -137,14 +324,58 @@
         "archetypes": {
             "nerd": {
                 "total_scores": {
-                    "personality": 28,
-                    "dialogue": 28
+                    "personality": 29,
+                    "dialogue": 26
                 },
                 "average_scores": {
-                    "personality": 2.8,
-                    "dialogue": 2.8
+                    "personality": 2.9,
+                    "dialogue": 2.6
+                },
+                "overall_average_score": 2.75
+            },
+            "debunker": {
+                "total_scores": {
+                    "personality": 31,
+                    "dialogue": 31
+                },
+                "average_scores": {
+                    "personality": 2.8182,
+                    "dialogue": 2.8182
+                },
+                "overall_average_score": 2.8182
+            },
+            "peacekeeper": {
+                "total_scores": {
+                    "personality": 30,
+                    "dialogue": 26
+                },
+                "average_scores": {
+                    "personality": 3.0,
+                    "dialogue": 2.6
                 },
                 "overall_average_score": 2.8
+            },
+            "chameleon": {
+                "total_scores": {
+                    "personality": 33,
+                    "dialogue": 30
+                },
+                "average_scores": {
+                    "personality": 2.75,
+                    "dialogue": 2.5
+                },
+                "overall_average_score": 2.625
+            },
+            "troll": {
+                "total_scores": {
+                    "personality": 29,
+                    "dialogue": 29
+                },
+                "average_scores": {
+                    "personality": 2.9,
+                    "dialogue": 2.9
+                },
+                "overall_average_score": 2.9
             }
         }
     },
