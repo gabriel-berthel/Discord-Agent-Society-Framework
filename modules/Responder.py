@@ -7,7 +7,7 @@ OPTIONS = {
     "mirostat_tau": 10, 
     "num_predict": 70,
     "mirostat_eta": 0.1, 
-    "num_ctx": 4096,
+    "num_ctx": 8192,
     "repeat_penalty": 1.5,
     "presence_penalty": 1.5,
     "frequency_penalty": 0.2,

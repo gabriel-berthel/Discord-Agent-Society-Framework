@@ -324,36 +324,36 @@
         "archetypes": {
             "nerd": {
                 "total_scores": {
-                    "personality": 24,
+                    "personality": 25,
                     "dialogue": 30
                 },
                 "average_scores": {
-                    "personality": 2.4,
+                    "personality": 2.5,
                     "dialogue": 3.0
                 },
-                "overall_average_score": 2.7
+                "overall_average_score": 2.75
             },
             "debunker": {
                 "total_scores": {
-                    "personality": 25,
+                    "personality": 24,
                     "dialogue": 33
                 },
                 "average_scores": {
-                    "personality": 2.2727,
+                    "personality": 2.1818,
                     "dialogue": 3.0
                 },
-                "overall_average_score": 2.6364
+                "overall_average_score": 2.5909
             },
             "peacekeeper": {
                 "total_scores": {
-                    "personality": 28,
+                    "personality": 30,
                     "dialogue": 30
                 },
                 "average_scores": {
-                    "personality": 2.8,
+                    "personality": 3.0,
                     "dialogue": 3.0
                 },
-                "overall_average_score": 2.9
+                "overall_average_score": 3.0
             },
             "chameleon": {
                 "total_scores": {
@@ -384,37 +384,54 @@
         "archetypes": {
             "nerd": {
                 "total_scores": {
-                    "personality": 31,
-                    "plan": 18,
-                    "memories": 34,
-                    "context": 38,
-                    "dialogue": 35
+                    "personality": 29,
+                    "plan": 25,
+                    "memories": 25,
+                    "context": 35,
+                    "dialogue": 30
                 },
                 "average_scores": {
-                    "personality": 2.3846,
-                    "plan": 1.3846,
-                    "memories": 2.6154,
-                    "context": 2.9231,
-                    "dialogue": 2.6923
+                    "personality": 2.2308,
+                    "plan": 1.9231,
+                    "memories": 1.9231,
+                    "context": 2.6923,
+                    "dialogue": 2.3077
                 },
-                "overall_average_score": 2.4
+                "overall_average_score": 2.2154
             },
             "debunker": {
                 "total_scores": {
-                    "personality": 40,
-                    "plan": 42,
-                    "memories": 42,
-                    "context": 48,
-                    "dialogue": 48
+                    "personality": 42,
+                    "plan": 40,
+                    "memories": 39,
+                    "context": 46,
+                    "dialogue": 45
                 },
                 "average_scores": {
-                    "personality": 2.2222,
-                    "plan": 2.3333,
-                    "memories": 2.3333,
-                    "context": 2.6667,
-                    "dialogue": 2.6667
+                    "personality": 2.3333,
+                    "plan": 2.2222,
+                    "memories": 2.1667,
+                    "context": 2.5556,
+                    "dialogue": 2.5
                 },
-                "overall_average_score": 2.4444
+                "overall_average_score": 2.3556
+            },
+            "peacekeeper": {
+                "total_scores": {
+                    "personality": 54,
+                    "plan": 44,
+                    "memories": 37,
+                    "context": 54,
+                    "dialogue": 52
+                },
+                "average_scores": {
+                    "personality": 2.8421,
+                    "plan": 2.3158,
+                    "memories": 1.9474,
+                    "context": 2.8421,
+                    "dialogue": 2.7368
+                },
+                "overall_average_score": 2.5368
             }
         }
     },
@@ -423,33 +440,48 @@
         "archetypes": {
             "debunker": {
                 "total_scores": {
-                    "personality": 43,
-                    "memories": 46,
-                    "context": 51,
-                    "former_plan": 44
+                    "personality": 37,
+                    "memories": 44,
+                    "context": 47,
+                    "former_plan": 48
                 },
                 "average_scores": {
-                    "personality": 2.5294,
-                    "memories": 2.7059,
-                    "context": 3.0,
-                    "former_plan": 2.5882
+                    "personality": 2.1765,
+                    "memories": 2.5882,
+                    "context": 2.7647,
+                    "former_plan": 2.8235
                 },
-                "overall_average_score": 2.7059
+                "overall_average_score": 2.5882
             },
             "nerd": {
                 "total_scores": {
-                    "personality": 41,
-                    "memories": 50,
+                    "personality": 42,
+                    "memories": 43,
                     "context": 51,
-                    "former_plan": 42
+                    "former_plan": 51
                 },
                 "average_scores": {
-                    "personality": 2.4118,
-                    "memories": 2.9412,
+                    "personality": 2.4706,
+                    "memories": 2.5294,
                     "context": 3.0,
-                    "former_plan": 2.4706
+                    "former_plan": 3.0
                 },
-                "overall_average_score": 2.7059
+                "overall_average_score": 2.75
+            },
+            "peacekeeper": {
+                "total_scores": {
+                    "personality": 50,
+                    "memories": 47,
+                    "context": 51,
+                    "former_plan": 49
+                },
+                "average_scores": {
+                    "personality": 2.9412,
+                    "memories": 2.7647,
+                    "context": 3.0,
+                    "former_plan": 2.8824
+                },
+                "overall_average_score": 2.8971
             }
         }
     }
