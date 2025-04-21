@@ -2,6 +2,23 @@ import yaml
 import sys
 from types import SimpleNamespace
 import re
+import json
+
+def save_json(results):
+    with open("results.json", "w") as f:
+        json.dump(results, f, indent=4, cls=NumpyEncoder) 
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (np.float32, np.float64)):
+            return float(obj)
+        if isinstance(obj, (np.int32, np.int64)):
+            return int(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.generic):
+            return obj.item()
+        return super().default(obj)
 
 class DictToAttribute(SimpleNamespace):
     def get(self, key, default=None):

@@ -12,8 +12,8 @@ config:
   impulses: True
   save_logs: False
   persitance_prefix: 'discord_server'
-  persistance_path: 'memories'
-  log_path: 'logs'
+  persistance_path: 'output/memories'
+  log_path: 'output/logs'
 
   # DeepSeek-R1-Distill-Llama-8B
   # Gemma 2

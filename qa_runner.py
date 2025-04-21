@@ -8,10 +8,38 @@ from modules.Contextualizer import Contextualizer
 import pickle
 from utils.utils import *
 from utils.prompt_generator import generate_agent_prompt
-from benchmark.Prober import Prober
+from utils.Prober import Prober
 from prompt_client import PromptClient
+import asyncio
+import os
 
 warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hub.file_download")
+
+async def prepare_qa_bench():
+    import os
+    import pickle
+    import shutil
+    import shutil
+
+    shutil.rmtree('output/qa_bench')
+    os.makedirs('output/qa_bench')
+    os.makedirs('output/qa_bench/logs')
+    os.makedirs('output/qa_bench/memories')
+    
+    print_replies = True
+    simulation_duration = 60 * 60
+    clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies, config_file='configs/qa_bench_prepare.yaml')
+    
+    for archetype, client in clients.items():
+        await client.stop()
+        client.agent.logger.save_logs()
+
+    file_path = os.path.join(f"qa_bench/qa_bench_histo.pkl")
+
+    with open(file_path, "wb") as f:
+        pickle.dump(historic, f)
+
+    print(f"[LOG] Saved historic to {file_path}")   
 
 def load_logs(path):
     with open(path, "rb") as f:
@@ -20,19 +48,20 @@ def load_logs(path):
 
 def load_qa_bench_data():
     archetypes = ["debunker", "nerd", "peacekeeper", "chameleon", "troll"]
-
-    logs = SimpleNamespace()
+    clients = PromptClient.build_clients('configs/qa_config.yaml')
+    logs = {}
 
     with open('./qa_bench/qa_bench_histo.pkl', 'rb') as f:
         historic = pickle.load(f)
         
-    clients = PromptClient.build_clients('configs/qa_config.yaml')
     for archetype in archetypes:
+        
         personnality_prompt = generate_agent_prompt(archetype, load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
         agent_memories = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories').get_all_documents()[0]
         data = load_logs(f"qa_bench/logs/qa_bench_{archetype}_log.pkl")
         
-        setattr(logs, archetype, SimpleNamespace(
+        # Creates attributes such as logs.<archetype>.client 
+        logs[archetype] = SimpleNamespace(
             client=clients[archetype],
             personality=personnality_prompt,
             agent_memories=agent_memories,
@@ -44,18 +73,19 @@ def load_qa_bench_data():
             response_queries=[(x['input'], x['output']) for x in data.response_queries],
             memories=[(x['input'], x['output']) for x in data.memories],
             response=[(x['input'], x['output']) for x in data.response]
-        ))
+        )
+        
     return logs
 
-import asyncio
-import os
-async def run_benchmarks(archetype_logs):
+async def run_benchmarks(logs):
+    
     if os.path.exists("results.json"):
         with open("results.json", "r") as file:
             results = json.load(file)
+    
     else:        
         results = {
-            # Recall
+            # Recall / Probing
             'a1': {'description': 'Self-knowledge Recall,', 'archetypes': {}},
             'a2': {'description': 'Dialogue Recall', 'archetypes': {}},
             'a3': {'description': 'Reflection Recall', 'archetypes': {}},
@@ -73,37 +103,37 @@ async def run_benchmarks(archetype_logs):
             'f1': {'description': 'Plan Relevancy', 'archetypes': {}}
         }
 
-    for archetype, logs in archetype_logs:
+    for archetype, log in logs.items():
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
         print('Working on', archetype)
-        await logs.client.start()
+        await log.client.start()
 
         print('Starting')
-        results['a1']['archetypes'][archetype] = await run_a1(logs.client, Prober, logs.personality)
+        results['a1']['archetypes'][archetype] = await run_a1(log.client, Prober, log.personality)
         print('A1 DONE')
-        results['a2']['archetypes'][archetype] = await run_a2(logs.client, Prober, logs.historic)
+        results['a2']['archetypes'][archetype] = await run_a2(log.client, Prober, log.historic)
         print('A2 DONE')
-        results['a3']['archetypes'][archetype] = await run_a3(logs.client, Prober, logs.agent_memories)
+        results['a3']['archetypes'][archetype] = await run_a3(log.client, Prober, log.agent_memories)
         print('A3 DONE')
-        results['b1']['archetypes'][archetype] = run_b1(logs.context_queries, memory)
+        results['b1']['archetypes'][archetype] = run_b1(log.context_queries, memory)
         print('B1 DONE')
         save_results(results)
-        results['b2']['archetypes'][archetype] = run_b2(logs.response_queries, memory)
+        results['b2']['archetypes'][archetype] = run_b2(log.response_queries, memory)
         print('B2 DONE')
         save_results(results)
-        results['c1']['archetypes'][archetype] = await run_c1(logs.neutral_ctxs, Contextualizer('llama3:8b'))
+        results['c1']['archetypes'][archetype] = await run_c1(log.neutral_ctxs, Contextualizer('llama3:8b'))
         print('C1 DONE')
         save_results(results)
-        results['d1']['archetypes'][archetype] = run_d1(logs.reflections, Prober)
+        results['d1']['archetypes'][archetype] = run_d1(log.reflections, Prober)
         print('D1 DONE')
         save_results(results)
-        results['e1']['archetypes'][archetype] = run_e1(logs.response, Prober)
+        results['e1']['archetypes'][archetype] = run_e1(log.response, Prober)
         print('E1 DONE')
-        results['f1']['archetypes'][archetype] = run_f1(logs.plans, Prober)
+        results['f1']['archetypes'][archetype] = run_f1(log.plans, Prober)
         save_results(results)
         print('F1 DONE')
         save_results(results)
-        results['e1']['archetypes'][archetype] = run_e1(logs.response, Prober)
+        results['e1']['archetypes'][archetype] = run_e1(log.response, Prober)
         print('E1 DONE')
         save_results(results)
 
@@ -118,23 +148,9 @@ if __name__ == "__main__":
     
     import json
     import numpy as np
-    
-    class NumpyEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, (np.float32, np.float64)):
-                return float(obj)
-            if isinstance(obj, (np.int32, np.int64)):
-                return int(obj)
-            if isinstance(obj, np.ndarray):
-                return obj.tolist()
-            if isinstance(obj, np.generic):
-                return obj.item()
-            return super().default(obj)
-        
-    import json
+      
+    asyncio.run(prepare_qa_bench())
+      
     logs = load_qa_bench_data()
-    archetype_logs = [(role, getattr(logs, role)) for role in vars(logs)]
-    results = asyncio.run(run_benchmarks(archetype_logs))
-    with open("results.json", "w") as f:
-        json.dump(results, f, indent=4, cls=NumpyEncoder)  
-    print(results)
+    results = asyncio.run(run_benchmarks(logs))
+    

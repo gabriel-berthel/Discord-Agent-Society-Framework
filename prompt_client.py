@@ -148,10 +148,16 @@ class PromptClient:
         return clients, historic
 
 
-async def main():
+async def prepare_qa_bench():
     import os
     import pickle
     import shutil
+    import shutil
+
+    shutil.rmtree('output/qa_bench')
+    os.makedirs('output/qa_bench')
+    os.makedirs('output/qa_bench/logs')
+    os.makedirs('output/qa_bench/memories')
     
     print_replies = True
     simulation_duration = 60 * 60

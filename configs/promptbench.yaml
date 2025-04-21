@@ -12,5 +12,5 @@ config:
   impulses: False
   save_logs: False
   persitance_prefix: 'promptbench'
-  persistance_path: 'memories'
-  log_path: 'logs'
+  persistance_path: 'output/memories'
+  log_path: 'output/logs'

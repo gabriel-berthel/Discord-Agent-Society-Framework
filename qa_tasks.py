@@ -9,8 +9,10 @@ from utils.utils import list_to_text
 import spacy
 import asyncio
 import pytextrank
-from benchmark.Prober import Prober
+from utils.Prober import Prober
 from prompt_client import PromptClient
+from modules.Memories import Memories
+from modules.Contextualizer import Contextualizer
 
 model = None
 tokenizer = None
@@ -59,7 +61,7 @@ def compute_cosine_distances(documents, model_name='all-MiniLM-L6-v2'):
     embeddings = model.encode(documents, convert_to_numpy=True)
     return cosine_distances(embeddings)
 
-def run_b1(context_queries, memory_module):
+def run_b1(context_queries, memory_module: Memories):
     cos_baselines = []
     cos_agents = []
     for msgs, queries in context_queries:
@@ -75,7 +77,7 @@ def run_b1(context_queries, memory_module):
         'max': {'baseline': np.max(cos_baselines), 'agent': np.max(cos_agents)}
     }
 
-def run_b2(logs, memory_module):
+def run_b2(logs, memory_module: Memories):
     cos_baselines = []
     cos_agents = []
     for arguments, queries in logs:
@@ -92,7 +94,7 @@ def run_b2(logs, memory_module):
         'max': {'baseline': np.max(cos_baselines), 'agent': np.max(cos_agents)}
     }
 
-async def run_c1(neutral_ctxs, contextualizer):
+async def run_c1(neutral_ctxs, contextualizer: Contextualizer):
     shared_keywords, unique_keywords  = [], []
     cosine_similarities_baselines = []
     cosine_similarities_agents = []
