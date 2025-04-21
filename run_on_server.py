@@ -1,7 +1,6 @@
 import asyncio
 import os
-import clients.discord_bot as discord_bot
-import utils.utils as utils
+import clients.discord_client as discord_client
 import argparse
 from dotenv import load_dotenv
 import sys
@@ -34,4 +33,4 @@ if __name__ == "__main__":
 
     load_dotenv(args.env)
 
-    discord_bot.run('configs/discord_server.yaml', os.getenv('ARCHETYPE'))
+    discord_client.run('configs/discord_server.yaml', os.getenv('ARCHETYPE'))

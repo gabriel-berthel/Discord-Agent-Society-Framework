@@ -14,18 +14,10 @@ OPTIONS = {
     "stop": ["<|endoftext|>"]
 }
 
-class QueryEngine():
-    def __init__(self, model):
-        self.model = model
-
-    async def context_query(self, messages):
-        if messages:
-            
-            msgs = '\n'.join(messages)
-            
-            system_instruction = f"""
+QUERY_BASE = f"""
 Imagine you are a Discord user who can query your personal notebook and diary to help respond to messages. 
 It’s important to ask relevant queries that will assist in crafting appropriate responses. 
+
 When you query, make sure to identify important entities (such as names, dates, or topics) and align your responses with the plan or context you are working with. 
 You should ask your queries in natural human language like you are browsing the web, and I will provide relevant information from your notebook and diary.
 
@@ -36,11 +28,20 @@ Query: Your second query here
 Query: Your third query here
 
 Here is the Discord conversation you need to write queries about:
-            """
+"""
+
+class QueryEngine():
+    def __init__(self, model):
+        self.model = model
+
+    async def context_query(self, messages):
+        if messages:
+            
+            msgs = '\n'.join(messages)
 
             response = await ollama.AsyncClient().generate(
                 model=self.model,
-                system=system_instruction,
+                system=QUERY_BASE,
                 prompt=msgs,
                 options=OPTIONS
             )
@@ -61,19 +62,9 @@ Your current plan is:
 Here is the context from your notebook or diary:
 {context}
 
-Imagine you are a Discord user who can query your personal notebook and diary to help respond to messages. 
-It’s important to ask relevant queries that will assist in crafting appropriate responses. 
+---
 
-When you query, make sure to identify important entities (such as names, dates, or topics) and align your responses with the plan or context you are working with. 
-You should ask your queries in natural human language like you are browsing the web, and I will provide relevant information from your notebook and diary.
-
-Please format your queries as follows:
-
-Query: Your first query here  
-Query: Your second query here  
-Query: Your third query here
-
-Make sure to write queries according to your personality, plan and context
+{QUERY_BASE}
 """
         
         response = await ollama.AsyncClient().generate(

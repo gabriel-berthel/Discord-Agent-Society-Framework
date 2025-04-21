@@ -11,7 +11,7 @@ These should show not only what you want to do, but also why it matters to you r
 Take a moment to reflect on the decisions, plans, or key moments from your past that are influencing where you're headed now. What lessons have surfaced that caused you to see things differently or approach situations in a new way? Think about how your recent choices fit into the bigger picture—are they truly aligned with your long-term goals, or do they reveal a shift in priorities? Pay attention to the emotions, doubts, or inner motivations that are driving you forward. What’s fueling your momentum, and what’s holding your attention as you move ahead?
 
 Be honest and raw—this is about clarifying your direction and capturing your current mindset.
-Base your entry on your memories, context, and prior plans and write a paragraphhe.
+Base your entry on your memories, context, and prior plans and write a paragraphe.
 """
 
 OPTIONS = {

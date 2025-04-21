@@ -1,8 +1,8 @@
 import asyncio
 import random
 import time
-from models.Agent import Agent
-from models.DiscordServer import DiscordServer
+from models.agent import Agent
+from models.discord_server import DiscordServer
 import logging
 from dotenv import load_dotenv
 
@@ -81,7 +81,6 @@ class PromptClient:
         self.server.add_message(channel_id, user_id, username, message)
         return message
     
-    
     @staticmethod
     def build_clients(config_file='benchmark_config.yaml'):
         server = DiscordServer(1, 'Benchmarking')
@@ -146,33 +145,3 @@ class PromptClient:
             message = response
 
         return clients, historic
-
-
-async def prepare_qa_bench():
-    import os
-    import pickle
-    import shutil
-    import shutil
-
-    shutil.rmtree('output/qa_bench')
-    os.makedirs('output/qa_bench')
-    os.makedirs('output/qa_bench/logs')
-    os.makedirs('output/qa_bench/memories')
-    
-    print_replies = True
-    simulation_duration = 60 * 60
-    clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies, config_file='configs/qa_bench_prepare.yaml')
-    
-    for archetype, client in clients.items():
-        await client.stop()
-        client.agent.logger.save_logs()
-
-    file_path = os.path.join(f"qa_bench/qa_bench_histo.pkl")
-
-    with open(file_path, "wb") as f:
-        pickle.dump(historic, f)
-
-    print(f"[LOG] Saved historic to {file_path}")   
-
-if __name__ == "__main__":
-    asyncio.run(main())

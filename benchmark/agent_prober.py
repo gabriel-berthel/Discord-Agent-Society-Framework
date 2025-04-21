@@ -1,9 +1,6 @@
 from dotenv import load_dotenv
-import yaml
 import json
-import os
 import ollama
-import re
 
 load_dotenv()
 

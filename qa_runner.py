@@ -2,7 +2,7 @@
 
 import warnings
 from types import SimpleNamespace
-from qa_tasks import run_b1, run_b2, run_c1, run_d1, run_a1, run_a2, run_a3, run_e1, run_f1
+from qa_tasks import *
 from modules.Memories import Memories
 from modules.Contextualizer import Contextualizer
 import pickle
@@ -12,53 +12,47 @@ from utils.Prober import Prober
 from prompt_client import PromptClient
 import asyncio
 import os
+import shutil
+from utils.qa_utils import *
 
 warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hub.file_download")
 
-async def prepare_qa_bench():
-    import os
-    import pickle
-    import shutil
-    import shutil
-
+async def prepare_qa_bench(duration, print_replies, config_file):
     shutil.rmtree('output/qa_bench')
     os.makedirs('output/qa_bench')
     os.makedirs('output/qa_bench/logs')
     os.makedirs('output/qa_bench/memories')
     
-    print_replies = True
-    simulation_duration = 60 * 60
-    clients, historic = await PromptClient.run_simulation(simulation_duration, print_replies, config_file='configs/qa_bench_prepare.yaml')
+    print('Running simulatation')
+    clients, historic = await PromptClient.run_simulation(
+        duration, print_replies, config_file='configs/qa_bench_prepare.yaml'
+    )
     
+    print('Saving logs in output/qa_bench/logs')
     for archetype, client in clients.items():
         await client.stop()
         client.agent.logger.save_logs()
 
-    file_path = os.path.join(f"qa_bench/qa_bench_histo.pkl")
-
-    with open(file_path, "wb") as f:
-        pickle.dump(historic, f)
-
-    print(f"[LOG] Saved historic to {file_path}")   
-
-def load_logs(path):
-    with open(path, "rb") as f:
-        obj = pickle.load(f)
-        return SimpleNamespace(**obj)
+    print('Saving historic in output/qa_bench/')
+    with open("qa_bench/qa_bench_histo.pkl", "wb") as f:
+        pickle.dump(historic, f)   
+    with open("qa_bench/qa_bench_histo.txt", "w") as f:
+        for line in historic:
+            f.writelines(f'{line}\n')
 
 def load_qa_bench_data():
     archetypes = ["debunker", "nerd", "peacekeeper", "chameleon", "troll"]
-    clients = PromptClient.build_clients('configs/qa_config.yaml')
-    logs = {}
+    clients: PromptClient = PromptClient.build_clients('configs/qa_config.yaml')
+    logs:dict[str, SimpleNamespace] = {}
 
     with open('./qa_bench/qa_bench_histo.pkl', 'rb') as f:
-        historic = pickle.load(f)
+        historic: list = pickle.load(f)
         
     for archetype in archetypes:
         
-        personnality_prompt = generate_agent_prompt(archetype, load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
-        agent_memories = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories').get_all_documents()[0]
-        data = load_logs(f"qa_bench/logs/qa_bench_{archetype}_log.pkl")
+        personnality_prompt: str = generate_agent_prompt(archetype, load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
+        agent_memories: Memories = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories').get_all_documents()[0]
+        data: SimpleNamespace = load_logs(f"qa_bench/logs/qa_bench_{archetype}_log.pkl")
         
         # Creates attributes such as logs.<archetype>.client 
         logs[archetype] = SimpleNamespace(
@@ -77,80 +71,102 @@ def load_qa_bench_data():
         
     return logs
 
-async def run_benchmarks(logs):
+async def run_benchmarks(logs: dict):
     
-    if os.path.exists("results.json"):
-        with open("results.json", "r") as file:
-            results = json.load(file)
-    
-    else:        
-        results = {
-            # Recall / Probing
-            'a1': {'description': 'Self-knowledge Recall,', 'archetypes': {}},
-            'a2': {'description': 'Dialogue Recall', 'archetypes': {}},
-            'a3': {'description': 'Reflection Recall', 'archetypes': {}},
-            
-            # Query Engine
-            'b1': {'description': 'Context Queries Relevancy', 'archetypes': {}},
-            'b2': {'description': 'Responder Queries Relevancy', 'archetypes': {}},
-            
-            # Contextualizer 
-            'c1': {'description': 'Context Accuracy', 'archetypes': {}},
-            
-            # Models outputs
-            'd1': {'description': 'Reflection Relevancy', 'archetypes': {}},
-            'e1': {'description': 'Message Relevancy', 'archetypes': {}},
-            'f1': {'description': 'Plan Relevancy', 'archetypes': {}}
-        }
+    results = {
+        # Recall / Probing
+        'a1': {'description': 'Self-knowledge Recall,', 'archetypes': {}},
+        'a2': {'description': 'Dialogue Recall', 'archetypes': {}},
+        'a3': {'description': 'Reflection Recall', 'archetypes': {}},
+        
+        # Query Engine
+        'b1': {'description': 'Context Queries Relevancy', 'archetypes': {}},
+        'b2': {'description': 'Responder Queries Relevancy', 'archetypes': {}},
+        
+        # Contextualizer 
+        'c1': {'description': 'Context Accuracy', 'archetypes': {}},
+        
+        # Models outputs
+        'd1': {'description': 'Reflection Relevancy', 'archetypes': {}},
+        'e1': {'description': 'Message Relevancy', 'archetypes': {}},
+        'f1': {'description': 'Plan Relevancy', 'archetypes': {}}
+    }
 
     for archetype, log in logs.items():
         memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
+        
         print('Working on', archetype)
+        
         await log.client.start()
 
-        print('Starting')
+        print('Starting A1')
         results['a1']['archetypes'][archetype] = await run_a1(log.client, Prober, log.personality)
         print('A1 DONE')
+        
+        print('Starting A2')
         results['a2']['archetypes'][archetype] = await run_a2(log.client, Prober, log.historic)
         print('A2 DONE')
+        
+        print('Starting A3')
         results['a3']['archetypes'][archetype] = await run_a3(log.client, Prober, log.agent_memories)
         print('A3 DONE')
+        
+        print('Starting B1')
         results['b1']['archetypes'][archetype] = run_b1(log.context_queries, memory)
         print('B1 DONE')
-        save_results(results)
+        
+        print('Starting B2')
         results['b2']['archetypes'][archetype] = run_b2(log.response_queries, memory)
         print('B2 DONE')
-        save_results(results)
+        
+        print('Starting C1')
         results['c1']['archetypes'][archetype] = await run_c1(log.neutral_ctxs, Contextualizer('llama3:8b'))
         print('C1 DONE')
-        save_results(results)
+        
+        print('Starting D1')
         results['d1']['archetypes'][archetype] = run_d1(log.reflections, Prober)
         print('D1 DONE')
-        save_results(results)
+
+        print('Starting E1')
         results['e1']['archetypes'][archetype] = run_e1(log.response, Prober)
         print('E1 DONE')
+        
+        print('Starting F1')
         results['f1']['archetypes'][archetype] = run_f1(log.plans, Prober)
-        save_results(results)
         print('F1 DONE')
-        save_results(results)
-        results['e1']['archetypes'][archetype] = run_e1(log.response, Prober)
-        print('E1 DONE')
-        save_results(results)
-
+        
         await logs.client.stop()
-    return results
+        
+        print(f'Saving results for {archetype}')
+        save_results()
 
-def save_results(results):
-    with open("results.json", "w") as f:
-        json.dump(results, f, indent=4, cls=NumpyEncoder) 
+    return results
 
 if __name__ == "__main__":
     
-    import json
-    import numpy as np
-      
-    asyncio.run(prepare_qa_bench())
-      
+    args = sys.argv[1:]
+    
+    should_run = 'n'
+    run_time = 3600
+    verbose = False
+
+    for arg in args:
+        if arg.lower() in ['y', 'n']:
+            should_run = arg.lower()
+        elif arg.isdigit():
+            run_time = int(arg)
+        elif arg.lower() == 'verbose':
+            verbose = True
+
+    if should_run == 'y':
+        if verbose:
+            print(f'About to run simulation for {run_time} seconds...')
+        asyncio.run(prepare_qa_bench(run_time, verbose, 'configs/qa_bench_prepare.yaml'))
+    
     logs = load_qa_bench_data()
+    if verbose:
+        print('Loaded logs, running benchmarks...')
+        
     results = asyncio.run(run_benchmarks(logs))
+
     

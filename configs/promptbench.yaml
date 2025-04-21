@@ -5,7 +5,7 @@ config:
   memories: True # -1 = deactivated
   plans: True
   model: "llama3:8b"
-  base-plan: ""
+  base_plan: ""
   channel_id: 1
   sequential_mode: True
   random_ignore: False

@@ -5,7 +5,7 @@ config:
   memories: True
   plans: True
   model: "llama3:8b"
-  base-plan: ""
+  base_plan: ""
   channel_id: 1362178271323623697
   sequential_mode: False
   random_ignore: False
