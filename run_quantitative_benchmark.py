@@ -34,9 +34,9 @@ async def prepare_qa_bench(duration, print_replies, config_file):
         client.agent.logger.save_logs()
 
     print('Saving historic in output/qa_bench/')
-    with open("qa_bench/qa_bench_histo.pkl", "wb") as f:
+    with open("output/qa_bench/qa_bench_histo.pkl", "wb") as f:
         pickle.dump(historic, f)   
-    with open("qa_bench/qa_bench_histo.txt", "w") as f:
+    with open("output/qa_bench/qa_bench_histo.txt", "w") as f:
         for line in historic:
             f.writelines(f'{line}\n')
 
@@ -45,14 +45,14 @@ def load_qa_bench_data():
     clients: PromptClient = PromptClient.build_clients('configs/qa_config.yaml')
     logs:dict[str, SimpleNamespace] = {}
 
-    with open('./qa_bench/qa_bench_histo.pkl', 'rb') as f:
+    with open('./output/qa_bench/qa_bench_histo.pkl', 'rb') as f:
         historic: list = pickle.load(f)
         
     for archetype in archetypes:
         
         personnality_prompt: str = generate_agent_prompt(archetype, load_yaml('archetypes.yaml')['agent_archetypes'][archetype])
-        agent_memories: Memories = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories').get_all_documents()[0]
-        data: SimpleNamespace = load_logs(f"qa_bench/logs/qa_bench_{archetype}_log.pkl")
+        agent_memories: Memories = Memories(f'qa_bench_{archetype}_mem.pkl', 'output/qa_bench/memories').get_all_documents()[0]
+        data: SimpleNamespace = load_logs(f"output/qa_bench/logs/qa_bench_{archetype}_log.pkl")
         
         # Creates attributes such as logs.<archetype>.client 
         logs[archetype] = SimpleNamespace(
@@ -93,7 +93,7 @@ async def run_benchmarks(logs: dict):
     }
 
     for archetype, log in logs.items():
-        memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'qa_bench/memories')
+        memory = Memories(f'qa_bench_{archetype}_mem.pkl', 'output/qa_bench/memories')
         
         print('Working on', archetype)
         
