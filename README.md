@@ -223,3 +223,10 @@ though the nature of the code make it functionally separate from the discord lay
   - **Run console simulation**: Instantiate all archetype and randomly selects next responder each turn.
 
 - Ideal for lightweight experimentation without requiring a full Discord environment.
+- Assumes the config sets the bot to be sequential
+
+**Note:**  
+Delays or lag may occur when all agents plan or write memories simultaneously.  
+Since they operate within the same execution thread, wait calls can accumulate, leading to performance bottlenecks.  
+Although the prompt client is asynchronous, it behaves in a somewhat synchronous manner under these conditions.
+
