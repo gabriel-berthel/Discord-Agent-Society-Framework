@@ -169,7 +169,7 @@ class PromptClient:
 
         logger.info('Running simulation')
         clients, historic = await PromptClient.run_simulation(
-            duration, print_replies, config_file='configs/qa_bench.yaml'
+            duration, print_replies, config_file='configs/clients/qa_bench.yaml'
         )
 
         logger.info('Saving logs in output/qa_bench/logs')
