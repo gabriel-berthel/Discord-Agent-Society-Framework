@@ -1,3 +1,9 @@
+# Summuary
+
+This project is designed to simulate a small society of AI agents — each with their own personality, memory, and behavior. While it’s built to handle multi-agent conversations and dynamics, it also works just fine for running a single agent in either a Discord server or directly in the terminal.
+
+The codebase separates core functions like memory, planning, and response logic, making it easy to modify or extend. Whether you're experimenting with agent interactions or just running a one-off bot, the system gives you a solid, modular starting point.
+
 # How to run
 
 ## Generalities
@@ -13,40 +19,207 @@
 
 **Notes:** Agent not guaranteed to behave optimally with other models, without tweaking parameters (ie: temparature).
 
-## Run Agent on discord
-
-### Create new agent
-
-Create **agent.env** file with the following keys:
-
-```
-TOKEN=<discord-api-token>
-SERVER_ID=<discord-server-id>
-ARCHETYPE=<archetype> (ie: troll)
-```
-
-**Each** agent should have their associated .env file!
-
-### Install requirements
+## Install requirements
 
 Run `pip install -r .\requirements.txt` to install dependencies. If you are on linux, also run `pip install uvloop`
 
-### Run the agent
+## Command-Line Interface (CLI) Usage Guide
 
-To run the agent on discord, start it using `python run_on_discord.py <ur .env file>`
+**General usage:**  
+`python hub.py <command> [options]`
 
-Discord agent configuration is located in `configs/discord_server.yaml` and is **shared** across agents,
-though feel free to modify *run_on_discord.py* if you want to have one config per discord agent.
+---
 
-**Note:** You can also define more archetypes in `archetype.yaml`
+### Commands & Arguments
 
-## Run the simulation outside discord:
+#### 1. `discord`
+Run a specified agent on a Discord server.  
+**Note:** Provide environment variables either via a `.env` file [1] or individual arguments [2*]. All three parameters below are required.
 
-Creating an instance of the Agent class, **any client** can be made, as all it takes is **reading** and **consuming**
-from the queues. However, for **convenience**, the class `PromptClient` in `clients/prompt_client.py` provides a
-*syncrhonous-ish* client. The method `run_simulation` creates the clients for all 5 archetypes and select the next one
-to speak randomly.
+**Options:**
+- `--env`         : *(string)* Path to a `.env` file containing environment variables. [1]  
+- `--token`       : *(string)* Discord bot token for authentication. [2a]  
+- `--server_id`   : *(string)* Discord server ID for bot deployment. [2b]  
+- `--archetype`   : *(string)* Agent archetype to initialize. [2c]  
 
-If you wish to run the simulation that way, **outside discord**, you can simply run
-`run_on_console.py <time in seconds>` and tweak `configs/console.yaml` if you wish to make any change to it.
+---
 
+#### 2. `simulate`
+Run a console-based simulation of available agents. Agents reply sequentially, with the next agent selected randomly.
+
+**Options:**
+- `--duration`    : *(int)* Duration of the simulation in seconds. Default: `3600`.  
+- `--verbose`     : *(flag)* Enable detailed logging during simulation.  
+
+---
+
+#### 3. `prep_qa`
+Prepare QA benchmark data by running a simulation and saving outputs to `output/qa_bench/*`.
+
+**Options:**
+- `--duration`    : *(int)* Time allocated for data preparation. Default: `3600`.  
+- `--verbose`     : *(flag)* Enable detailed output for preparation steps.  
+
+---
+
+#### 4. `qa_bench`
+Run QA benchmark tasks using outputs generated from `prep_qa`.  
+**Requires:** Execution of `prep_qa` beforehand.
+
+**Options:**
+- `--verbose`     : *(flag)* Enable detailed output during benchmarking.  
+
+---
+
+#### 5. `prob`
+Probe an agent using a specified configuration and archetype. Opens a chat-like interface for interaction.
+
+**Options:**
+- `--config`      : *(string)* Path to the `.yaml` config file. **(Required)**  
+- `--archetype`   : *(string)* Name of the agent archetype. **(Required)**  
+
+---
+
+*Notes:* Use `--help` with any subcommand for detailed usage, e.g., `python hub.py discord --help`
+
+## Configuration Files
+
+**General configuration file**:
+- `archetypes.yaml`: define the archetypes here
+- `ollama_options.py`: base-model tweaking here (per module) 
+
+**Agent Yaml Configuration Files are located in `configs\clients\`**:
+- (1) `discord.yaml`: Used running the simulation on discord
+- (2) `simulate.yaml`: Used running the simulation in the console
+- (3) `prep_qa.yaml`: Used to prepare Quantative Benchmark data
+- (4) `qa_bench.yaml`: Used Compute Quantitative Benchmark
+- `promptbench.yaml`: parameters for the promptbench benchmarking
+
+## Run the simulation
+
+### On the console
+- Make sure the config file sets the agents in sequential mode
+- Run  `python hub.py simulate --duration <duration in seconds> --verbose` 
+
+### On a discord server
+
+Make sure to:
+- Create (1) application per agent
+- Enable ALL intents on the application portal
+- Invite the application inside the server
+
+For each agent create a .env with the following keys:
+- `TOKEN`: discord application token
+- `SERVER_ID`: server ID the should operate in
+- `ARCHETYPE`: archetype of the agent (defined in `configs/archetypes.yaml`)
+
+Then run `python hub.py discord --env <agent_env_file>`
+
+Alternatively, you can run `python hub.py discord --token <token> --server_id <id> --archetype <archetype>`
+
+## Run benchmarks
+
+TODO: Write this part
+
+
+## Some technical details
+
+### Modules
+
+- `agent_memories.py`: Handles Vector Database for Memory Retrival
+- `agent_planner.py`: Handles Agent Planning 
+- `agent_response_handler.py`: Handles Agent Responses 
+- `agent_summuries.py`: create contextual summaries & agent memories
+- `query_engine.py`: creates queries used for memory retrival
+
+### Important Models
+
+#### `agent.py` — Agent Lifecycle and Communication Orchestrator
+
+This object encapsulates the internal state and behavior of an AI Agent. It handles asynchronous communication with external clients via queues and coordinates with internal modules through structured routines.
+
+##### Asynchronous I/O Communication
+
+- **`responses`** — Outbound messages from the agent to the client.
+  - Emission is guaranteed if `sequential` mode is enabled in the configuration.
+  - Must be consumed by an external asynchronous client.
+
+- **`event_queue`** — Inbound messages from the client to the agent (primary input channel).
+  - Messages are inserted by an external client.
+  - Monitored and consumed by the Response Routine.
+  - May be processed in "read-only", "ignore", or "batch" modes.
+
+- **`_processed_message_queue`** — Internal staging for memory formation.
+  - Populated when events are processed in "read-only" or "batch" modes.
+  - Consumed by the Memory Routine to generate and store compacted memories.
+
+##### Module Communication
+
+- **Planning Routine**
+  - Triggered every 5 memories (if enabled).
+  - Handles high-level planning tasks such as goal setting or dialogue structuring.
+
+- **Memory Routine**  
+  **Input**: `_processed_message_queue`  
+  **Output**: Writes to the memory module.
+  - Invoked every 5 processed messages (if enabled).
+  - Updates long-term or contextual memory from compacted experiences.
+
+- **Response Routine**  
+  **Input**: `event_queue`  
+  **Outputs**: `_processed_message_queue`, `responses`
+  - Manages message interpretation and determines reply strategy.
+  - Supports both deterministic and probabilistic behavior modes:
+
+  - **Sequential Mode (`sequential = True`)**
+    - Messages are processed and responded to immediately (synchronous-like behavior).
+
+  - **Asynchronous Mode (`sequential = False`)**
+    - Introduces dynamic, realistic behavior:
+      - Random channel switching  
+      - Selective message ignoring  
+      - “Read-only” mode for silent memory formation  
+      - Batched processing of event queue  
+      - Initiates spontaneous or idle-triggered new topics  
+
+- **Module Interactions**
+  - **DiscordServer**: Enables contextual awareness through channel switching and summarization of recent messages (up to 15).
+  - **Memory Module**: In-memory by default with persistence via pickling. Easily swappable with other backends implementing the same interface.
+
+---
+
+#### `discord_server.py` — Virtual Representation of the Discord Server
+
+Acts as an abstracted, client-managed representation of a Discord-like environment, enabling decoupling between the agent logic and the communication platform.
+
+Key Points:
+- Must be instantiated and managed externally (by the client).
+- Enables the agent to:
+  - Switch channels based on context or events.
+  - Retrieve the last *n* messages from a specific channel.
+- Enable ping translation (`@<DiscordId>` to display name).
+- Designed to generalize across any channel-based communication backend.
+
+### Clients
+
+Discord is merely the front end of the project, 
+though the nature of the code make it functionally separate from the discord layer.
+
+#### `discord_client.py` — Agent Deployment in a Discord Environment
+
+- Manages the lifecycle of an agent within a live Discord server.
+- Interfaces with `discord_server.py` to provide the agent with channel-based context and message events.
+- Responsible for:
+  - Connecting to Discord APIs.
+  - Routing messages from channels into the agent’s event queue.
+  - Delivering agent responses back into the appropriate Discord channels.
+
+#### `prompt_client.py` — Console-Based Agent Runner
+
+- Provides a CLI-based interface for interacting with agents.
+- Primary use cases:
+  - **Benchmarking**: Evaluate agent behavior and performance in a controlled terminal setting.
+  - **Chat-like Prompting**: Manually probe or interact with the agent for Q&A, debugging, messing around or research.
+  - **Run console simulation**: Instantiate all archetype and randomly selects next responder each turn.
+
+- Ideal for lightweight experimentation without requiring a full Discord environment.

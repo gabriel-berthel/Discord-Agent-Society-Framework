@@ -19,7 +19,7 @@ class QueryEngine:
     def __init__(self, model):
         self.model = model
 
-    async def context_query(self, messages):
+    async def create_transcript_queries(self, messages):
         """
         Generates queries based on a list of Discord messages only.
 
@@ -42,7 +42,7 @@ class QueryEngine:
 
         return []
 
-    async def response_queries(self, plan, context, personality, messages=None):
+    async def create_response_queries(self, plan, context, personality, messages=None):
         """
         Generates queries using current plan, user context, and personality traits.
 

@@ -163,7 +163,7 @@ class Agent:
         Helps the agent retain short-term information without overloading the memory system.
         """
         msgs = [msg for msg in self.server.get_messages(channel_id).copy()]
-        neutral_ctx = await self.contextualizer.neutral_context(msgs, bot_context)
+        neutral_ctx = await self.contextualizer.summurize_transcript(msgs, bot_context)
         self.logger.log_event('neutral_ctxs', (msgs, bot_context), neutral_ctx)
         return neutral_ctx
 
@@ -173,7 +173,7 @@ class Agent:
         Used during planning to retrieve the most context-aware memories.
         """
         msgs = [msg for msg in self.server.get_messages(channel_id).copy()]
-        context_queries = await self.query_engine.context_query(msgs)
+        context_queries = await self.query_engine.create_transcript_queries(msgs)
         self.logger.log_event('context_queries', msgs, context_queries)
         return context_queries
 
@@ -182,7 +182,7 @@ class Agent:
         Queries memory using personality, plan, and current context to retrieve relevant reflections.
         Used during response generation to give agents consistent personalities.
         """
-        queries = await self.query_engine.response_queries(plan, context, self.personnality_prompt, messages)
+        queries = await self.query_engine.create_response_queries(plan, context, self.personnality_prompt, messages)
         self.logger.log_event('response_queries', (plan, context, self.personnality_prompt, messages), queries)
         memories = self.memory.query_multiple(queries)
         self.logger.log_event('memories', queries, memories)
@@ -193,7 +193,7 @@ class Agent:
         Generates a user response. 
         Combines current context, short-term memory, long-term memory, and personality info.
         """
-        response = await self.responder.respond(plan, context, memories, messages, base_prompt, self.last_messages)
+        response = await self.responder.make_response(plan, context, memories, messages, base_prompt, self.last_messages)
         self.logger.log_event('response', (plan, context, memories, messages, base_prompt), response)
         self.last_messages.append(response)
         return response
@@ -203,7 +203,7 @@ class Agent:
         Generates a reflective summary based on recent messages.
         Used to store meaningful insights into long-term memory & allow agent to evolve.
         """
-        reflection = await self.contextualizer.reflection(messages, personality_prompt)
+        reflection = await self.contextualizer.summurize_into_memory(messages, personality_prompt)
         self.logger.log_event('reflections', (messages, personality_prompt), reflection)
         return reflection
 
@@ -211,7 +211,7 @@ class Agent:
         """
         Refines the agent's plan by incorporating new memories, context, and the personality prompt.
         """
-        plan = await self.planner.refine_plan(former_plan, context, unique_memories, channel_context, base_prompt)
+        plan = await self.planner.make_plan(former_plan, context, unique_memories, channel_context, base_prompt)
         self.logger.log_event('plans', (former_plan, context, unique_memories, base_prompt), plan)
         return plan
 

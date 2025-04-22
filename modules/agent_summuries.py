@@ -17,7 +17,7 @@ class Contextualizer:
     def __init__(self, model):
         self.model = model
 
-    async def neutral_context(self, messages, bot_context):
+    async def summurize_transcript(self, messages, bot_context):
         """
         Generates a neutral, factual summary of a Discord conversation.
 
@@ -52,7 +52,7 @@ class Contextualizer:
 
         return "Reading the discord conversation, I can observe that there is no messages at the moment. I should consider sparking a new topic."
 
-    async def reflection(self, messages, agent_base_prompt):
+    async def summurize_into_memory(self, messages, agent_base_prompt):
         """
         Produces a reflective, personal note based on a Discord conversation.
 

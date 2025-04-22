@@ -16,7 +16,7 @@ class Planner:
     def __init__(self, model):
         self.model = model
 
-    async def refine_plan(self, plan, context, memories, channel_context, argent_base_prompt):
+    async def make_plan(self, plan, context, memories, channel_context, argent_base_prompt):
         """
         Refines and generates a new plan based on current context, memories, previous decisions, and channel context.
 

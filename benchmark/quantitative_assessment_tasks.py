@@ -49,7 +49,7 @@ async def run_c1(neutral_ctxs, contextualizer: Contextualizer):
         msgs, bot_context = arguments
         content = bot_context + '\n'.join(msgs)
 
-        agent = await contextualizer.neutral_context(msgs, bot_context)
+        agent = await contextualizer.summurize_transcript(msgs, bot_context)
         baseline = summarize_text(content)
 
         agent_keywords = extract_keywords(agent)

@@ -18,7 +18,7 @@ class Responder:
     def __init__(self, model):
         self.model = model
 
-    async def respond(self, plan, context, memories, messages, agent_base_prompt, last_messages=None):
+    async def make_response(self, plan, context, memories, messages, agent_base_prompt, last_messages=None):
         """
         Generates a response to a Discord conversation based on the provided context, plan, memories, and messages.
 

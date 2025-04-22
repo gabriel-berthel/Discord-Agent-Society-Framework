@@ -16,8 +16,8 @@ if os.name != "nt":
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-SERVER_CONFIG = 'configs/discord_server.yaml'
-CONSOLE_SIMULATION_CONFIG = 'configs/local.yaml'
+SERVER_CONFIG = 'configs/clients/discord.yaml'
+CONSOLE_SIMULATION_CONFIG = 'configs/clients/simulate.yaml'
 
 # ---------- Configs ----------
 @dataclass
@@ -122,7 +122,6 @@ def main():
     # Simulation
     p_sim = subparsers.add_parser("simulate", help="Run console simulation")
     p_sim.add_argument("--duration", type=int, default=3600)
-    p_sim.add_argument("--verbose", action="store_true")
 
     # QA Benchmark Prep
     p_prep = subparsers.add_parser("prep_qa", help="Prepare QA benchmark data")
