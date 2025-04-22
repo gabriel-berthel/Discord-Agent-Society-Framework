@@ -29,7 +29,7 @@ ARCHETYPE=<archetype> (ie: troll)
 
 ### Install requirements
 
-Run `pip install -r .\requirements.txt` to install dependencies.
+Run `pip install -r .\requirements.txt` to install dependencies. If you are on linux, also run `pip install uvloop`
 
 ### Run the agent
 

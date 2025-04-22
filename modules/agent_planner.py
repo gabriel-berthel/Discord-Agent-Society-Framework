@@ -1,8 +1,8 @@
 import ollama
 
 from configs.ollama_options import AGENT_PLANNING_OPTIONS
-from utils.agent_utils import *
-from utils.base_prompt import planner_base
+from utils.agent.agent_utils import *
+from utils.agent.base_prompts import planner_base
 
 
 class Planner:

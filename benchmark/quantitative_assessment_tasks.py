@@ -2,7 +2,7 @@ from benchmark.agent_prober import Prober
 from clients.prompt_client import PromptClient
 from modules.agent_memories import Memories
 from modules.agent_summuries import Contextualizer
-from utils.qa_tasks_utils import *
+from utils.benchmarks.qa_tasks_utils import *
 
 
 def run_b1(context_queries, memory_module: Memories):

@@ -1,7 +1,7 @@
 import ollama
 
 from configs.ollama_options import AGENT_RESPONSE_OPTIONS
-from utils.agent_utils import clean_response
+from utils.agent.agent_utils import clean_response
 
 
 class Responder:

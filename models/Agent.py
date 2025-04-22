@@ -14,8 +14,8 @@ from modules.agent_planner import Planner
 from modules.agent_response_handler import Responder
 from modules.agent_summuries import Contextualizer
 from modules.query_engine import QueryEngine
-from utils.agent_utils import *
-from utils.base_prompt import generate_agent_prompt
+from utils.agent.agent_utils import *
+from utils.agent.base_prompts import generate_agent_prompt
 from utils.file_utils import load_yaml
 
 logging.getLogger("transformers").setLevel(logging.ERROR)

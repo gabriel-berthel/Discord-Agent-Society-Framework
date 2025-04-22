@@ -1,4 +1,4 @@
-from utils.agent_utils import DictToAttribute
+from utils.agent.agent_utils import DictToAttribute
 
 
 def generate_agent_prompt(archetype_name: str, archetype_data: DictToAttribute):

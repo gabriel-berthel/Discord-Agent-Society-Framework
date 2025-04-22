@@ -11,21 +11,19 @@ from dotenv import load_dotenv
 from models.agent import Agent
 from models.discord_server import DiscordServer
 
-load_dotenv('agent.env')
-
 logger = logging.getLogger(__name__)
 
 
 class PromptClient:
-    def __init__(self, agent_conf, archetype, name, server_id, server):
-        self.name = name
-        self.id = server_id
+    def __init__(self, agent_conf, archetype, user_id, server):
         self.server: DiscordServer = server
-        self.agent = Agent(server_id, agent_conf, server, archetype)
+        self.agent = Agent(user_id, agent_conf, server, archetype)
         self.tasks = []
-        self.server.update_user(server_id, self.agent.name)
+        self.name = self.agent.name
+        self.server.update_user(user_id, self.agent.name)
+
         logger.info(
-            f"Agent-Client: [key=PromptClient] | [{self.name}] Initialized with archetype '{archetype}', ID: {server_id}")
+            f"Agent-Client: [key=PromptClient] | [{self.name}] Initialized with archetype '{archetype}', ID: {self.server.id}")
 
     async def start(self):
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Starting agent routines.")
@@ -100,7 +98,7 @@ class PromptClient:
         ]
 
         clients = {
-            role: PromptClient(config_file, role, name, client_id, server)
+            role: PromptClient(config_file, role, client_id, server)
             for role, name, client_id in roles
         }
 
@@ -137,7 +135,7 @@ class PromptClient:
 
             for role in roles:
                 if role != current_archetype:
-                    agent_histories[role].append((message, current_client.id, current_client.name, 1))
+                    agent_histories[role].append((message, current_client.server.id, current_client.name, 1))
 
             next_archetype = random.choice([r for r in roles if r != current_archetype])
             next_client = clients[next_archetype]

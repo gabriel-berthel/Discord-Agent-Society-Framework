@@ -5,7 +5,7 @@ import pandas as pd
 from promptbench.prompts import task_oriented, method_oriented, role_oriented
 from tqdm import tqdm
 
-from utils.promptbench_utils import *
+from utils.benchmarks.promptbench_utils import *
 
 # Prompt name
 task_name_map = {

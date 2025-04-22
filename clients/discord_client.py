@@ -15,7 +15,8 @@ server: DiscordServer|None = None
 tasks = []
 guild: hikari.RESTGuild|None = None
 
-def run(agent_conf, archetype):
+def run(agent_conf):
+
     bot = hikari.GatewayBot(
         intents=hikari.Intents.ALL, # Important! Didn't test with less intents! Toggle them all just to be sure.
         token=os.getenv("TOKEN")
@@ -121,7 +122,7 @@ def run(agent_conf, archetype):
                 logger.debug(f"Agent-Client: [key=Discord] | Loaded channel: {channel.name} ({channel.id})")
 
         # Creating Agent
-        agent = ag.Agent(uid, agent_conf, server, archetype)
+        agent = ag.Agent(uid, agent_conf, server, os.getenv("ARCHETYPE"))
         logger.info(f"Agent-Client: [key=Discord] | Created Agent")
 
         # Starting message_handler() ready to consume messages from agent

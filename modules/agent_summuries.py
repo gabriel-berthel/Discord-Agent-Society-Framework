@@ -1,8 +1,8 @@
 import ollama
 
 from configs.ollama_options import CONTEXTUALIZER_NEUTRAL_OPTIONS, REFLECTIONS_OPTIONS
-from utils.agent_utils import *
-from utils.base_prompt import neutral_base, engaged_base
+from utils.agent.agent_utils import *
+from utils.agent.base_prompts import neutral_base, engaged_base
 
 
 class Contextualizer:

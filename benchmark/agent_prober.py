@@ -3,8 +3,6 @@ import json
 import ollama
 from dotenv import load_dotenv
 
-load_dotenv()
-
 # Prompt templates
 QUIZ_SYSTEM_PROMPT = """\
 You are crafting quiz questions from pieces of text. Alternate between binary and multiple-choice formats:

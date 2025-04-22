@@ -5,12 +5,12 @@ import pickle
 import sys
 import warnings
 
-from benchmark.qa_tasks import *
+from benchmark.quantitative_assessment_tasks import *
 from clients.prompt_client import PromptClient
 from modules.agent_memories import Memories
 from modules.agent_summuries import Contextualizer
-from utils.agent_utils import *
-from utils.base_prompt import generate_agent_prompt
+from utils.agent.agent_utils import *
+from utils.agent.base_prompts import generate_agent_prompt
 from utils.file_utils import load_agent_logs, save_benchmark_results, load_yaml
 import subprocess
 
@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hu
 
 def load_qa_bench_data() -> dict[str, SimpleNamespace]:
     archetypes = ["debunker", "nerd", "peacekeeper", "chameleon", "troll"]
-    clients: dict[str, PromptClient] = PromptClient.build_clients('configs/qa_config.yaml')
+    clients: dict[str, PromptClient] = PromptClient.build_clients('../configs/qa_config.yaml')
     agent_logs: dict[str, SimpleNamespace] = {}
 
     with open('./output/qa_bench/qa_bench_histo.pkl', 'rb') as f:
@@ -27,7 +27,7 @@ def load_qa_bench_data() -> dict[str, SimpleNamespace]:
 
     for archetype in archetypes:
         personnality_prompt: str = generate_agent_prompt(archetype,
-                                                         load_yaml('configs/archetypes.yaml')['agent_archetypes'][
+                                                         load_yaml('../configs/archetypes.yaml')['agent_archetypes'][
                                                              archetype])
         agent_memories: Memories = \
             Memories(f'qa_bench_{archetype}_mem.pkl', 'output/qa_bench/memories').get_all_documents()[0]

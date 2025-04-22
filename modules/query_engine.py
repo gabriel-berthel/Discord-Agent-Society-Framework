@@ -1,8 +1,8 @@
 import ollama
 
 from configs.ollama_options import QUERIES_OPTIONS
-from utils.agent_utils import split_queries
-from utils.base_prompt import query_prompt_base
+from utils.agent.agent_utils import split_queries
+from utils.agent.base_prompts import query_prompt_base
 
 
 class QueryEngine:
