@@ -46,10 +46,11 @@ def get_projection_fn(pred):
 
 
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
-    for prompt in prompts:
+    preds, labels = [], []
 
-        preds, labels = [], []
-
+    # TODO: A la base ça retournait après la boucle sur le premier prompt.
+    # Donc j'ai tronqué au 1er directement car jcp quel était ton intention.
+    for prompt in prompts[:1]:
         for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
             input_text = pb.InputProcess.basic_format(prompt, data)
 
@@ -64,8 +65,7 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
             labels.append(label)
 
         # evaluate
-
-        return pb.Eval.compute_cls_accuracy(preds, labels)
+    return pb.Eval.compute_cls_accuracy(preds, labels)
 
 
 async def run_agents_benchmark(save_to="prompt_bench.csv"):
