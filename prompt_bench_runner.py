@@ -38,7 +38,7 @@ async def prompt_agent(prompt, client):
 
 
 RESULTS = []
-clients = cl.PromptClient.build_clients('configs/promptbench.yaml')
+clients = cl.PromptClient.build_clients('configs/clients/promptbench.yaml')
 
 
 def get_projection_fn(pred):
