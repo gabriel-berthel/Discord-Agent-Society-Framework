@@ -46,17 +46,26 @@ def get_projection_fn(pred):
 
 
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
-    prompt = prompts[0] if isinstance(prompts, list) else prompts
-    preds, labels = [], []
-    for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
-        input_text = pb.InputProcess.basic_format(prompt, data)
-        label = data['label']
-        raw_pred = await prompt_fn(input_text, *args)
-        pred = pb.OutputProcess.cls(raw_pred, projection)
-        preds.append(pred)
-        labels.append(label)
-    # evaluate
-    return pb.Eval.compute_cls_accuracy(preds, labels)
+    for prompt in prompts:
+
+        preds, labels = [], []
+
+        for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
+            input_text = pb.InputProcess.basic_format(prompt, data)
+
+            label = data['label']
+
+            raw_pred = await prompt_fn(input_text, *args)
+
+            pred = pb.OutputProcess.cls(raw_pred, projection)
+
+            preds.append(pred)
+
+            labels.append(label)
+
+        # evaluate
+
+        return pb.Eval.compute_cls_accuracy(preds, labels)
 
 
 async def run_agents_benchmark(save_to="prompt_bench.csv"):
