@@ -55,10 +55,12 @@ class PromptClient:
         await self.agent.add_event(event)
 
         attempt = 0
-        message, _ = await self.agent.responses.get()
+        message = ""
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
 
-        while attempt < 5 and message == "":
+        while attempt < 3 and message == "":
+            message, _ = await self.agent.responses.get()
+
             logger.info(
                 f"Agent-Client: [key=PromptClient] | [{self.name}] Empty response attempt {attempt + 1}, retrying...")
             message, _ = await self.agent.responses.get()
