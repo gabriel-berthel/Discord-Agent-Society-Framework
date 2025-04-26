@@ -66,7 +66,7 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
         await client.start()
 
     for task, prompts, projection, dataset in tasks:
-        dataset = pb.DatasetLoader.load_dataset(dataset)[:1]
+        dataset = pb.DatasetLoader.load_dataset(dataset)[:200]
         scores = []
         for architype, client in clients.items():
             score = await run_task(prompts, dataset, architype, projection, prompt_agent, [client])
