@@ -39,8 +39,8 @@ class QueryEngine:
                     system=query_prompt_base,
                     options=QUERIES_OPTIONS
                 ),
-                timeout=60 * 3,
-                timeout_message="Query Generation Aborted! Model waited for 3 minutes",
+                timeout=60,
+                timeout_message="Query Generation Aborted!",
                 default_return=[]
             )
 
@@ -88,8 +88,8 @@ Here is the context from your notebook or diary:
                 system=system_instruction,
                 options=QUERIES_OPTIONS
             ),
-            timeout=60 * 3,
-            timeout_message="Query Generation Aborted! Model waited for 3 minutes",
+            timeout=60,
+            timeout_message="Query Generation Aborted!",
             default_return=[]
         )
 

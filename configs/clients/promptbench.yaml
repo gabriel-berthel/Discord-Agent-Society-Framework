@@ -22,4 +22,4 @@ config:
   # Logs
   save_logs: False # Save module outputs as pickles
   log_path: 'output/logs' # where module output should be saved
-  log_level: 40 # log level to show from the console (only for the agent)
+  log_level: 10 # log level to show from the console (only for the agent)

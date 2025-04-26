@@ -50,8 +50,7 @@ class PromptClient:
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Prompting with message: '{message}'")
         self.server.update_user(user_id, username)
         event = (channel_id, user_id, username, message)
-        self.server.add_message(channel_id, user_id, username, message)
-
+        self.server.add_message(*event)
         await self.agent.add_event(event)
 
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
@@ -65,13 +64,13 @@ class PromptClient:
     async def multi_prompt(self, events):
         logger.info(
             f"Agent-Client: [key=PromptClient] | [{self.name}] Executing multi_prompt with {len(events)} events.")
-
+        self.agent.lock_response = True
         for message, user_id, username, channel_id in events:
             self.server.update_user(user_id, username)
             event = (channel_id, user_id, username, message)
+            logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Trying to add event: [{username}] -> '{message}'")
             await self.agent.add_event(event)
-            logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Event added: [{username}] -> '{message}'")
-
+        self.agent.lock_response = False
         message, _ = await self.agent.responses.get()
         self.server.add_message(self.agent.monitoring_channel, self.agent.user_id, self.agent.name, message)
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Multi-prompt response: '{message}'")
@@ -129,7 +128,7 @@ class PromptClient:
 
             for role in roles:
                 if role != current_archetype:
-                    agent_histories[role].append((message, current_client.server.id, current_client.name, 1))
+                    agent_histories[role].append((message, current_client.agent.user_id, current_client.name, 1))
 
             next_archetype = random.choice([r for r in roles if r != current_archetype])
             next_client = clients[next_archetype]
@@ -163,7 +162,7 @@ class PromptClient:
 
         logger.info('Running simulation')
         clients, historic = await PromptClient.run_simulation(
-            duration, print_replies, config_file='configs/clients/qa_bench.yaml'
+            duration, print_replies, config_file='configs/clients/prep_qa.yaml'
         )
 
         logger.info('Saving logs in output/qa_bench/logs')

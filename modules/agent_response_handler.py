@@ -79,8 +79,8 @@ Bring new beef to the table! Keep responses brief, like 1–2 sentences max, lik
                 options=AGENT_RESPONSE_OPTIONS,
                 stream=False
             ),
-            timeout=60*3,
-            timeout_message="Response Generation Aborted! Model waited for 3 minutes"
+            timeout=60,
+            timeout_message="Response Generation Aborted!"
         )
 
         return clean_response(response['response'])
@@ -114,7 +114,7 @@ Bring new beef to the table! Keep responses brief, like 1–2 sentences max, lik
                 system=system_instruction,
                 options=AGENT_RESPONSE_OPTIONS
             ),
-            timeout=60*1,
+            timeout=60*3,
             timeout_message="Response Generation Aborted! Model waited for 3 minutes",
             default_return="Hi"
         )

@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 import asyncio
 import subprocess
 import os
+import logging
+
 
 from clients.prompt_client import PromptClient
 import clients.discord_client as discord_client
@@ -14,7 +16,6 @@ if os.name != "nt":
     import uvloop
 
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
 
 SERVER_CONFIG = 'configs/clients/discord.yaml'
 CONSOLE_SIMULATION_CONFIG = 'configs/clients/simulate.yaml'

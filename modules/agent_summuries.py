@@ -49,8 +49,8 @@ class Contextualizer:
                     system=system,
                     options=CONTEXTUALIZER_NEUTRAL_OPTIONS
                 ),
-                timeout=60 * 2,
-                timeout_message="Summury Generation Aborted! Model waited for 2 minutes",
+                timeout=60,
+                timeout_message="Summury Generation Aborted!",
                 default_return="Nothing seems to be happening here."
             )
 

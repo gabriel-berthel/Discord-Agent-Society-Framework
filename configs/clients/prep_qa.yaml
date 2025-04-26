@@ -7,8 +7,8 @@ config:
   sequential_mode: True # If sequential, manual channel switch & all messages are processed ASAP
 
   # Module toggles
-  memories: False # Enable / Disable creation of memories
-  plans: False # Enable / Disable creation of plans
+  memories: True # Enable / Disable creation of memories
+  plans: True # Enable / Disable creation of plans
 
   # Persistance
   persistance_prefix: 'qa_bench' # prefix identifying agent memories. new prefix = new memories
@@ -20,6 +20,6 @@ config:
   channel_id: 1 # Channel the agent is monitoring. Change dynamically if sequential_mode is off. Random if non-existant.
 
   # Logs
-  save_logs: False # Save module outputs as pickles
+  save_logs: True # Save module outputs as pickles
   log_path: 'output/qa_bench/logs' # where module output should be saved
-  log_level: 40 # log level to show from the console (only for the agent)
+  log_level: 30 # log level to show from the console (only for the agent)

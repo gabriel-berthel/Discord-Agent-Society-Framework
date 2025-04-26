@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hu
 
 def load_qa_bench_data() -> dict[str, SimpleNamespace]:
     archetypes = ["debunker", "nerd", "peacekeeper", "chameleon", "troll"]
-    clients: dict[str, PromptClient] = PromptClient.build_clients('configs/clients/prep_qa.yaml')
+    clients: dict[str, PromptClient] = PromptClient.build_clients('configs/clients/qa_bench.yaml')
     agent_logs: dict[str, SimpleNamespace] = {}
 
     with open('./output/qa_bench/qa_bench_histo.pkl', 'rb') as f:
