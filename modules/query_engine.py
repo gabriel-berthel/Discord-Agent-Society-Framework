@@ -39,7 +39,7 @@ class QueryEngine:
                     system=query_prompt_base,
                     options=QUERIES_OPTIONS
                 ),
-                timeout=60,
+                timeout=120,
                 timeout_message="Query Generation Aborted!",
                 default_return=[]
             )
@@ -88,7 +88,7 @@ Here is the context from your notebook or diary:
                 system=system_instruction,
                 options=QUERIES_OPTIONS
             ),
-            timeout=60,
+            timeout=120,
             timeout_message="Query Generation Aborted!",
             default_return=[]
         )

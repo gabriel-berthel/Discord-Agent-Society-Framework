@@ -60,7 +60,7 @@ class Planner:
                 system=system_instruction,
                 options=AGENT_PLANNING_OPTIONS
             ),
-            timeout=60 * 3,
+            timeout=120,
             timeout_message="Query Generation Aborted! Model waited for 3 minutes",
             default_return="I want to answer to everything"
         )
