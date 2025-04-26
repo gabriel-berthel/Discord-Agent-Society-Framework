@@ -5,6 +5,7 @@ import pickle
 import random
 import shutil
 import time
+import asyncio
 
 from dotenv import load_dotenv
 
@@ -12,7 +13,6 @@ from models.agent import Agent
 from models.discord_server import DiscordServer
 
 logger = logging.getLogger(__name__)
-
 
 class PromptClient:
     def __init__(self, agent_conf, archetype, user_id, server):
@@ -54,17 +54,9 @@ class PromptClient:
 
         await self.agent.add_event(event)
 
-        attempt = 0
-        message = ""
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
 
-        import asyncio
-
-        attempt = 0
         message = ""
-
-        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
-
         try:
             async with asyncio.timeout(180):
                 while True:
@@ -73,13 +65,10 @@ class PromptClient:
                     except asyncio.TimeoutError:
                         logger.info(
                             f"Agent-Client: [key=PromptClient] | [{self.name}] No response from model! waiting...")
-                        self.agent.event_queue.task_done()
                         continue
-
-
-
         except asyncio.TimeoutError:
-            logger.warning(f"Agent-Client: [key=PromptClient] | [{self.name}] Gave up after 120s total timeout.")
+            logger.warning(f"Agent-Client: [key=PromptClient] | [{self.name}] Gave up after 180s total timeout.")
+            self.agent.event_queue.task_done()
 
         self.server.add_message(self.agent.monitoring_channel, self.agent.user_id, self.agent.name, message)
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Final response: '{message}'")
