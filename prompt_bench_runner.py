@@ -14,7 +14,6 @@ task_name_map = {
     "cola": "cola",
     "qqp": "qqp",
     "mnli": "mnli",
-    "iwslt": "iwslt",
     "bool_logic": "bool_logic",
     "valid_parentheses": "valid_parentheses",
     "math": "math"
