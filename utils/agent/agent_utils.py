@@ -1,6 +1,16 @@
 import re
 from types import SimpleNamespace
+import asyncio
+import logging
 
+logger = logging.getLogger(__name__)
+
+async def _wait_time_out(tasks, timeout=30, timeout_message="Operation timed out.", default_return=""):
+    try:
+        return await asyncio.wait_for(tasks, timeout=timeout)
+    except asyncio.TimeoutError:
+        logger.error(f"Agent-Module: [key='WaitTimeOut'] | {timeout_message}")
+        return default_return
 
 class DictToAttribute(SimpleNamespace):
     """SimpleNameSpace + get method compability :D"""

@@ -1,7 +1,7 @@
 import ollama
 
 from configs.ollama_options import QUERIES_OPTIONS
-from utils.agent.agent_utils import split_queries
+from utils.agent.agent_utils import split_queries, _wait_time_out
 from utils.agent.base_prompts import query_prompt_base
 
 
@@ -32,12 +32,18 @@ class QueryEngine:
         if messages:
             msgs = '\n'.join(messages)
 
-            response = await ollama.AsyncClient().generate(
-                model=self.model,
-                system=query_prompt_base,
-                prompt=msgs,
-                options=QUERIES_OPTIONS
+            response = await _wait_time_out(
+                ollama.AsyncClient().generate(
+                    model=self.model,
+                    prompt=msgs,
+                    system=query_prompt_base,
+                    options=QUERIES_OPTIONS
+                ),
+                timeout=60 * 3,
+                timeout_message="Query Generation Aborted! Model waited for 3 minutes",
+                default_return=[]
             )
+
             return split_queries(response['response'])
 
         return []
@@ -75,11 +81,16 @@ Here is the context from your notebook or diary:
 {query_prompt_base}
 """
 
-        response = await ollama.AsyncClient().generate(
-            model=self.model,
-            system=system_instruction,
-            prompt=msgs,
-            options=QUERIES_OPTIONS
+        response = await _wait_time_out(
+            ollama.AsyncClient().generate(
+                model=self.model,
+                prompt=msgs,
+                system=system_instruction,
+                options=QUERIES_OPTIONS
+            ),
+            timeout=60 * 3,
+            timeout_message="Query Generation Aborted! Model waited for 3 minutes",
+            default_return=[]
         )
 
         return split_queries(response['response'])

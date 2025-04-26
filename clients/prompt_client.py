@@ -56,19 +56,7 @@ class PromptClient:
 
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
 
-        message = ""
-        try:
-            async with asyncio.timeout(180):
-                while True:
-                    try:
-                        message, _ = await asyncio.wait_for(self.agent.responses.get(), timeout=10)
-                    except asyncio.TimeoutError:
-                        logger.info(
-                            f"Agent-Client: [key=PromptClient] | [{self.name}] No response from model! waiting...")
-                        continue
-        except asyncio.TimeoutError:
-            logger.warning(f"Agent-Client: [key=PromptClient] | [{self.name}] Gave up after 180s total timeout.")
-            self.agent.event_queue.task_done()
+        message, _ = await self.agent.responses.get()
 
         self.server.add_message(self.agent.monitoring_channel, self.agent.user_id, self.agent.name, message)
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Final response: '{message}'")

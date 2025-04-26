@@ -159,6 +159,7 @@ def main():
         case "simulate":
             asyncio.run(run_simulation(SimConfig(args.duration, args.verbose)))
         case "prep_qa":
+            print(f'Starting prep_qa with --duration={args.duration} and --verbose={args.verbose}')
             asyncio.run(prepare_qa_bench(BenchPrepConfig(args.duration, args.verbose)))
         case "qa_bench":
             print('Please make sure you ran prep_qa first!')

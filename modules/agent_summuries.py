@@ -1,7 +1,7 @@
 import ollama
 
 from configs.ollama_options import CONTEXTUALIZER_NEUTRAL_OPTIONS, REFLECTIONS_OPTIONS
-from utils.agent.agent_utils import *
+from utils.agent.agent_utils import clean_module_output, _wait_time_out
 from utils.agent.base_prompts import neutral_base, engaged_base
 
 
@@ -42,12 +42,18 @@ class Contextualizer:
         """
 
         if messages:
-            response = await ollama.AsyncClient().generate(
-                model=self.model,
-                system=system,
-                prompt=prompt,
-                options=CONTEXTUALIZER_NEUTRAL_OPTIONS
+            response = await _wait_time_out(
+                ollama.AsyncClient().generate(
+                    model=self.model,
+                    prompt=prompt,
+                    system=system,
+                    options=CONTEXTUALIZER_NEUTRAL_OPTIONS
+                ),
+                timeout=60 * 2,
+                timeout_message="Summury Generation Aborted! Model waited for 2 minutes",
+                default_return="Nothing seems to be happening here."
             )
+
             return clean_module_output(response['response'])
 
         return "Reading the discord conversation, I can observe that there is no messages at the moment. I should consider sparking a new topic."
@@ -78,11 +84,16 @@ class Contextualizer:
         {msgs}
         """
 
-        response = await ollama.AsyncClient().generate(
-            model=self.model,
-            prompt=prompt,
-            system=system,
-            options=REFLECTIONS_OPTIONS
+        response = await _wait_time_out(
+            ollama.AsyncClient().generate(
+                model=self.model,
+                prompt=prompt,
+                system=system,
+                options=REFLECTIONS_OPTIONS
+            ),
+            timeout=60 * 3,
+            timeout_message="Reflection Generation Aborted! Model waited for 3 minutes",
+            default_return=""
         )
 
         return clean_module_output(response['response'])

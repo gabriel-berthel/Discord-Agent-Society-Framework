@@ -1,7 +1,7 @@
 import ollama
 
 from configs.ollama_options import AGENT_RESPONSE_OPTIONS
-from utils.agent.agent_utils import clean_response
+from utils.agent.agent_utils import clean_response, _wait_time_out
 
 
 class Responder:
@@ -71,12 +71,16 @@ Reply immediately but don't repeat yourself or what is being said.
 Bring new beef to the table! Keep responses brief, like 1–2 sentences max, like a Discord message, unless maybe a longer answer is really needed.
 """
 
-        response = await ollama.AsyncClient().generate(
-            model=self.model,
-            system=system_instruction,
-            prompt=f"\n{msgs}",
-            options=AGENT_RESPONSE_OPTIONS,
-            stream=False
+        response = await _wait_time_out(
+            ollama.AsyncClient().generate(
+                model=self.model,
+                system=system_instruction,
+                prompt=f"\n{msgs}",
+                options=AGENT_RESPONSE_OPTIONS,
+                stream=False
+            ),
+            timeout=60*3,
+            timeout_message="Response Generation Aborted! Model waited for 3 minutes"
         )
 
         return clean_response(response['response'])
@@ -103,11 +107,16 @@ Bring new beef to the table! Keep responses brief, like 1–2 sentences max, lik
         No one is talking so maybe you should start a new discussion! Just be spontanous and tell us about what u like or want to do or were doing!
         """
 
-        response = await ollama.AsyncClient().generate(
-            model=self.model,
-            prompt=prompt,
-            system=system_instruction,
-            options=AGENT_RESPONSE_OPTIONS
+        response = await _wait_time_out(
+            ollama.AsyncClient().generate(
+                model=self.model,
+                prompt=prompt,
+                system=system_instruction,
+                options=AGENT_RESPONSE_OPTIONS
+            ),
+            timeout=60*1,
+            timeout_message="Response Generation Aborted! Model waited for 3 minutes",
+            default_return="Hi"
         )
 
         return clean_response(response['response'])

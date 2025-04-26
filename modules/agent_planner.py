@@ -1,7 +1,7 @@
 import ollama
 
 from configs.ollama_options import AGENT_PLANNING_OPTIONS
-from utils.agent.agent_utils import *
+from utils.agent.agent_utils import _wait_time_out, clean_module_output
 from utils.agent.base_prompts import planner_base
 
 
@@ -53,11 +53,16 @@ class Planner:
         {context}
         """
 
-        response = await ollama.AsyncClient().generate(
-            model=self.model,
-            prompt=prompt,
-            system=system_instruction,
-            options=AGENT_PLANNING_OPTIONS
+        response = await _wait_time_out(
+            ollama.AsyncClient().generate(
+                model=self.model,
+                prompt=prompt,
+                system=system_instruction,
+                options=AGENT_PLANNING_OPTIONS
+            ),
+            timeout=60 * 3,
+            timeout_message="Query Generation Aborted! Model waited for 3 minutes",
+            default_return="I want to answer to everything"
         )
 
         return clean_module_output(response['response'])
