@@ -55,14 +55,18 @@ class PromptClient:
         await self.agent.add_event(event)
 
         attempt = 0
-        message, _ = await self.agent.responses.get()
+        message = ""
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
 
-        while attempt < 5 and message == "":
-            logger.info(
-                f"Agent-Client: [key=PromptClient] | [{self.name}] Empty response attempt {attempt + 1}, retrying...")
+        while attempt < 3:
             message, _ = await self.agent.responses.get()
-            attempt += 1
+
+            if message == "":
+                logger.info(
+                    f"Agent-Client: [key=PromptClient] | [{self.name}] Empty response attempt {attempt + 1}, retrying...")
+                attempt += 1
+            else:
+                break
 
         self.server.add_message(self.agent.monitoring_channel, self.agent.user_id, self.agent.name, message)
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Final response: '{message}'")
