@@ -13,12 +13,11 @@ task_name_map = {
     "sst2": "sst2",
     "cola": "cola",
     "qqp": "qqp",
-    "gsm8k": "gsm8k",
+    "mnli": "mnli",
+    "iwslt": "iwslt",
     "bool_logic": "bool_logic",
     "valid_parentheses": "valid_parentheses",
-    "csqa": "csqa",
-    "math": "math",
-    "expert_prompting": "expert_prompting",
+    "math": "math"
 }
 
 tasks = []
@@ -34,24 +33,16 @@ async def prompt_ollama(prompt):
 
 
 async def prompt_agent(prompt, client):
-    return await client.prompt(prompt, 2, "Admin")
-
+    return await client.prompt(prompt, 60, "Admin")
 
 RESULTS = []
-clients = cl.PromptClient.build_clients('configs/clients/promptbench.yaml')
-
-
-def get_projection_fn(pred):
-    return lambda pred: 1 if "positive" in pred.lower() else 0 if "negative" in pred.lower() else -1
-
 
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
     preds, labels = [], []
-
     # TODO: A la base ça retournait après la boucle sur le premier prompt.
     # Donc j'ai tronqué au 1er directement car jcp quel était ton intention.
-    for prompt in prompts[:1]:
-        for data in tqdm(dataset, desc=f"{architype} - {dataset}"):
+    for prompt in prompts[:200]:
+        for data in tqdm(dataset, desc=f"{architype} - {prompt[:15]}"):
             input_text = pb.InputProcess.basic_format(prompt, data)
 
             label = data['label']
@@ -69,18 +60,20 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
 
 
 async def run_agents_benchmark(save_to="prompt_bench.csv"):
-    for task, prompts, projection, dataset in tasks:
+    clients = cl.PromptClient.build_clients('configs/clients/promptbench.yaml')
 
-        dataset = pb.DatasetLoader.load_dataset(dataset)[:100]
+    for archetype, client in clients.items():
+        print(f'Starting {archetype}')
+        await client.start()
+
+    for task, prompts, projection, dataset in tasks:
+        dataset = pb.DatasetLoader.load_dataset(dataset)[:1]
         scores = []
         for architype, client in clients.items():
-            await client.start()
             score = await run_task(prompts, dataset, architype, projection, prompt_agent, [client])
             scores.append((architype, score))
-            await client.stop()
 
         baseline_score = await run_task(prompts, dataset, "baseline", projection, prompt_ollama)
-
         RESULTS.append({
             "dataset": dataset,
             "scores": scores,
@@ -96,6 +89,9 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
         df.to_csv(save_to, index=False)
         print(f"\n Résultats sauvegardés dans {save_to}")
 
+    for archetype, client in clients.items():
+        print(f'Starting {archetype}')
+        await client.stop()
 
 if __name__ == '__main__':
     asyncio.run(run_agents_benchmark())

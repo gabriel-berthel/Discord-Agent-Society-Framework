@@ -2,13 +2,13 @@ config:
   # Routine Configuration
   # response_delay -> Guaranteed sleep @ the end of each cycle
   # max_random_response_delay -> random sleep between 0 & defined value
-  response_delay: 1 # -> Guaranteed sleep @ the end of each cycle
+  response_delay: 5 # -> Guaranteed sleep @ the end of each cycle
   max_random_response_delay: 0 # -> random sleep between 0 & defined value
   sequential_mode: True # If sequential, manual channel switch & all messages are processed ASAP
 
   # Module toggles
   memories: True # Enable / Disable creation of memories
-  plans: True # Enable / Disable creation of plans
+  plans: False # Enable / Disable creation of plans
 
   # Persistance
   persistance_prefix: 'promptbench' # prefix identifying agent memories. new prefix = new memories

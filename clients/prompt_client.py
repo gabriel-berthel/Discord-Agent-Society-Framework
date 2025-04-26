@@ -39,12 +39,6 @@ class PromptClient:
         self.agent.stop()
         for task in self.tasks:
             task.cancel()
-        for task in self.tasks:
-            try:
-                await task
-                logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Task completed cleanly.")
-            except asyncio.CancelledError:
-                logger.warning(f"Agent-Client: [key=PromptClient] | [{self.name}] Task cancellation was not clean.")
 
     async def prompt(self, message, user_id, username, channel_id=1):
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Prompting with message: '{message}'")
