@@ -40,7 +40,7 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
     preds, labels = [], []
     # TODO: A la base ça retournait après la boucle sur le premier prompt.
     # Donc j'ai tronqué au 1er directement car jcp quel était ton intention.
-    for prompt in prompts[:200]:
+    for prompt in prompts[:1]:
         for data in tqdm(dataset, desc=f"{architype} - {prompt[:15]}"):
             input_text = pb.InputProcess.basic_format(prompt, data)
 
@@ -89,7 +89,7 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
         print(f"\n Résultats sauvegardés dans {save_to}")
 
     for archetype, client in clients.items():
-        print(f'Starting {archetype}')
+        print(f'Stopping {archetype}')
         await client.stop()
 
 if __name__ == '__main__':
