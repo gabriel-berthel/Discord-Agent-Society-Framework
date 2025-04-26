@@ -13,7 +13,6 @@ from models.discord_server import DiscordServer
 
 logger = logging.getLogger(__name__)
 
-
 class PromptClient:
     def __init__(self, agent_conf, archetype, user_id, server):
         self.server: DiscordServer = server
