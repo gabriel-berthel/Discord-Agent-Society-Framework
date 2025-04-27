@@ -11,6 +11,7 @@ from clients.prompt_client import PromptClient
 import clients.discord_client as discord_client
 from models.discord_server import DiscordServer
 from benchmark.qa_benchmark import load_qa_bench_data, run_benchmarks
+from benchmark.prompt_bench_runner import run_agents_benchmark
 
 if os.name != "nt":
     import uvloop
@@ -70,13 +71,12 @@ def run_discord_bot(config: DiscordConfig):
     discord_client.run(SERVER_CONFIG)
 
 async def run_simulation(config: SimConfig):
-    if config.verbose:
-        print(f"Running simulation for {config.duration} seconds...")
+    print(f"Running simulation for {config.duration} seconds...")
     await PromptClient.run_simulation(config.duration, True, CONSOLE_SIMULATION_CONFIG, 'Hi!')
 
 async def prepare_qa_bench(config: BenchPrepConfig):
-    if config.verbose:
-        print(f"Preparing benchmark data for {config.duration} seconds...")
+    print(f"Preparing benchmark data for {config.duration} seconds...")
+
     await PromptClient.prepare_qa_bench(config.duration, config.verbose)
 
 async def benchmark_qa_bench(config: RunBenchConfig):
@@ -88,6 +88,10 @@ async def benchmark_qa_bench(config: RunBenchConfig):
         print("Loaded logs, running benchmarks...")
 
     await run_benchmarks(logs)
+
+async def run_prompt_bench():
+    print("Starting prompt benchmark...")
+    await run_agents_benchmark()
 
 async def probe(config: ProbingConfig):
     server = DiscordServer(1, 'Probing')
@@ -138,6 +142,9 @@ def main():
     p_prob.add_argument("--config", type=str, required=True, help="Path to the agent .yaml to use")
     p_prob.add_argument("--archetype", type=str, required=True, help="Archetype to use for probing")
 
+    # Start Prompt Bench Benchmarking
+    prompt_bench = subparsers.add_parser("promptbench", help="Run PromptBench benchmark")
+
     args = parser.parse_args()
 
     # Dispatch
@@ -167,6 +174,8 @@ def main():
             asyncio.run(benchmark_qa_bench(RunBenchConfig(args.verbose)))
         case "prob":
             asyncio.run(probe(ProbingConfig(args.config, args.archetype)))
+        case "prompt_bench":
+            asyncio.run(run_prompt_bench())
 
 
 if __name__ == "__main__":

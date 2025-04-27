@@ -16,7 +16,6 @@ task_name_map = {
     "mnli": "mnli",
     "bool_logic": "bool_logic",
     "valid_parentheses": "valid_parentheses",
-    "math": "math"
 }
 
 tasks = []
@@ -26,10 +25,8 @@ tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_ori
 
 ollama.pull('llama3:8b')
 
-
 async def prompt_ollama(prompt):
     return ollama.generate("llama3:8b", prompt)["response"]
-
 
 async def prompt_agent(prompt, client):
     return await client.prompt(prompt, 60, "Admin")
@@ -59,7 +56,7 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
 
 
 async def run_agents_benchmark(save_to="prompt_bench.csv"):
-    clients = cl.PromptClient.build_clients('configs/clients/promptbench.yaml')
+    clients = cl.PromptClient.build_clients('../configs/clients/promptbench.yaml')
 
     for archetype, client in clients.items():
         print(f'Starting {archetype}')
