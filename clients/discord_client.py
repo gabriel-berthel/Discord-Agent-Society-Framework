@@ -5,6 +5,7 @@ import os
 import hikari
 
 import models.agent as ag
+from models.event import Event
 from models.agent import Agent
 from models.discord_server import DiscordServer
 
@@ -54,10 +55,17 @@ def run(agent_conf):
     async def on_message(event: hikari.GuildMessageCreateEvent):
         logger.debug(
             f"Agent-Client: [key=Discord] | Received message from {event.message.author.username}: {event.message.content}")
-        await agent.add_event(
-            (event.channel_id, event.message.author.id, event.message.author.display_name, event.message.content))
-        agent.server.add_message(event.channel_id, event.message.author.id, event.message.author.display_name,
-                                 event.message.content)
+
+        event = Event(
+            channel_id=event.message.channel_id,
+            content=event.message.content,
+            display_name=event.message.author.display_name,
+            author_id=event.message.author.id,
+        )
+
+        await agent.add_event(event)
+        agent.server.add_message(event)
+
         logger.debug(f"Agent-Client: [key=Discord] | Message queued for processing and added to server representation")
 
     @bot.listen(hikari.MemberCreateEvent)
