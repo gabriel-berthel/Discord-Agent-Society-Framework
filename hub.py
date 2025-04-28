@@ -10,8 +10,6 @@ import logging
 from clients.prompt_client import PromptClient
 import clients.discord_client as discord_client
 from models.discord_server import DiscordServer
-from benchmark.qa_benchmark import load_qa_bench_data, run_benchmarks
-from benchmark.prompt_bench_runner import run_agents_benchmark
 
 if os.name != "nt":
     import uvloop
@@ -20,6 +18,7 @@ if os.name != "nt":
 
 SERVER_CONFIG = 'configs/clients/discord.yaml'
 CONSOLE_SIMULATION_CONFIG = 'configs/clients/simulate.yaml'
+
 
 # ---------- Configs ----------
 @dataclass
@@ -80,6 +79,7 @@ async def prepare_qa_bench(config: BenchPrepConfig):
     await PromptClient.prepare_qa_bench(config.duration, config.verbose)
 
 async def benchmark_qa_bench(config: RunBenchConfig):
+    from benchmark.qa_benchmark import load_qa_bench_data, run_benchmarks
     print("Downloading en_core_web_sm")
     subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
 
@@ -90,6 +90,7 @@ async def benchmark_qa_bench(config: RunBenchConfig):
     await run_benchmarks(logs)
 
 async def run_prompt_bench():
+    from benchmark.prompt_bench_runner import run_agents_benchmark
     print("Starting prompt benchmark...")
     await run_agents_benchmark()
 
@@ -174,7 +175,7 @@ def main():
             asyncio.run(benchmark_qa_bench(RunBenchConfig(args.verbose)))
         case "prob":
             asyncio.run(probe(ProbingConfig(args.config, args.archetype)))
-        case "prompt_bench":
+        case "promptbench":
             asyncio.run(run_prompt_bench())
 
 

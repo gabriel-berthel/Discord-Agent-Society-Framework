@@ -56,14 +56,14 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
 
 
 async def run_agents_benchmark(save_to="prompt_bench.csv"):
-    clients = cl.PromptClient.build_clients('../configs/clients/promptbench.yaml')
+    clients = cl.PromptClient.build_clients('configs/clients/promptbench.yaml')
 
     for archetype, client in clients.items():
         print(f'Starting {archetype}')
         await client.start()
 
     for task, prompts, projection, dataset in tasks:
-        dataset = pb.DatasetLoader.load_dataset(dataset)[:200]
+        dataset = pb.DatasetLoader.load_dataset(dataset)[:100]
         scores = []
         for architype, client in clients.items():
             score = await run_task(prompts, dataset, architype, projection, prompt_agent, [client])
@@ -77,17 +77,17 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
             "baseline": baseline_score
         })
 
-    df = pd.DataFrame(RESULTS)
-    print("\n Résumé des performances :")
-    print(df)
+        df = pd.DataFrame(RESULTS)
+        print("\n Résumé des performances :")
+        print(df)
 
-    if save_to:
-        df.to_csv(save_to, index=False)
-        print(f"\n Résultats sauvegardés dans {save_to}")
+        if save_to:
+            df.to_csv(save_to, index=False)
+            print(f"\n Résultats sauvegardés dans {save_to}")
 
-    for archetype, client in clients.items():
-        print(f'Stopping {archetype}')
-        await client.stop()
+        for archetype, client in clients.items():
+            print(f'Stopping {archetype}')
+            await client.stop()
 
 if __name__ == '__main__':
     asyncio.run(run_agents_benchmark())
