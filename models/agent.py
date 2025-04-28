@@ -17,6 +17,7 @@ from modules.query_engine import QueryEngine
 from utils.agent.agent_utils import *
 from utils.agent.base_prompts import generate_agent_prompt
 from utils.file_utils import load_yaml
+from models.event import Event
 
 logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
@@ -111,7 +112,7 @@ class Agent:
         # Agent Queues
         self.responses: Queue = Queue()
         self.processed_messages: Queue = Queue()
-        self.event_queue: Queue = Queue()
+        self.event_queue: Queue[Event] = Queue()
         self.last_messages: deque = deque(maxlen=5)
         self.logger.logger.info(f"Agent-Info: [key={self.name}] | Queue created")
 
@@ -139,16 +140,15 @@ class Agent:
         """Stops agent modules at next iteration"""
         self._running = False
 
-    async def add_event(self, event) -> None:
+    async def add_event(self, event: Event) -> None:
         """
         Adds an event to the agent's queue if:
         - The agent is not the message author
         - The message is in the monitored channel
         - The event queue is not locked
         """
-        channel_id, author_id, _, _ = event
 
-        if author_id != self.user_id and self.monitoring_channel == channel_id and not self.lock_queue:
+        if event.author_id != self.user_id and self.monitoring_channel == event.channel_id and not self.lock_queue:
             await self.event_queue.put(event)
             self.logger.logger.info(
                     f"Agent-Info: [key={self.name}] | Added event in event queue")
@@ -343,7 +343,7 @@ class Agent:
                 await sleep(self.config.response_delay)
                 await sleep(random.uniform(0, self.config.max_random_response_delay))
 
-    async def _process_messages(self, messages) -> None:
+    async def _process_messages(self, events) -> None:
         """
         Processes a list of messages by:
         - Formatting them for downstream modules
@@ -352,17 +352,16 @@ class Agent:
         - Adding messages to the processed message queue
         """
 
-        formatted_messages = [self.server.format_message(author_id, global_name, content) for
-                              _, author_id, global_name, content in messages]
+        formatted_messages = [self.server.format_message(event) for event in events]
 
         context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
         memories = await self.get_memories(self.plan, context, formatted_messages)
         response = await self.get_response(self.plan, context, memories, formatted_messages, self.personnality_prompt)
         
         if response:
-            await self.responses.put((response, messages[0][0]))
+            await self.responses.put((response, events[0].channel_id))
         else:
-            await self.responses.put(("", messages[0][0]))
+            await self.responses.put(("", events[0].channel_id))
 
         for message in formatted_messages:
             await self.processed_messages.put(message)
@@ -394,10 +393,11 @@ class Agent:
         """
         current_size = self.event_queue.qsize()
         for _ in range(current_size):
-            channel_id, author_id, global_name, content = await self.event_queue.get()
-            message = self.server.format_message(author_id, global_name, content)
+            event = await self.event_queue.get()
+            message = self.server.format_message(event)
             self.logger.logger.info(
-                f"Agent-Info: [key={self.name}] | Processing message from {global_name} (read-only)")
+                f"Agent-Info: [key={self.name}] | Processing message from {event.display_name} (read-only)")
+
             await self.processed_messages.put(message)
 
     async def _ignore(self) -> None:

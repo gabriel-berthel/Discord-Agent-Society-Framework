@@ -10,6 +10,7 @@ import asyncio
 from dotenv import load_dotenv
 
 from models.agent import Agent
+from models.event import Event
 from models.discord_server import DiscordServer
 
 logger = logging.getLogger(__name__)
@@ -42,33 +43,35 @@ class PromptClient:
 
     async def prompt(self, message, user_id, username, channel_id=1):
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Prompting with message: '{message}'")
-        self.server.update_user(user_id, username)
-        event = (channel_id, user_id, username, message)
-        self.server.add_message(*event)
-        await self.agent.add_event(event)
 
-        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
+        prompted = Event(
+            channel_id=channel_id,
+            author_id=user_id,
+            display_name=username,
+            content=message,
+        )
+
+        await self.agent.add_event(prompted)
+        self.server.add_message(prompted)
 
         message, _ = await self.agent.responses.get()
+        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Received response: '{message}'")
 
-        self.server.add_message(self.agent.monitoring_channel, self.agent.user_id, self.agent.name, message)
+        self._add_message_from_agent_to_server(content=message)
+
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Final response: '{message}'")
         return message
 
-    async def multi_prompt(self, events):
-        logger.info(
-            f"Agent-Client: [key=PromptClient] | [{self.name}] Executing multi_prompt with {len(events)} events.")
-        self.agent.lock_response = True
-        for message, user_id, username, channel_id in events:
-            self.server.update_user(user_id, username)
-            event = (channel_id, user_id, username, message)
-            logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Trying to add event: [{username}] -> '{message}'")
-            await self.agent.add_event(event)
-        self.agent.lock_response = False
-        message, _ = await self.agent.responses.get()
-        self.server.add_message(self.agent.monitoring_channel, self.agent.user_id, self.agent.name, message)
-        logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Multi-prompt response: '{message}'")
-        return message
+    def _add_message_from_agent_to_server(self,content):
+
+        event = Event(
+            channel_id=self.agent.monitoring_channel,
+            author_id=self.agent.user_id,
+            display_name=self.agent.name,
+            content=content,
+        )
+
+        self.server.add_message(event)
 
     @staticmethod
     def build_clients(config_file='benchmark_config.yaml'):
@@ -93,58 +96,84 @@ class PromptClient:
         return clients
 
     @staticmethod
-    async def run_simulation(duration: float, print_replies, config_file, initial_message="Hi! What's up gamers",
-                             clients=None):
+    async def run_simulation(duration: float, verbose: bool, config_file:str, initial_message="Hi! What's up gamers"):
+        """
+        Helper method to run a simulation a quasi-synchronous way.
+
+        Indeed, agents are put in sequential-mode. Though, the next speaker is determined randomly.
+
+        Client response routine is "locked" until their time to respond comes. This ensures the entire batch
+        is processed all at once. ie: if 10 messages were sent before a client is randomly selected, the agent
+        tied to the client will respond to the 10 messages.
+
+        """
+
         logger.info(f"Agent-Client: [key=PromptClient] | Running simulation for {duration} seconds.")
-        clients = clients if clients else PromptClient.build_clients(config_file)
+        transcript = []
 
+        # fetching clients if none are given
+        clients = PromptClient.build_clients(config_file)
+
+        # Lock response routine so the event queue is only processed when desired
         for client in clients.values():
-            await client.start()
+            client.agent.monitoring_channe = 1
+            client.agent.lock_response = True
 
+        # grabbing all the roles
+        roles = [role for role, client in clients.items()]
+
+        # starting clients
+        await asyncio.gather(*(client.start() for client in clients.values()))
         logger.info("Agent-Client: [key=PromptClient] | All clients started.")
-        roles = list(clients.keys())
-        start_time = time.time()
-        historic = [initial_message]
 
+        start_time = time.time()
+
+        # Sending the first message
         current_archetype = random.choice(roles)
         current_client = clients[current_archetype]
-        message = initial_message
+        message = f"[{current_client.name}] {initial_message}"
+        verbose and print(message)
+        transcript.append(message)
 
-        msg = f"[{current_client.name}] {message}"
-        if print_replies:
-            print(msg)
-
-        agent_histories = {role: [] for role in roles}
-
+        prompt = initial_message
         while time.time() - start_time < duration:
             logger.info(
-                f"Agent-Client: [key=PromptClient] | [{current_client.name}] Broadcasting message to next agent.")
+                f"Agent-Client: [key=PromptClient] | [{current_client.name}] Broadcasting messages to next agent.")
 
-            for role in roles:
-                if role != current_archetype:
-                    agent_histories[role].append((message, current_client.agent.user_id, current_client.name, 1))
+            event = Event(
+                channel_id=1,
+                author_id=current_client.agent.user_id,
+                display_name=current_client.agent.name,
+                content=prompt
+            )
 
+            # Adding event, to agents event queue
+            # Current agent filtering isn't done as the event queue filters it.
+            for client in clients.values():
+                await client.agent.add_event(event)
+
+            # Choosing next Agent to respond
             next_archetype = random.choice([r for r in roles if r != current_archetype])
-            next_client = clients[next_archetype]
+            next_client: PromptClient = clients[next_archetype]
 
-            context_events = agent_histories[next_archetype]
+            # Responding to every event before
+            next_client.agent.lock_response = False
             logger.info(
                 f"Agent-Client: [key=PromptClient] | [{next_client.name}] Responding to message from previous agent.")
+            response, channel_id = await next_client.agent.responses.get()
+            next_client.agent.lock_response = True
 
-            response = await next_client.multi_prompt(context_events)
+            # Just logging and storing messages.
+            message = f"[{next_client.name}] {response}"
+            verbose and print(message)
+            transcript.append(message)
 
-            msg = f"[{next_client.name}] {response}"
-            if print_replies:
-                print(msg)
-
-            historic.append(msg)
-            agent_histories[next_archetype] = []
-            current_archetype = next_archetype
-            current_client = next_client
-            message = response
+            # Preparing next irritation
+            current_archetype, current_client = (next_archetype, next_client)
+            prompt = response
 
         logger.info("Agent-Client: [key=PromptClient] | Simulation completed.")
-        return clients, historic
+        return clients, transcript
 
     @staticmethod
     async def prepare_qa_bench(duration, print_replies):

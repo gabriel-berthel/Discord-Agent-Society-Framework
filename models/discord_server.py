@@ -1,5 +1,5 @@
 from collections import deque
-
+from models.event import Event
 
 class DiscordServer:
     """
@@ -32,12 +32,12 @@ class DiscordServer:
         if channel_id not in self.channels:
             self.channels[channel_id] = {"name": channel_name, "messages": deque(maxlen=15), "last_id": None}
 
-    def add_message(self, channel_id, author_id, global_name, content) -> None:
+    def add_message(self, event: Event) -> None:
         """Add message to message circular queue"""
 
-        if channel_id in self.channels:
-            self.channels[channel_id]["messages"].append(self.format_message(author_id, global_name, content))
-            self.channels[channel_id]["last_id"] = author_id
+        if event.channel_id in self.channels:
+            self.channels[event.channel_id]["messages"].append(self.format_message(event))
+            self.channels[event.channel_id]["last_id"] = event.author_id
 
     def get_channel(self, channel_id) -> dict:
         """Returns channel dictionary"""
@@ -56,9 +56,9 @@ class DiscordServer:
 
         return message
 
-    def format_message(self, author_id, global_name, content) -> str:
+    def format_message(self, event: Event) -> str:
         """Format messages in "User: Message" format"""
-        return f"{global_name}: {self.fix_message(content)}"
+        return f"{event.display_name}: {self.fix_message(event.content)}"
 
     def __repr__(self) -> str:
         return f"DiscordServer({self.name}, {len(self.users)} users, {len(self.channels)} channels)"
