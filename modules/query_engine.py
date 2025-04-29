@@ -41,7 +41,7 @@ class QueryEngine:
                 ),
                 timeout=120,
                 timeout_message="Query Generation Aborted!",
-                default_return=[]
+                default_return=""
             )
 
             return split_queries(response['response'])
@@ -90,7 +90,7 @@ Here is the context from your notebook or diary:
             ),
             timeout=120,
             timeout_message="Query Generation Aborted!",
-            default_return=[]
+            default_return=""
         )
 
         return split_queries(response['response'])
