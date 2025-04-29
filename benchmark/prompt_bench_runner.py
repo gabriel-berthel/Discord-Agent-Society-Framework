@@ -59,7 +59,7 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
 
     for task, prompts, projection, dataset_name in tasks:
         print(f'Working with {dataset_name} on {task}')
-        dataset = pb.DatasetLoader.load_dataset(dataset_name)[:100]
+        dataset = pb.DatasetLoader.load_dataset(dataset_name)[:50]
         async_tasks = []
 
         for architype, client in clients.items():
@@ -72,7 +72,7 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
             run_task(prompts, dataset, "baseline", projection, prompt_ollama)
         )
 
-        results = await asyncio.gather(*(task for _, task in async_tasks), baseline_task)
+        results = await asyncio.gather(*(task for task in async_tasks), baseline_task)
         scores = [(architype, score) for architype, score in results]
 
         RESULTS.append({
