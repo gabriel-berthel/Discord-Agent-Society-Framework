@@ -3,7 +3,6 @@ import asyncio
 import ollama
 import pandas as pd
 from promptbench.prompts import task_oriented, method_oriented, role_oriented
-from tqdm import tqdm
 from clients import prompt_client as cl
 
 from utils.benchmarks.promptbench_utils import *
@@ -26,7 +25,8 @@ tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_ori
 ollama.pull('llama3:8b')
 
 async def prompt_ollama(prompt):
-    return ollama.generate("llama3:8b", prompt)["response"]
+    res = await ollama.AsyncClient().generate("llama3:8b", prompt)
+    return res["response"]
 
 async def prompt_agent(prompt, client):
     return await client.prompt(prompt, 60, "Admin")
@@ -35,23 +35,19 @@ RESULTS = []
 
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
     preds, labels = [], []
-    # TODO: A la base ça retournait après la boucle sur le premier prompt.
-    # Donc j'ai tronqué au 1er directement car jcp quel était ton intention.
-    for prompt in prompts[:1]:
-        for data in tqdm(dataset, desc=f"{architype} - {prompt[:15]}"):
-            input_text = pb.InputProcess.basic_format(prompt, data)
+    prompt = prompts[0]
 
-            label = data['label']
+    for iteration, data in enumerate(dataset):
+        input_text = pb.InputProcess.basic_format(prompt, data)
+        label = data['label']
+        raw_pred = await prompt_fn(input_text, *args)
+        pred = pb.OutputProcess.cls(raw_pred, projection)
+        preds.append(pred)
+        labels.append(label)
 
-            raw_pred = await prompt_fn(input_text, *args)
+        print(f'Iteration no {iteration} for {architype}')
 
-            pred = pb.OutputProcess.cls(raw_pred, projection)
 
-            preds.append(pred)
-
-            labels.append(label)
-
-        # evaluate
     return pb.Eval.compute_cls_accuracy(preds, labels)
 
 
@@ -59,22 +55,30 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
     clients = cl.PromptClient.build_clients('configs/clients/promptbench.yaml')
 
     for archetype, client in clients.items():
-        print(f'Starting {archetype}')
         await client.start()
 
-    for task, prompts, projection, dataset in tasks:
-        dataset = pb.DatasetLoader.load_dataset(dataset)[:100]
-        scores = []
-        for architype, client in clients.items():
-            score = await run_task(prompts, dataset, architype, projection, prompt_agent, [client])
-            scores.append((architype, score))
+    for task, prompts, projection, dataset_name in tasks:
+        print(f'Working with {dataset_name} on {task}')
+        dataset = pb.DatasetLoader.load_dataset(dataset_name)[:100]
+        async_tasks = []
 
-        baseline_score = await run_task(prompts, dataset, "baseline", projection, prompt_ollama)
+        for architype, client in clients.items():
+            task = asyncio.create_task(
+                run_task(prompts, dataset, architype, projection, prompt_agent, [client])
+            )
+            tasks.append((architype, task))
+
+        baseline_task = asyncio.create_task(
+            run_task(prompts, dataset, "baseline", projection, prompt_ollama)
+        )
+
+        results = await asyncio.gather(*(task for _, task in async_tasks), baseline_task)
+        scores = [(architype, score) for (architype, _), score in zip(tasks, results)]
+
         RESULTS.append({
-            "dataset": dataset,
+            "dataset": dataset_name,
             "scores": scores,
-            "task": task,
-            "baseline": baseline_score
+            "task": task
         })
 
         df = pd.DataFrame(RESULTS)
@@ -85,9 +89,9 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
             df.to_csv(save_to, index=False)
             print(f"\n Résultats sauvegardés dans {save_to}")
 
-        for archetype, client in clients.items():
-            print(f'Stopping {archetype}')
-            await client.stop()
+    for archetype, client in clients.items():
+        print(f'Stopping {archetype}')
+        await client.stop()
 
 if __name__ == '__main__':
     asyncio.run(run_agents_benchmark())
