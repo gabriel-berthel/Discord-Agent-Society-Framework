@@ -78,6 +78,9 @@ Probe an agent using a specified configuration and archetype. Opens a chat-like 
 - `--config`      : *(string)* Path to the `.yaml` config file. **(Required)**  
 - `--archetype`   : *(string)* Name of the agent archetype. **(Required)**  
 
+#### 5. `promptbench`
+Run the promptbench benchmarking tasks.
+
 ---
 
 *Notes:* Use `--help` with any subcommand for detailed usage, e.g., `python hub.py discord --help`
@@ -93,7 +96,7 @@ Probe an agent using a specified configuration and archetype. Opens a chat-like 
 - (2) `simulate.yaml`: Used running the simulation in the console
 - (3) `prep_qa.yaml`: Used to prepare Quantative Benchmark data
 - (4) `qa_bench.yaml`: Used Compute Quantitative Benchmark
-- `promptbench.yaml`: parameters for the promptbench benchmarking
+- (5) `promptbench.yaml`: parameters for the promptbench benchmarking
 
 ## Run the simulation
 
@@ -180,7 +183,7 @@ This object encapsulates the internal state and behavior of an AI Agent. It hand
       - Selective message ignoring  
       - “Read-only” mode for silent memory formation  
       - Batched processing of event queue  
-      - Initiates spontaneous or idle-triggered new topics  
+      - Initiates spontaneous messages when switching channel
 
 - **Module Interactions**
   - **DiscordServer**: Enables contextual awareness through channel switching and summarization of recent messages (up to 15).
