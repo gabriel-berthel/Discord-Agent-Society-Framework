@@ -48,7 +48,7 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
         print(f'Iteration no {iteration} for {architype}')
 
 
-    return pb.Eval.compute_cls_accuracy(preds, labels)
+    return architype, pb.Eval.compute_cls_accuracy(preds, labels)
 
 
 async def run_agents_benchmark(save_to="prompt_bench.csv"):
@@ -73,7 +73,7 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
         )
 
         results = await asyncio.gather(*(task for _, task in async_tasks), baseline_task)
-        scores = [(architype, score) for (architype, _), score in zip(tasks, results)]
+        scores = [(architype, score) for architype, score in results]
 
         RESULTS.append({
             "dataset": dataset_name,
