@@ -1,14 +1,12 @@
 import logging
 import os
 import random
-import time
 from asyncio import Queue, sleep
 from collections import deque
 from datetime import datetime
 
 import modules.agent_memories as db
 from models.agent_logger import AgentLogger
-from models.agent_state import AgentState
 from models.discord_server import DiscordServer
 from modules.agent_planner import Planner
 from modules.agent_response_handler import Responder
@@ -120,7 +118,6 @@ class Agent:
         self.last_discussion_time = 0
         self.read_only: bool = False
         self._running: bool = True
-        self.state: AgentState = AgentState.IDLE
         self.lock_queue: bool = False
         self.memory_count: int = 0
         self.logger.logger.info(f"Agent-Info: [key={self.name}] | State variable loaded")
@@ -232,116 +229,59 @@ class Agent:
 
     async def respond_routine(self) -> None:
         """
-        Main routine that controls agent response behavior.
-
-        - **Sequential Mode**: Processes all queued events deterministically and continuously.
-        ->> Channel switch must be handled externally.
-        - **Non-Sequential Mode**: Adds random elements (e.g., ignore, read-only, random responses) for more lifelike behavior.
-        ->> Also handles spontaneous topic initiation when idle, and supports switching between channels.
+        Main routine that controls agent response behavior. Operates in both sequential and non-sequential modes.
         """
 
-        idle_threshold = 60 * 5
-        last_active = time.time()
+        while self._running:
 
-        # Sequential mode -> Agent always respond to everything in their queue ASAP
-        if self.sequential:
-            while self._running:
-                if self.event_queue.qsize() > 0 and not self.lock_response:
-                    self.state = AgentState.PROCESSING
+            # If Empty Queue or Lock on response => Skip this iteration
+            if self.event_queue.qsize() == 0 or self.lock_response:
+                await asyncio.sleep(1)
+                continue
+
+            # In Sequential Mode: Always process the batch
+            # Else:
+            #   - Random Channel Switch May Occur followed by topic initiation
+            #   - Random choice between processing batch, ignoring a message or reading the queue without responding.
+            if self.sequential:
+                await self._process_batch()
+            else:
+                # Channel Switch process the queue without responding
+                # And a topic is initiated right away
+                if random.random() < 0.05:
+                    self.lock_queue = True
+                    await self._read_only()
+                    self.monitoring_channel = random.choice(
+                        [channel_id for channel_id in self.server.channels.keys() if channel_id != self.monitoring_channel]
+                    )
+
+                    self.logger.logger.info(
+                        f"Agent-Channel: [key={self.name}] | Switched to channel: {self.server.get_channel(self.monitoring_channel)}"
+                    )
+
+                    # New Topic Initiation
+                    topic = await self.get_new_topic(self.plan, self.personnality_prompt)
+                    if topic:
+                        await self.responses.put((topic, self.monitoring_channel))
+                        await self.processed_messages.put(f'[Me] {topic}')
+                        self.logger.logger.info(f"Agent-Output: [key={self.name}] | Created new topic: {topic}")
+
+                    self.lock_queue = False
+
+                read_type = random.choices(['BATCH', 'IGNORE', 'ONLY_READ'], weights=[0.90, 0.025, 0.075], k=1)[0]
+
+                if read_type == 'BATCH':
                     await self._process_batch()
-                else:
-                    self.state = AgentState.IDLE
+                elif read_type == 'ONLY_READ':
+                    await self._read_only()
+                elif read_type == 'IGNORE':
+                    await self._ignore()
 
-                await sleep(10)
-                await sleep(random.uniform(0, self.config.max_random_response_delay))
-        else:
-            # Agent will behave more randomly
-            # It's not always easy to keep track of what they're doing
-            # But it's good as human are not predictable! sometimes they answer, sometime they read but forget, sometime they ignore...
-            while self._running:
-                now = time.time()
-                old_state = self.state
-                try:
+                self.logger.logger.info(f"Agent-State: [key={self.name}] | Type of Read: {read_type}")
+        
 
-                    # 5% chance channel switch
-                    # Read Only is called to gracefully empty event queue but still form memories down the line.
-                    # Lock is used to avoid having new events added during.
-                    if random.random() < 0.05:
-                        self.lock_queue = True
-                        await self._read_only()
-                        self.monitoring_channel = random.choice([channel_id for channel_id in self.server.channels.keys() if
-                                                                channel_id != self.monitoring_channel])
-                        self.logger.logger.info(
-                            f"Agent-Channel: [key={self.name}] | Switched to channel: {self.server.get_channel(self.monitoring_channel)}")
-                        self.lock_queue = False
-
-                    # If no event in event queue, then agent will try to initiate topic.
-                    # self.read_only is not really set anywhere, but it's there to dynamically mute the agent if necessary.
-                    if self.event_queue.qsize() > 0:
-                        self.state = AgentState.READ_ONLY if self.read_only else AgentState.PROCESSING
-                    elif now - last_active > idle_threshold:
-                        self.state = AgentState.INITIATING_TOPIC
-                    else:
-                        self.state = AgentState.IDLE
-
-                    if old_state != self.state:
-                        self.logger.logger.info(f"Agent-State: [key={self.name}] | New State: {self.state}")
-
-                    if self.state == AgentState.PROCESSING:
-
-                        # Randomly select to ignore, only read messages or respond. Weights are random with range to make agent less predictable.
-                        batch_weight = round(random.uniform(0.5, 0.7), 3)
-                        ignore_weight = round(random.uniform(0.05, 0.1), 3)
-                        only_read_weight = max(1 - round(batch_weight + ignore_weight, 3), 0)
-                        substate = random.choices(['BATCH', 'IGNORE', 'ONLY_READ'],
-                                                weights=[batch_weight, ignore_weight, only_read_weight], k=1)[0]
-                        self.logger.logger.info(
-                            f"Agent-Substate: [key={self.name}] | Substate: {substate}, w=[batch_weight={batch_weight}, ignore_weight={ignore_weight}, only_read_weight={only_read_weight}]")
-
-                        if substate == 'BATCH':
-                            # Will respond to a random number of elements in the queue.
-                            # No need to check queue size as _process_batch takes the min.
-                            noelem = int(random.uniform(1, 10))
-                            await self._process_batch(noelem)
-                        elif substate == 'ONLY_READ':
-                            # Will put everything in processed_message queue but not respond
-                            await self._read_only()
-                        elif substate == 'IGNORE':
-                            # Messaged won't even be in processed_message queue.
-                            await self._ignore()
-
-                        last_active = time.time()
-                    elif self.state == AgentState.READ_ONLY:
-                        await self._read_only()
-                    elif self.state == AgentState.INITIATING_TOPIC and not self.read_only:
-                        # Agent will try to initiate topic though, we check the last message in the channel wasn't send by the agent.
-                        last_message_is_me = self.server.channels[self.monitoring_channel]['last_id'] != self.user_id
-                        if last_message_is_me:
-                            self.logger.logger.info(f"Agent-Substate: [key={self.name}] | last_message_is_me=true")
-                            # though there is 0.5 % chance the agent will send a new message anyway.
-                            # so every cycle, if (ie 5 minutes) without any message after this agent sent one...
-                            # agent may still try to bring a new topic!
-                            # this bit of random is important as can diversify conversations
-                            if not random.random() < 0.005:
-                                self.logger.logger.info(
-                                    f"Agent-Substate: [key={self.name}] | Aborting topic initialisation")
-                                continue
-
-                        # if last message is another agent then an entirely new topic will be made.
-                        # not much context is given to LLM so only the personality and plan determine the output.
-                        last_active = time.time()
-                        topic = await self.get_new_topic(self.plan, self.personnality_prompt)
-                        if topic:
-                            await self.responses.put((topic, self.monitoring_channel))
-                            await self.processed_messages.put(f'[Me] {topic}')
-                            self.logger.logger.info(f"Agent-Output: [key={self.name}] | Created new topic: {topic}")
-
-                except Exception as e:
-                    self.logger.logger.error(f"Agent-Routine: [key={self.name}] | Error with responder routine: {e}")
-
-                # random delays to make agent more "human"
-                await sleep(self.config.response_delay)
-                await sleep(random.uniform(0, self.config.max_random_response_delay))
+            await sleep(10)
+            await sleep(random.uniform(0, self.config.max_random_response_delay))
 
     async def _process_messages(self, events) -> None:
         """
@@ -358,15 +298,15 @@ class Agent:
         memories = await self.get_memories(self.plan, context, formatted_messages)
         response = await self.get_response(self.plan, context, memories, formatted_messages, self.personnality_prompt)
         
-        if response:
-            await self.responses.put((response, events[0].channel_id))
-        else:
-            await self.responses.put(("", events[0].channel_id))
+        await self.responses.put((response, events[0].channel_id))
 
         for message in formatted_messages:
             await self.processed_messages.put(message)
+            
+        if response != "":
+            await self.processed_messages.put(f'[Me] {response}')
 
-    async def _process_batch(self, noelem: int = None) -> None:
+    async def _process_batch(self) -> None:
         """
         Retrieves up to `noelem` messages from the event queue and processes them.
         If `noelem` is None, the entire queue is processed. It is used in both sequential & non-sequential mode.
@@ -374,16 +314,15 @@ class Agent:
         """
 
         q_size = self.event_queue.qsize()
-        noelem = q_size if not noelem else min(q_size, noelem)
 
         batch = [
             await self.event_queue.get()
-            for _ in range(noelem)
+            for _ in range(q_size)
         ]
     
         if batch:
             self.logger.logger.info(
-                f"Agent-Info: [key={self.name}] | Processed {noelem} elements in the {q_size} events from the event queue")
+                f"Agent-Info: [key={self.name}] | Processed {q_size} elements from the event queue")
             await self._process_messages(batch)
 
     async def _read_only(self) -> None:

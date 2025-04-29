@@ -52,6 +52,7 @@ def split_queries(txt):
         list: A list of parsed and cleaned queries.
     """
 
+
     queries = re.findall(r'Query:\s*(.+?)(?=\nQuery:|\Z)', txt, flags=re.DOTALL)
     return [
         re.sub(r'\s+', ' ', re.sub(r'[^\w\s?]', '', q.strip()))
