@@ -59,26 +59,19 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
 
     for task, prompts, projection, dataset_name in tasks:
         print(f'Working with {dataset_name} on {task}')
-        dataset = pb.DatasetLoader.load_dataset(dataset_name)[:50]
-        async_tasks = []
+        dataset = pb.DatasetLoader.load_dataset(dataset_name)[:100]
+        scores = []
 
         for architype, client in clients.items():
-            task = asyncio.create_task(
-                run_task(prompts, dataset, architype, projection, prompt_agent, [client])
-            )
-            tasks.append((architype, task))
+            score = await run_task(prompts, dataset, architype, projection, prompt_agent, [client])
+            scores.append(score)
 
-        baseline_task = asyncio.create_task(
-            run_task(prompts, dataset, "baseline", projection, prompt_ollama)
-        )
-
-        results = await asyncio.gather(*(task for task in async_tasks), baseline_task)
-        scores = [(architype, score) for architype, score in results]
+        baseline_task = await run_task(prompts, dataset, "baseline", projection, prompt_ollama)
+        scores.append(baseline_task)
 
         RESULTS.append({
             "dataset": dataset_name,
-            "scores": scores,
-            "task": task
+            "scores": scores
         })
 
         df = pd.DataFrame(RESULTS)
