@@ -25,7 +25,7 @@ modular starting point.
 
 ## Install requirements
 
-Run `pip install -r .\requirements.txt` to install dependencies. If you are on linux, also run `pip install uvloop`
+Run `python -m pip install -r requirements.txt` to install dependencies. If you are on linux, also run `pip install uvloop`
 
 ## Command-Line Interface (CLI) Usage Guide
 
