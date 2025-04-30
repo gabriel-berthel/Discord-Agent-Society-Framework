@@ -11,18 +11,17 @@ from models.event import Event
 
 logger = logging.getLogger(__name__)
 
-agent: Agent|None = None
-server: DiscordServer|None = None
+agent: Agent | None = None
+server: DiscordServer | None = None
 tasks = []
-guild: hikari.RESTGuild|None = None
+guild: hikari.RESTGuild | None = None
+
 
 def run(agent_conf):
-
     bot = hikari.GatewayBot(
-        intents=hikari.Intents.ALL, # Important! Didn't test with less intents! Toggle them all just to be sure.
+        intents=hikari.Intents.ALL,  # Important! Didn't test with less intents! Toggle them all just to be sure.
         token=os.getenv("TOKEN")
     )
-
 
     async def message_handler():
         """
@@ -147,4 +146,5 @@ def run(agent_conf):
         tasks.append(asyncio.create_task(agent.plan_routine()))
 
         logger.info("Agent-Client: [key=Discord] | Bot is ready.")
+
     bot.run()

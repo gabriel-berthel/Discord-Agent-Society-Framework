@@ -24,14 +24,18 @@ tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_ori
 
 ollama.pull('llama3:8b')
 
+
 async def prompt_ollama(prompt):
     res = await ollama.AsyncClient().generate("llama3:8b", prompt)
     return res["response"]
 
+
 async def prompt_agent(prompt, client):
     return await client.prompt(prompt, 60, "Admin")
 
+
 RESULTS = []
+
 
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
     preds, labels = [], []
@@ -47,7 +51,6 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
 
         print(f'Iteration no {iteration} for {architype}')
 
-
     return architype, pb.Eval.compute_cls_accuracy(preds, labels)
 
 
@@ -62,11 +65,16 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
         dataset = pb.DatasetLoader.load_dataset(dataset_name)[:25]
         scores = []
 
-        a0 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[0], projection, prompt_agent, [list(clients.values())[0]]))
-        a1 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[1], projection, prompt_agent, [list(clients.values())[1]]))
-        a2 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[2], projection, prompt_agent, [list(clients.values())[2]]))
-        a3 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[3], projection, prompt_agent, [list(clients.values())[3]]))
-        a4 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[4], projection, prompt_agent, [list(clients.values())[4]]))
+        a0 = asyncio.create_task(
+            run_task(prompts, dataset, list(clients.keys())[0], projection, prompt_agent, [list(clients.values())[0]]))
+        a1 = asyncio.create_task(
+            run_task(prompts, dataset, list(clients.keys())[1], projection, prompt_agent, [list(clients.values())[1]]))
+        a2 = asyncio.create_task(
+            run_task(prompts, dataset, list(clients.keys())[2], projection, prompt_agent, [list(clients.values())[2]]))
+        a3 = asyncio.create_task(
+            run_task(prompts, dataset, list(clients.keys())[3], projection, prompt_agent, [list(clients.values())[3]]))
+        a4 = asyncio.create_task(
+            run_task(prompts, dataset, list(clients.keys())[4], projection, prompt_agent, [list(clients.values())[4]]))
 
         baseline_task = asyncio.create_task(run_task(prompts, dataset, "baseline", projection, prompt_ollama))
 
@@ -93,6 +101,7 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
     for archetype, client in clients.items():
         print(f'Stopping {archetype}')
         await client.stop()
+
 
 if __name__ == '__main__':
     asyncio.run(run_agents_benchmark())

@@ -12,6 +12,7 @@ from models.event import Event
 
 logger = logging.getLogger(__name__)
 
+
 class PromptClient:
     def __init__(self, agent_conf, archetype, user_id, server):
         self.server: DiscordServer = server
@@ -59,7 +60,7 @@ class PromptClient:
         logger.info(f"Agent-Client: [key=PromptClient] | [{self.name}] Final response: '{message}'")
         return message
 
-    def _add_message_from_agent_to_server(self,content):
+    def _add_message_from_agent_to_server(self, content):
 
         event = Event(
             channel_id=self.agent.monitoring_channel,
@@ -93,7 +94,7 @@ class PromptClient:
         return clients
 
     @staticmethod
-    async def run_simulation(duration: float, verbose: bool, config_file:str, initial_message="Hi! What's up gamers"):
+    async def run_simulation(duration: float, verbose: bool, config_file: str, initial_message="Hi! What's up gamers"):
         """
         Helper method to run a simulation a quasi-synchronous way.
 

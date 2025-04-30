@@ -5,12 +5,14 @@ from types import SimpleNamespace
 
 logger = logging.getLogger(__name__)
 
+
 async def _wait_time_out(tasks, timeout=30, timeout_message="Operation timed out.", default_return=""):
     try:
         return await asyncio.wait_for(tasks, timeout=timeout)
     except asyncio.TimeoutError:
         logger.error(f"Agent-Module: [key='WaitTimeOut'] | {timeout_message}")
         return default_return
+
 
 class DictToAttribute(SimpleNamespace):
     """SimpleNameSpace + get method compability :D"""
@@ -51,7 +53,6 @@ def split_queries(txt):
     Returns:
         list: A list of parsed and cleaned queries.
     """
-
 
     queries = re.findall(r'Query:\s*(.+?)(?=\nQuery:|\Z)', txt, flags=re.DOTALL)
     return [

@@ -27,19 +27,23 @@ class DiscordConfig:
     server_id: str | None = None
     archetype: str | None = None
 
+
 @dataclass
 class SimConfig:
     duration: int
     verbose: bool
+
 
 @dataclass
 class BenchPrepConfig:
     duration: int
     verbose: bool
 
+
 @dataclass
 class RunBenchConfig:
     verbose: bool
+
 
 @dataclass
 class ProbingConfig:
@@ -68,14 +72,17 @@ def run_discord_bot(config: DiscordConfig):
 
     discord_client.run(SERVER_CONFIG)
 
+
 async def run_simulation(config: SimConfig):
     print(f"Running simulation for {config.duration} seconds...")
     await PromptClient.run_simulation(config.duration, True, CONSOLE_SIMULATION_CONFIG, 'Hi!')
+
 
 async def prepare_qa_bench(config: BenchPrepConfig):
     print(f"Preparing benchmark data for {config.duration} seconds...")
 
     await PromptClient.prepare_qa_bench(config.duration, config.verbose)
+
 
 async def benchmark_qa_bench(config: RunBenchConfig):
     from benchmark.qa_benchmark import load_qa_bench_data, run_benchmarks
@@ -88,10 +95,12 @@ async def benchmark_qa_bench(config: RunBenchConfig):
 
     await run_benchmarks(logs)
 
+
 async def run_prompt_bench():
     from benchmark.prompt_bench_runner import run_agents_benchmark
     print("Starting prompt benchmark...")
     await run_agents_benchmark()
+
 
 async def probe(config: ProbingConfig):
     server = DiscordServer(1, 'Probing')
@@ -111,6 +120,7 @@ async def probe(config: ProbingConfig):
         a = await client.prompt(q, 128, 'Moderator', 1)
         print('Agent:', a)
     await client.stop()
+
 
 # ---------- Main CLI ----------
 def main():

@@ -147,8 +147,7 @@ class Agent:
         if event.author_id != self.user_id and self.monitoring_channel == event.channel_id and not self.lock_queue:
             await self.event_queue.put(event)
             self.logger.logger.info(
-                    f"Agent-Info: [key={self.name}] | Added event in event queue")
-
+                f"Agent-Info: [key={self.name}] | Added event in event queue")
 
     # --- Module Helper ---
 
@@ -192,7 +191,8 @@ class Agent:
         Generates a user response. 
         Combines current context, short-term memory, long-term memory, and personality info.
         """
-        response = await self.responder.make_response(plan, context, memories, messages, base_prompt, self.last_messages)
+        response = await self.responder.make_response(plan, context, memories, messages, base_prompt,
+                                                      self.last_messages)
         self.logger.log_event('response', (plan, context, memories, messages, base_prompt), response)
         self.last_messages.append(response)
         return response
@@ -251,7 +251,8 @@ class Agent:
                     self.lock_queue = True
                     await self._read_only()
                     self.monitoring_channel = random.choice(
-                        [channel_id for channel_id in self.server.channels.keys() if channel_id != self.monitoring_channel]
+                        [channel_id for channel_id in self.server.channels.keys() if
+                         channel_id != self.monitoring_channel]
                     )
 
                     self.logger.logger.info(
@@ -277,7 +278,6 @@ class Agent:
                     await self._ignore()
 
                 self.logger.logger.info(f"Agent-State: [key={self.name}] | Type of Read: {read_type}")
-        
 
             await sleep(10)
             await sleep(random.uniform(0, self.config.max_random_response_delay))
@@ -296,12 +296,12 @@ class Agent:
         context = await self.get_channel_context(self.monitoring_channel, self.get_bot_context())
         memories = await self.get_memories(self.plan, context, formatted_messages)
         response = await self.get_response(self.plan, context, memories, formatted_messages, self.personnality_prompt)
-        
+
         await self.responses.put((response, events[0].channel_id))
 
         for message in formatted_messages:
             await self.processed_messages.put(message)
-            
+
         if response != "":
             await self.processed_messages.put(f'[Me] {response}')
 
@@ -318,7 +318,7 @@ class Agent:
             await self.event_queue.get()
             for _ in range(q_size)
         ]
-    
+
         if batch:
             self.logger.logger.info(
                 f"Agent-Info: [key={self.name}] | Processed {q_size} elements from the event queue")
