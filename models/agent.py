@@ -1,4 +1,3 @@
-import logging
 import os
 import random
 from asyncio import Queue, sleep
@@ -8,6 +7,7 @@ from datetime import datetime
 import modules.agent_memories as db
 from models.agent_logger import AgentLogger
 from models.discord_server import DiscordServer
+from models.event import Event
 from modules.agent_planner import Planner
 from modules.agent_response_handler import Responder
 from modules.agent_summuries import Contextualizer
@@ -15,7 +15,6 @@ from modules.query_engine import QueryEngine
 from utils.agent.agent_utils import *
 from utils.agent.base_prompts import generate_agent_prompt
 from utils.file_utils import load_yaml
-from models.event import Event
 
 logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)

@@ -1,5 +1,7 @@
 from collections import deque
+
 from models.event import Event
+
 
 class DiscordServer:
     """

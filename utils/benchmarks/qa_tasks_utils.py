@@ -1,11 +1,10 @@
+# it is not "called" anywhere but nlp.add_pipe("textrank") depends on it :)
+# noinspection PyUnresolvedReferences
+import pytextrank
 import spacy
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_distances
 from transformers import BartTokenizer, BartForConditionalGeneration
-
-# it is not "called" anywhere but nlp.add_pipe("textrank") depends on it :)
-# noinspection PyUnresolvedReferences
-import pytextrank
 
 model = None
 tokenizer = None

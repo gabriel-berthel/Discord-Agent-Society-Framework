@@ -1,7 +1,6 @@
 import json
 
 import ollama
-from dotenv import load_dotenv
 
 # Prompt templates
 QUIZ_SYSTEM_PROMPT = """\

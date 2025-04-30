@@ -1,14 +1,13 @@
 import argparse
-from dataclasses import dataclass
-from dotenv import load_dotenv
 import asyncio
-import subprocess
 import os
-import logging
+import subprocess
+from dataclasses import dataclass
 
+from dotenv import load_dotenv
 
-from clients.prompt_client import PromptClient
 import clients.discord_client as discord_client
+from clients.prompt_client import PromptClient
 from models.discord_server import DiscordServer
 
 if os.name != "nt":

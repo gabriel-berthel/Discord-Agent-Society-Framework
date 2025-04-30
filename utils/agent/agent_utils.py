@@ -1,7 +1,7 @@
-import re
-from types import SimpleNamespace
 import asyncio
 import logging
+import re
+from types import SimpleNamespace
 
 logger = logging.getLogger(__name__)
 

@@ -5,9 +5,9 @@ import os
 import hikari
 
 import models.agent as ag
-from models.event import Event
 from models.agent import Agent
 from models.discord_server import DiscordServer
+from models.event import Event
 
 logger = logging.getLogger(__name__)
 

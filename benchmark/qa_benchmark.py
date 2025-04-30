@@ -1,7 +1,7 @@
 # bench_runner.py
 
-import asyncio
 import pickle
+import subprocess
 import sys
 import warnings
 
@@ -12,7 +12,6 @@ from modules.agent_summuries import Contextualizer
 from utils.agent.agent_utils import *
 from utils.agent.base_prompts import generate_agent_prompt
 from utils.file_utils import load_agent_logs, save_benchmark_results, load_yaml
-import subprocess
 
 warnings.filterwarnings("ignore", category=FutureWarning, module="huggingface_hub.file_download")
 

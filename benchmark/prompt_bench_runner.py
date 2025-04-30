@@ -3,8 +3,8 @@ import asyncio
 import ollama
 import pandas as pd
 from promptbench.prompts import task_oriented, method_oriented, role_oriented
-from clients import prompt_client as cl
 
+from clients import prompt_client as cl
 from utils.benchmarks.promptbench_utils import *
 
 # Prompt name
@@ -59,15 +59,23 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
 
     for task, prompts, projection, dataset_name in tasks:
         print(f'Working with {dataset_name} on {task}')
-        dataset = pb.DatasetLoader.load_dataset(dataset_name)[:100]
+        dataset = pb.DatasetLoader.load_dataset(dataset_name)[:25]
         scores = []
 
-        for architype, client in clients.items():
-            score = await run_task(prompts, dataset, architype, projection, prompt_agent, [client])
-            scores.append(score)
+        a0 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[0], projection, prompt_agent, [list(clients.values())[0]]))
+        a1 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[1], projection, prompt_agent, [list(clients.values())[1]]))
+        a2 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[2], projection, prompt_agent, [list(clients.values())[2]]))
+        a3 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[3], projection, prompt_agent, [list(clients.values())[3]]))
+        a4 = asyncio.create_task(run_task(prompts, dataset, list(clients.keys())[4], projection, prompt_agent, [list(clients.values())[4]]))
 
-        baseline_task = await run_task(prompts, dataset, "baseline", projection, prompt_ollama)
-        scores.append(baseline_task)
+        baseline_task = asyncio.create_task(run_task(prompts, dataset, "baseline", projection, prompt_ollama))
+
+        scores.append(await baseline_task)
+        scores.append(await a1)
+        scores.append(await a2)
+        scores.append(await a3)
+        scores.append(await a4)
+        scores.append(await a0)
 
         RESULTS.append({
             "dataset": dataset_name,

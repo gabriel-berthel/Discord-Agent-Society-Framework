@@ -5,13 +5,10 @@ import pickle
 import random
 import shutil
 import time
-import asyncio
-
-from dotenv import load_dotenv
 
 from models.agent import Agent
-from models.event import Event
 from models.discord_server import DiscordServer
+from models.event import Event
 
 logger = logging.getLogger(__name__)
 
