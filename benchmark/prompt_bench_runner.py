@@ -3,8 +3,8 @@ import asyncio
 import ollama
 import pandas as pd
 from promptbench.prompts import task_oriented, method_oriented, role_oriented
-from clients import prompt_client as cl
 
+from clients import prompt_client as cl
 from utils.benchmarks.promptbench_utils import *
 
 # Prompt name
@@ -24,14 +24,18 @@ tasks += build_tasks_from_prompts(role_oriented.ROLE_ORIENTED_PROMPTS, "role_ori
 
 ollama.pull('llama3:8b')
 
+
 async def prompt_ollama(prompt):
     res = await ollama.AsyncClient().generate("llama3:8b", prompt)
     return res["response"]
 
+
 async def prompt_agent(prompt, client):
     return await client.prompt(prompt, 60, "Admin")
 
+
 RESULTS = []
+
 
 async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
     preds, labels = [], []
@@ -46,7 +50,6 @@ async def run_task(prompts, dataset, architype, projection, prompt_fn, args=[]):
         labels.append(label)
 
         print(f'Iteration no {iteration} for {architype}')
-
 
     return architype, pb.Eval.compute_cls_accuracy(preds, labels)
 
@@ -85,6 +88,7 @@ async def run_agents_benchmark(save_to="prompt_bench.csv"):
     for archetype, client in clients.items():
         print(f'Stopping {archetype}')
         await client.stop()
+
 
 if __name__ == '__main__':
     asyncio.run(run_agents_benchmark())
