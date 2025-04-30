@@ -162,11 +162,35 @@ This object encapsulates the internal state and behavior of an AI Agent. It hand
   - Triggered every 5 memories (if enabled).
   - Handles high-level planning tasks such as goal setting or dialogue structuring.
 
+Pseudocode:
+```text
+While Plan Routine Is Running:
+If there are more than 5 new memories:
+  - Fetch last 15 messages from the relevant Discord channel
+  - Generate a Summary using Agent Summaries module
+  - Generate Neutral Queries from the Summary
+  - Retrieve related Memories using the Query Engine
+  - Fetch channel metadata
+  - Execute Plan method in Agent Planner
+  - If the Plan is updated:
+      - Store the Plan in the Vector Memory Database as a new memory
+```
+
 - **Memory Routine**  
   **Input**: `_processed_message_queue`  
   **Output**: Writes to the memory module.
   - Invoked every 5 processed messages (if enabled).
   - Updates long-term or contextual memory from compacted experiences.
+
+Pseudocode:
+```text
+While Memory Routine is running:
+If processedMessagesQueue has 5 or more messages:
+  - Retrieve 5 messages
+  - Generate a Reflection using Agent Summaries module
+  - Store the Reflection in the Vector Memory Database
+  - Increment the reflection counter
+```
 
 - **Response Routine**  
   **Input**: `event_queue`  
@@ -184,6 +208,54 @@ This object encapsulates the internal state and behavior of an AI Agent. It hand
       - “Read-only” mode for silent memory formation  
       - Batched processing of event queue  
       - Initiates spontaneous messages when switching channel
+
+Pseudocode:
+```text
+1. Queue & Lock Check
+- If the event queue is empty OR response lock is active:
+  -> Wait 1 second
+  -> Skip this iteration
+
+2. Sequential Mode (self.sequential == True)
+- Always:
+  -> Process the entire event queue (batch mode)
+
+3. Non-Sequential Mode
+
+- 5% chance to trigger a channel switch:
+  -> Lock the event queue
+  -> Read messages without responding
+  -> Randomly switch to a different monitoring channel
+  -> Generate a new topic using the current plan and personality prompt
+     If a message is generated:
+       -> Add it to the response queue
+       -> Add it to the processed message queue
+  -> Unlock the event queue
+
+- Randomly select behavior (weighted):
+  - 90% chance — Respond to event queue:
+    -> Generate a contextual summary from the last 15 messages
+    -> Retrieve relevant memories using:
+       - Contextual summary
+       - Current plan
+       - Event queue messages
+       -> Query Retriever generates queries
+       -> Vector database returns matching memories
+    -> Create a response using:
+       - Plan
+       - Context
+       - Retrieved memories
+       - Event queue messages
+       - Personality prompt
+    -> Add the response to the response queue
+    -> Move the processed event message to the processed message queue
+
+  - 7.5% chance — Read Only:
+    -> Move the message to the processed message queue without responding
+
+  - 2.5% chance — Ignore:
+    -> Discard one event from the event queue with no further action
+```
 
 - **Module Interactions**
   - **DiscordServer**: Enables contextual awareness through channel switching and summarization of recent messages (up to 15).
