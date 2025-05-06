@@ -1,4 +1,4 @@
-# Summuary
+# Summary
 
 This project is designed to simulate a small society of AI agents — each with their own personality, memory, and
 behavior. While it’s built to handle multi-agent conversations and dynamics, it also works just fine for running a
